@@ -175,7 +175,9 @@
         let isAIDetecting = false;
         let aiRequestFrameId = null;
 
-        // 🎯 1. เรียกใช้ Local Model จากโฟลเดอร์ในเครื่อง
+        // 🎯 1. ที่อยู่ไฟล์โมเดล YOLOv8
+        // 💡 คำแนะนำ: หากนำขึ้น Vercel / GitHub Pages ให้เปลี่ยนไปใช้ CDN URL ลิงก์ jsDelivr ที่สร้างไว้ครับ
+        // เช่น: 'https://cdn.jsdelivr.net/gh/USERNAME/REPO@main/model/model.json'
         const YOLO_MODEL_URL = './model/model.json';
         
         // 🔒 2. กำหนดให้ตรวจจับเฉพาะ Class ID 0 (Person)
@@ -190,7 +192,7 @@
                     btn.innerText = "⏳ กำลังโหลดโมเดล YOLO AI...";
                     btn.classList.add("opacity-75", "cursor-wait");
                     try {
-                        // โหลดโมเดล YOLOv8 Local ผ่าน TensorFlow.js GraphModel
+                        // โหลดโมเดล YOLOv8 ผ่าน TensorFlow.js GraphModel
                         yoloModel = await tf.loadGraphModel(YOLO_MODEL_URL);
                         
                         // Warmup โมเดลเพื่อให้ประมวลผลเฟรมแรกได้เร็วขึ้น
@@ -201,7 +203,7 @@
 
                     } catch (err) {
                         console.error("YOLO Model Load Error:", err);
-                        alert("เกิดข้อผิดพลาดในการโหลดโมเดล! กรุณาตรวจสอบว่าวางไฟล์ model.json และ .bin ไว้ในโฟลเดอร์ ./model/ เรียบร้อยแล้ว");
+                        alert("เกิดข้อผิดพลาดในการโหลดโมเดล! \n\nหากรันบน Vercel ให้ตรวจสอบว่าได้เปลี่ยน URL ในตัวแปร YOLO_MODEL_URL ไปใช้ jsDelivr CDN ลิงก์แล้วหรือยังครับ");
                         btn.innerText = "🤖 เปิดโหมด AI YOLO ตรวจจับคน";
                         btn.classList.remove("opacity-75", "cursor-wait");
                         return;
