@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI AIR ROBOT - โรงเรียนชุมแพศึกษา</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+    
+    <!-- สมองกล AI TensorFlow.js สำหรับประมวลผล YOLO -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="air_model.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Sarabun:wght@300;400;700&display=swap');
+        
+        body { background: radial-gradient(circle at 50% 50%, #0d1127 0%, #050714 70%, #020308 100%); color: #e2e8f0; font-family: 'Sarabun', sans-serif; overflow-x: hidden; }
+        .cyber-font { font-family: 'Orbitron', 'Sarabun', sans-serif; }
+        .status-good { background: linear-gradient(135deg, #00f2fe, #4facfe); color: #050714; box-shadow: 0 0 20px rgba(0, 242, 254, 0.6); }
+        .status-moderate { background: linear-gradient(135deg, #f9d423, #ff4e50); color: white; box-shadow: 0 0 20px rgba(255, 78, 80, 0.6); }
+        .status-poor { background: linear-gradient(135deg, #f857a6, #ff5858); color: white; box-shadow: 0 0 20px rgba(248, 87, 166, 0.6); }
+        .status-hazardous { background: linear-gradient(135deg, #b92b27, #1565c0); color: white; box-shadow: 0 0 25px rgba(185, 43, 39, 0.8); border: 2px solid #ff0055; }
+        
+        .bg-card { background: rgba(13, 20, 46, 0.45); backdrop-filter: blur(16px); border: 1px solid rgba(0, 242, 254, 0.15); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); transition: all 0.3s ease; }
+        .gauge-container { position: relative; width: 100%; height: 140px; }
+        .gauge-value { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-weight: 800; color: #00f2fe; text-shadow: 0 0 10px rgba(0,242,254,0.5); }
+        .key-active { background: linear-gradient(135deg, #ff007f, #7928ca) !important; color: white !important; transform: scale(0.92); box-shadow: 0 0 20px rgba(255, 0, 127, 0.8) !important; border-color: #ff007f !important; }
+        .no-select { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+        
+        input[type="range"] { background: #111636; }
+        input[type="range"]::-webkit-slider-thumb { background: #00f2fe; border: 2px solid #ffffff; border-radius: 9999px; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 12px #00f2fe; appearance: none; width: 15px; height: 15px; }
+        .cyber-border-neon { border-left: 4px solid #00f2fe; }
+        .cyber-border-magenta { border-left: 4px solid #ff007f; }
+    </style>
+</head>
+<body class="min-h-screen no-select">
+
+    <header class="bg-card border-b border-cyan-500/20 shadow-2xl py-6 px-6 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">AI AIR ROBOT - ระบบทำนายคุณภาพอากาศอัจฉริยะ (Interactive AI Dashboard)</h1>
+                <p class="text-cyan-300/70 text-sm mt-1 font-medium">โรงเรียนชุมแพศึกษา | 🏎️ ระบบติดตามพิกัดดาวเทียม GPS จริง แบบ Real-time Tracking</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex items-center space-x-3">
+                <span id="location-status" class="px-4 py-1.5 rounded-full text-xs font-bold bg-indigo-950/60 border border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(0,242,254,0.1)]">📍 กำลังดาวน์โหลดพิกัดดาวเทียม...</span>
+                <span id="connection-status" class="px-4 py-1.5 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-400/40 animate-pulse">🟢 Connected Online</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+        
+        <!-- แถวที่ 1: กล้อง AI และ แผงควบคุมหุ่นยนต์ -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- กล่องที่ 1: ภาพสดกล้อง ESP32-CAM + Canvas AI YOLO -->
+            <div class="lg:col-span-2 bg-card rounded-2xl p-5 flex flex-col justify-between border border-cyan-500/40 shadow-[0_0_20px_rgba(0,242,254,0.1)]">
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-cyan-400 font-bold text-lg tracking-wide cyber-font flex items-center">
+                            <span class="mr-2 animate-pulse text-2xl">📹</span> AI VISION (YOLO Person Detector)
+                        </h3>
+                        <span id="cam-status-badge" class="text-xs px-3 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">พร้อมใช้งาน</span>
+                    </div>
+                    
+                    <div class="relative w-full h-[350px] lg:h-[450px] bg-slate-950 rounded-xl overflow-hidden border-2 border-slate-800 flex items-center justify-center">
+                        <img id="esp32-stream" src="" crossorigin="anonymous" class="w-full h-full object-contain hidden z-0" alt="ESP32-CAM Stream">
+                        <canvas id="ai-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-10 hidden"></canvas>
+                        
+                        <div id="cam-placeholder" class="text-center p-4 z-20">
+                            <span class="text-5xl block mb-4">📷</span>
+                            <p class="text-sm text-gray-400 font-medium">กำลังเชื่อมต่อกล้องอัตโนมัติ...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-slate-800 flex flex-wrap gap-3 items-center">
+                    <input type="text" id="cam-ip-input" value="10.151.196.140" placeholder="เช่น 192.168.1.50" class="bg-slate-950 border border-indigo-500/40 rounded-lg px-4 py-2 text-sm text-cyan-300 w-full md:w-auto flex-grow focus:outline-none focus:border-cyan-400 cyber-font">
+                    <button onclick="connectESP32Camera()" class="bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold px-6 py-2 rounded-lg whitespace-nowrap transition-all shadow-[0_0_15px_rgba(0,242,254,0.4)] hover:scale-105">
+                        🔌 เชื่อมต่อกล้อง
+                    </button>
+                    <button id="btn-toggle-ai" onclick="toggleAIDetection()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-6 py-2 rounded-lg whitespace-nowrap transition-all shadow-[0_0_15px_rgba(168,85,247,0.4)] hover:scale-105 hidden">
+                        🤖 เปิดโหมด AI YOLO ตรวจจับคน
+                    </button>
+                </div>
+            </div>
+
+            <!-- กล่องที่ 2: แผงควบคุมหุ่นยนต์ -->
+            <div class="lg:col-span-1 bg-card rounded-2xl p-6 flex flex-col justify-center items-center text-center border-fuchsia-500/30 shadow-[0_0_20px_rgba(255,0,127,0.1)]">
+                <div class="mb-6">
+                    <h3 class="text-fuchsia-400 font-bold text-xl tracking-wide flex items-center justify-center cyber-font">🕹️ แผงควบคุมหุ่นยนต์</h3>
+                    <p class="text-sm text-gray-400 font-medium mt-2">💡 กดปุ่มลูกศรบนคีย์บอร์ดเพื่อสั่งวิ่ง</p>
+                </div>
+                
+                <div class="relative w-[260px] h-[260px] bg-slate-950/80 rounded-full shadow-[inset_0_0_30px_rgba(0,0,0,0.9)] p-4 border-2 border-indigo-500/30 flex items-center justify-center">
+                    <div class="grid grid-cols-3 gap-2 w-full h-full rounded-full overflow-hidden">
+                        <div></div>
+                        <button id="btn-F" class="bg-slate-900 hover:bg-cyan-950 text-cyan-400 border border-cyan-500/30 font-bold rounded-t-2xl flex items-center justify-center shadow transition-all duration-150 text-3xl">▲</button>
+                        <div></div>
+                        <button id="btn-L" class="bg-slate-900 hover:bg-cyan-950 text-cyan-400 border border-cyan-500/30 font-bold rounded-l-2xl flex items-center justify-center shadow transition-all duration-150 text-3xl">◀</button>
+                        <div></div> 
+                        <button id="btn-R" class="bg-slate-900 hover:bg-cyan-950 text-cyan-400 border border-cyan-500/30 font-bold rounded-r-2xl flex items-center justify-center shadow transition-all duration-150 text-3xl">▶</button>
+                        <div></div>
+                        <button id="btn-B" class="bg-slate-900 hover:bg-cyan-950 text-cyan-400 border border-cyan-500/30 font-bold rounded-b-2xl flex items-center justify-center shadow transition-all duration-150 text-3xl">▼</button>
+                        <div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- แถวที่ 2: ปัจจัยบริบท + ผลลัพธ์ AI (มลพิษ) -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div class="lg:col-span-1 bg-card rounded-2xl p-6 flex flex-col justify-center cyber-border-neon">
+                <h3 class="text-cyan-400 font-bold text-sm mb-5 flex items-center tracking-wide cyber-font"><span class="mr-2">📡</span> ปรับแต่งปัจจัยพื้นที่</h3>
+                <div class="space-y-6">
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-2"><label class="text-gray-300">ห่างนิคมอุตสาหกรรม</label><div class="text-cyan-400 cyber-font"><span id="txt-prox-val" class="font-bold text-base">7.4</span> กม.</div></div>
+                        <input type="range" id="slide-prox" min="0.1" max="25" step="0.1" value="7.4" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
+                        <input type="hidden" id="num-prox" value="7.4">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-2"><label class="text-gray-300">หนาแน่นประชากร</label><div class="text-cyan-400 cyber-font"><span id="txt-pop-val" class="font-bold text-base">545</span> คน/กม²</div></div>
+                        <input type="range" id="slide-pop" min="100" max="1000" step="1" value="545" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
+                        <input type="hidden" id="num-pop" value="545">
+                    </div>
+                </div>
+            </div>
+            <div class="lg:col-span-2 bg-card rounded-2xl p-6 flex flex-col justify-between cyber-border-magenta">
+                <div>
+                    <h2 class="text-fuchsia-400 text-sm font-bold tracking-wider uppercase mb-3 cyber-font">ผลการทำนายประมวลผลคุณภาพอากาศ (Air Model)</h2>
+                    <div class="flex items-baseline mt-4"><span id="ai-prediction-text" class="text-4xl font-black text-white tracking-wider cyber-font text-shadow-neon">รอข้อมูล...</span></div>
+                </div>
+                <div class="mt-6 pt-4 border-t border-indigo-950">
+                    <p class="text-gray-400 text-sm flex items-center"><span class="mr-2 text-xl">💡</span> <span id="ai-advice">ระบบกำลังสแตนด์บายรอสัญญาณข้อมูลดิบจากท่อ MQTT</span></p>
+                </div>
+            </div>
+            <div id="status-color-box" class="lg:col-span-1 rounded-2xl p-6 flex flex-col justify-center items-center bg-slate-900/60 border border-indigo-500/20 text-gray-400 transition-all duration-500 shadow-lg min-h-[160px]">
+                <span id="status-emoji" class="text-6xl mb-3 animate-bounce">📡</span>
+                <span id="status-label" class="text-xl font-black uppercase tracking-widest cyber-font">No Data</span>
+            </div>
+        </div>
+
+        <!-- แถวที่ 3-5: เกจ กราฟ และการ์ดข้อมูลมลพิษ -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-card rounded-2xl p-6 flex flex-col items-center"><p class="text-cyan-400 text-xs font-bold tracking-wider uppercase mb-4 cyber-font">อุณหภูมิห้องจริง</p><div class="gauge-container"><canvas id="tempGauge"></canvas><div class="gauge-value text-xl cyber-font"><span id="txt-temp" class="text-2xl">0.0</span> °C</div></div></div>
+            <div class="bg-card rounded-2xl p-6 flex flex-col items-center"><p class="text-fuchsia-400 text-xs font-bold tracking-wider uppercase mb-4 cyber-font">ความชื้นอากาศจริง</p><div class="gauge-container"><canvas id="humGauge"></canvas><div class="gauge-value text-xl cyber-font"><span id="txt-hum" class="text-2xl">0</span> %</div></div></div>
+        </div>
+        <div>
+            <h3 class="text-gray-300 font-bold text-lg mb-4 flex items-center tracking-wide cyber-font">📊 ตารางสรุปค่ามลพิษที่ได้รับ (หุ่นยนต์ และ API สภาพอากาศ)</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="bg-gradient-to-br from-blue-950/60 to-slate-900/80 rounded-2xl p-5 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.05)] relative overflow-hidden group"><p class="text-cyan-400 text-xs font-bold uppercase tracking-wider cyber-font">ก๊าซ CO</p><p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-co">0.00</span> <span class="text-xs font-normal text-cyan-600">ppm</span></p></div>
+                <div class="bg-gradient-to-br from-indigo-950/60 to-slate-900/80 rounded-2xl p-5 border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.05)] relative overflow-hidden group"><p class="text-indigo-400 text-xs font-bold uppercase tracking-wider cyber-font">PM2.5</p><p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-pm25">0</span> <span class="text-xs font-normal text-indigo-500">µg/m³</span></p></div>
+                <div class="bg-gradient-to-br from-purple-950/60 to-slate-900/80 rounded-2xl p-5 border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.05)] relative overflow-hidden group"><p class="text-purple-400 text-xs font-bold uppercase tracking-wider cyber-font">PM10</p><p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-pm10">0</span> <span class="text-xs font-normal text-purple-500">µg/m³</span></p></div>
+                <div class="bg-slate-900/40 rounded-2xl p-5 border border-slate-800/80"><p class="text-amber-400 text-xs font-bold uppercase tracking-wider cyber-font">ก๊าซ NO2</p><p class="text-3xl font-black text-gray-200 mt-2 cyber-font"><span id="val-no2">0.00</span> <span class="text-xs font-normal text-gray-500">ppm</span></p></div>
+                <div class="bg-slate-900/40 rounded-2xl p-5 border border-slate-800/80 col-span-2 md:col-span-1"><p class="text-emerald-400 text-xs font-bold uppercase tracking-wider cyber-font">ก๊าซ SO2</p><p class="text-3xl font-black text-gray-200 mt-2 cyber-font"><span id="val-so2">0.00</span> <span class="text-xs font-normal text-gray-500">ppm</span></p></div>
+            </div>
+        </div>
+        <div class="bg-card rounded-2xl p-6 border border-cyan-500/10">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                <h3 class="text-gray-200 font-bold tracking-wide cyber-font">📊 กราฟแนวโน้มมลพิษทางอากาศ Real-time</h3>
+                <button onclick="resetChartZoom()" class="px-4 py-1.5 text-xs font-bold bg-slate-900 hover:bg-cyan-950 text-cyan-400 border border-cyan-500/30 rounded-xl shadow-[0_0_10px_rgba(0,242,254,0.1)] transition-all">🔄 รีเซ็ตการซูม</button>
+            </div>
+            <div style="position: relative; height:340px; width:100%"><canvas id="realtimeChart"></canvas></div>
+        </div>
+    </main>
+
+    <script>
+        // ==========================================
+        // 🎯 ระบบ AI ตรวจจับเฉพาะคน (Person Only)
+        // ==========================================
+        let yoloModel = null;
+        let isAIDetecting = false;
+        let aiRequestFrameId = null;
+
+        // 🎯 1. เรียกใช้ Local Model จากโฟลเดอร์ในเครื่อง
+        const YOLO_MODEL_URL = './model/model.json';
+        
+        // 🔒 2. กำหนดให้ตรวจจับเฉพาะ Class ID 0 (Person)
+        const PERSON_CLASS_ID = 0; 
+
+        async function toggleAIDetection() {
+            const btn = document.getElementById("btn-toggle-ai");
+            const canvas = document.getElementById("ai-canvas");
+
+            if (!isAIDetecting) {
+                if (!yoloModel) {
+                    btn.innerText = "⏳ กำลังโหลดโมเดล YOLO AI...";
+                    btn.classList.add("opacity-75", "cursor-wait");
+                    try {
+                        // โหลดโมเดล YOLOv8 Local ผ่าน TensorFlow.js GraphModel
+                        yoloModel = await tf.loadGraphModel(YOLO_MODEL_URL);
+                        
+                        // Warmup โมเดลเพื่อให้ประมวลผลเฟรมแรกได้เร็วขึ้น
+                        const dummyTensor = tf.zeros([1, 640, 640, 3]);
+                        await yoloModel.executeAsync(dummyTensor);
+                        tf.dispose(dummyTensor);
+                        console.log("✅ โหลดโมเดล YOLO สำเร็จ!");
+
+                    } catch (err) {
+                        console.error("YOLO Model Load Error:", err);
+                        alert("เกิดข้อผิดพลาดในการโหลดโมเดล! กรุณาตรวจสอบว่าวางไฟล์ model.json และ .bin ไว้ในโฟลเดอร์ ./model/ เรียบร้อยแล้ว");
+                        btn.innerText = "🤖 เปิดโหมด AI YOLO ตรวจจับคน";
+                        btn.classList.remove("opacity-75", "cursor-wait");
+                        return;
+                    }
+                }
+                
+                isAIDetecting = true;
+                btn.innerText = "🛑 ปิดโหมด AI YOLO";
+                btn.classList.replace("bg-purple-600", "bg-red-600");
+                btn.classList.replace("hover:bg-purple-500", "hover:bg-red-500");
+                btn.classList.remove("opacity-75", "cursor-wait");
+                canvas.classList.remove("hidden");
+                detectCameraObjects();
+                
+            } else {
+                isAIDetecting = false;
+                btn.innerText = "🤖 เปิดโหมด AI YOLO ตรวจจับคน";
+                btn.classList.replace("bg-red-600", "bg-purple-600");
+                btn.classList.replace("hover:bg-red-500", "hover:bg-purple-500");
+                canvas.classList.add("hidden");
+                
+                if (aiRequestFrameId) cancelAnimationFrame(aiRequestFrameId);
+                const ctx = canvas.getContext("2d");
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        // ==========================================
+        // 🧠 ฟังก์ชันรันคำนวณและประมวลผลผลลัพธ์จาก YOLO
+        // ==========================================
+        async function runYOLOInference(videoElement) {
+            return tf.tidy(() => {
+                // 1. Preprocessing: ปรับขนาดเป็น 640x640 และปรับค่าสีเป็น 0-1
+                const imgTensor = tf.browser.fromPixels(videoElement);
+                const resized = tf.image.resizeBilinear(imgTensor, [640, 640]);
+                const normalized = resized.div(255.0);
+                const batched = normalized.expandDims(0);
+
+                // 2. Inference: ส่งเข้าโมเดล YOLO
+                const output = yoloModel.execute(batched);
+                
+                // YOLOv8 Output shape: [1, 84, 8400] -> transpose เป็น [8400, 84]
+                const transposed = output.squeeze([0]).transpose([1, 0]);
+                
+                // แยกส่วนกล่อง bounding box (cx, cy, w, h) และ คะแนนความเชื่อมั่น (scores)
+                const boxes = transposed.slice([0, 0], [-1, 4]);
+                const scores = transposed.slice([0, 4], [-1, -1]);
+
+                // ค้นหาคลาสที่มีคะแนนความเชื่อมั่นสูงสุดในแต่ละช่อง
+                const maxScores = scores.max(1);
+                const classIds = scores.argMax(1);
+
+                return {
+                    boxes: boxes.arraySync(),
+                    scores: maxScores.arraySync(),
+                    classIds: classIds.arraySync()
+                };
+            });
+        }
+
+        async function detectCameraObjects() {
+            if (!isAIDetecting) return;
+            
+            const video = document.getElementById("esp32-stream");
+            const canvas = document.getElementById("ai-canvas");
+            const ctx = canvas.getContext("2d");
+
+            // ตรวจสอบความสมบูรณ์ของภาพวิดีโอ
+            if (!video.complete || video.naturalWidth === 0 || video.classList.contains("hidden")) {
+                aiRequestFrameId = requestAnimationFrame(detectCameraObjects);
+                return;
+            }
+
+            // 1. ขนาดพิกเซลภาพจริงจากกล้อง ESP32-CAM
+            const imgW = video.naturalWidth;
+            const imgH = video.naturalHeight;
+
+            // 2. ขนาดและตำแหน่งการแสดงผลจริงบนหน้าจอ
+            const rect = video.getBoundingClientRect();
+            const displayW = rect.width;
+            const displayH = rect.height;
+
+            // กำหนดขนาด Canvas ให้เท่ากับขนาดแสดงผลจริงบนหน้าจอพอดี
+            canvas.width = displayW;
+            canvas.height = displayH;
+
+            // 3. คำนวณขอบดำ (Letterbox) ที่เกิดจาก object-contain ให้ตรงตำแหน่ง
+            const imgAspect = imgW / imgH;
+            const displayAspect = displayW / displayH;
+
+            let renderW, renderH, offsetX = 0, offsetY = 0;
+
+            if (imgAspect > displayAspect) {
+                renderW = displayW;
+                renderH = displayW / imgAspect;
+                offsetY = (displayH - renderH) / 2;
+            } else {
+                renderH = displayH;
+                renderW = displayH * imgAspect;
+                offsetX = (displayW - renderW) / 2;
+            }
+
+            // อัตราส่วนการขยายพิกัด Bounding Box
+            const scaleX = renderW / imgW;
+            const scaleY = renderH / imgH;
+
+            try {
+                // รันการตรวจจับด้วย YOLO
+                const rawResults = await runYOLOInference(video);
+                
+                const candidateBoxes = [];
+                const candidateScores = [];
+
+                // 🎯 คัดกรองเอาเฉพาะ Class ID 0 (Person) และ Score >= 40%
+                for (let i = 0; i < rawResults.scores.length; i++) {
+                    if (rawResults.classIds[i] === PERSON_CLASS_ID && rawResults.scores[i] >= 0.40) {
+                        const [cx, cy, w, h] = rawResults.boxes[i];
+                        
+                        // แปลงพิกัดจากระบบ 640x640 เป็นพิกัดภาพเดิม
+                        const x = (cx - w / 2) * (imgW / 640);
+                        const y = (cy - h / 2) * (imgH / 640);
+                        const width = w * (imgW / 640);
+                        const height = h * (imgH / 640);
+
+                        candidateBoxes.push([y, x, y + height, x + width]); // [y1, x1, y2, x2]
+                        candidateScores.push(rawResults.scores[i]);
+                    }
+                }
+
+                // ทำ Non-Maximum Suppression (NMS) เพื่อตัดกรอบที่ซ้ำซ้อน
+                let selectedIndices = [];
+                if (candidateBoxes.length > 0) {
+                    const tensorBoxes = tf.tensor2d(candidateBoxes);
+                    const tensorScores = tf.tensor1d(candidateScores);
+                    const nms = await tf.image.nonMaxSuppressionAsync(tensorBoxes, tensorScores, 10, 0.45, 0.40);
+                    selectedIndices = await nms.array();
+                    
+                    tf.dispose([tensorBoxes, tensorScores, nms]);
+                }
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                selectedIndices.forEach(idx => {
+                    const score = candidateScores[idx];
+                    const box = candidateBoxes[idx];
+
+                    const x = box[1];
+                    const y = box[0];
+                    const width = box[3] - box[1];
+                    const height = box[2] - box[0];
+
+                    // คำนวณพิกัดตำแหน่งกรอบบนหน้าจอ Canvas
+                    let finalX = (x * scaleX) + offsetX;
+                    let finalY = (y * scaleY) + offsetY;
+                    let finalW = width * scaleX;
+                    let finalH = height * scaleY;
+
+                    // 🎯 บีบกรอบคนให้แคบลงพอดีตัว (Shrink Box)
+                    const reduceWidth = finalW * 0.25;  // บีบด้านข้างลง 25%
+                    const reduceHeight = finalH * 0.05; // บีบด้านบน-ล่างลง 5%
+
+                    finalX = finalX + (reduceWidth / 2);
+                    finalY = finalY + (reduceHeight / 2);
+                    finalW = finalW - reduceWidth;
+                    finalH = finalH - reduceHeight;
+
+                    // วาดกรอบสี่เหลี่ยมสีชมพู/แดง
+                    ctx.strokeStyle = "#ff0055";
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(finalX, finalY, finalW, finalH);
+
+                    // วาดป้ายชื่อ PERSON และ % ความเชื่อมั่น
+                    const label = `🚨 PERSON ${Math.round(score * 100)}%`;
+                    
+                    ctx.font = "bold 13px 'Orbitron', sans-serif";
+                    const textWidth = ctx.measureText(label).width;
+                    const labelY = finalY - 22 > 0 ? finalY - 22 : finalY;
+                    
+                    ctx.fillStyle = "#ff0055";
+                    ctx.fillRect(finalX, labelY, textWidth + 10, 22);
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillText(label, finalX + 5, labelY + 16);
+                    
+                    // สั่งหยุดหุ่นยนต์อัตโนมัติเมื่อพบคน (Rescue Mode)
+                    if (client && client.isConnected()) {
+                        let stopMsg = new Paho.MQTT.Message("S");
+                        stopMsg.destinationName = "pollution/robot/control";
+                        client.send(stopMsg);
+                    }
+                });
+
+            } catch (err) {
+                console.error("YOLO AI Detection Error:", err);
+            }
+            
+            aiRequestFrameId = requestAnimationFrame(detectCameraObjects);
+        }
+
+        // ==========================================
+        // ระบบกล้องและอื่นๆ 
+        // ==========================================
+        function connectESP32Camera() {
+            let rawIp = document.getElementById("cam-ip-input").value.trim();
+            if (!rawIp) return;
+            
+            let cleanIp = rawIp.replace("http://", "").replace("/", "");
+            let streamUrl = `http://${cleanIp}/`;
+
+            const imgStream = document.getElementById("esp32-stream");
+            const placeholder = document.getElementById("cam-placeholder");
+            const badge = document.getElementById("cam-status-badge");
+            const btnAI = document.getElementById("btn-toggle-ai");
+
+            badge.innerText = "กำลังเชื่อมต่อ...";
+            badge.className = "text-xs px-3 py-1 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse";
+
+            imgStream.src = streamUrl;
+            imgStream.classList.remove("hidden");
+            placeholder.classList.add("hidden");
+            btnAI.classList.remove("hidden");
+            
+            badge.innerText = "● LIVE STREAM";
+            badge.className = "text-xs px-3 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse font-bold";
+
+            imgStream.onerror = () => {
+                badge.innerText = "เชื่อมต่อล้มเหลว";
+                badge.className = "text-xs px-3 py-1 rounded bg-red-500/20 text-red-400 border border-red-500/30";
+                imgStream.classList.add("hidden");
+                placeholder.classList.remove("hidden");
+                btnAI.classList.add("hidden");
+            };
+        }
+
+        window.addEventListener('load', () => { setTimeout(connectESP32Camera, 1000); });
+
+        const indexToLabelMap = { 0: "Good", 1: "Moderate", 2: "Poor", 3: "Hazardous" };
+        const WEATHER_API_KEY = "4642af1ae8c5becc27c24372d72c8601"; 
+        let currentLat = 16.7164; let currentLon = 102.1158; 
+        let latestSensorData = { temp: 25.0, hum: 70.0, co: 1.5, no2: 25.0, so2: 8.5, pm25: 20.0, pm10: 25.0 };
+
+        function createGaugeConfig(initialValue, maxRange, colorTheme) {
+            return { type: 'doughnut', data: { datasets: [{ data: [initialValue, maxRange - initialValue], backgroundColor: [colorTheme, '#090d22'], borderWidth: 0 }] }, options: { rotation: 270, circumference: 180, cutout: '80%', plugins: { tooltip: { enabled: false } }, maintainAspectRatio: false, responsive: true } };
+        }
+        const tempGaugeChart = new Chart(document.getElementById('tempGauge').getContext('2d'), createGaugeConfig(0, 50, '#00f2fe'));
+        const humGaugeChart = new Chart(document.getElementById('humGauge').getContext('2d'), createGaugeConfig(0, 100, '#ff007f'));
+
+        const ctx = document.getElementById('realtimeChart').getContext('2d');
+        const maxDataPoints = 30; 
+        const chartData = { labels: [], datasets: [ { label: 'CO (ppm)', data: [], borderColor: '#00f2fe', backgroundColor: '#00f2fe', tension: 0.3, fill: false, borderWidth: 2.5 }, { label: 'NO2 (ppm)', data: [], borderColor: '#fbbf24', backgroundColor: '#fbbf24', tension: 0.3, fill: false, borderWidth: 2 }, { label: 'SO2 (ppm)', data: [], borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.3, fill: false, borderWidth: 2 }, { label: 'PM2.5 (µg/m³)', data: [], borderColor: '#ff007f', backgroundColor: '#ff007f', tension: 0.3, fill: false, borderWidth: 2.5 }, { label: 'PM10 (µg/m³)', data: [], borderColor: '#8b5cf6', backgroundColor: '#8b5cf6', tension: 0.3, fill: false, borderWidth: 2 } ] };
+        const realtimeChart = new Chart(ctx, { type: 'line', data: chartData, options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: 'rgba(0, 242, 254, 0.05)' }, ticks: { color: '#64748b', font: { family: 'Orbitron' } } }, y: { beginAtZero: true, grid: { color: 'rgba(0, 242, 254, 0.05)' }, ticks: { color: '#64748b', font: { family: 'Orbitron' } } } }, plugins: { legend: { labels: { color: '#94a3b8', font: { weight: 'bold', family: 'Orbitron' } } }, zoom: { pan: { enabled: true, mode: 'x' }, zoom: { wheel: { enabled: true, speed: 0.08 }, pinch: { enabled: true }, mode: 'x' } } } } });
+        function resetChartZoom() { realtimeChart.resetZoom(); }
+
+        const airQualityConfig = {
+            "Good": { emoji: "🟢 😊", label: "อากาศดีมาก", class: "status-good", advice: "คุณภาพอากาศดีมาก เหมาะแก่การทำกิจกรรมกลางแจ้งทุกประเภท" },
+            "Moderate": { emoji: "🟡 😐", label: "อากาศปานกลาง", class: "status-moderate", advice: "คุณภาพอากาศปานกลาง ผู้ที่แพ้ง่ายควรลดระยะเวลาทำกิจกรรมกลางแจ้ง" },
+            "Poor": { emoji: "🔴 😷", label: "เริ่มมีผลกระทบ", class: "status-poor", advice: "ตรวจพบมลพิษสารแก๊สหรือค่าฝุ่นเลเซอร์เริ่มเกินเกณฑ์มาตรฐาน!" },
+            "Hazardous": { emoji: "🟣 🚨", label: "อันตรายร้ายแรง", class: "status-hazardous", advice: "ระดับมลพิษโดยรวมเข้าขั้นวิกฤตอันตราย! กรุณางดกิจกรรมนอกอาคาร" }
+        };
+
+        function updateAIPrediction() {
+            const proximity = parseFloat(document.getElementById("num-prox").value) || 7.4;
+            const popDensity = parseFloat(document.getElementById("num-pop").value) || 545;
+            const x_input = [latestSensorData.temp, latestSensorData.hum, latestSensorData.pm25, latestSensorData.pm10, latestSensorData.no2, latestSensorData.so2, latestSensorData.co, proximity, popDensity];
+
+            let prediction = "Unknown"; let confidenceText = "";
+            try {
+                if (typeof predictAirQuality === "function") {
+                    let rawOutput = predictAirQuality(x_input); 
+                    let probabilities = Array.isArray(rawOutput) ? (Array.isArray(rawOutput[0]) ? rawOutput[0] : rawOutput) : [];
+                    if (probabilities.length > 0 && !isNaN(probabilities[0])) {
+                        const maxProbability = Math.max(...probabilities);
+                        const predictedIndex = probabilities.indexOf(maxProbability);
+                        prediction = indexToLabelMap[predictedIndex] || "Unknown";
+                        confidenceText = `(${(maxProbability * 100).toFixed(1)}%)`;
+                    }
+                }
+            } catch (e) {}
+
+            if (prediction === "Unknown") {
+                let score = 0;
+                score += (latestSensorData.pm25 > 35 ? 2 : (latestSensorData.pm25 > 15 ? 1 : 0));
+                score += (latestSensorData.co > 30.0 ? 3 : (latestSensorData.co > 9.0 ? 1 : 0)); 
+                prediction = score >= 4 ? "Hazardous" : (score === 3 ? "Poor" : (score === 2 ? "Moderate" : "Good"));
+            }
+
+            if (airQualityConfig[prediction]) {
+                const ui = airQualityConfig[prediction];
+                document.getElementById("ai-prediction-text").innerText = `${prediction} ${confidenceText}`;
+                document.getElementById("ai-advice").innerText = ui.advice;
+                document.getElementById("status-color-box").className = `lg:col-span-1 rounded-2xl p-6 flex flex-col justify-center items-center shadow-2xl transition-all duration-500 ${ui.class}`;
+                document.getElementById("status-emoji").innerText = ui.emoji;
+                document.getElementById("status-label").innerText = ui.label;
+            }
+        }
+
+        ["slide-prox", "slide-pop"].forEach((id, idx) => {
+            const numId = ["num-prox", "num-pop"][idx];
+            const textId = ["txt-prox-val", "txt-pop-val"][idx];
+            document.getElementById(id).addEventListener("input", (e) => {
+                document.getElementById(numId).value = e.target.value;
+                document.getElementById(textId).innerText = e.target.value;
+                updateAIPrediction();
+            });
+        });
+
+        function getUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(
+                    (pos) => { currentLat = pos.coords.latitude; currentLon = pos.coords.longitude; document.getElementById("location-status").innerText = `📍 พิกัด GPS จริง: ${currentLat.toFixed(5)}, ${currentLon.toFixed(5)}`; sendGPSData(currentLat, currentLon); fetchPollutionAPI(); },
+                    (err) => { document.getElementById("location-status").innerText = `📍 พิกัดโรงเรียน (สำรอง): อ.ชุมแพ`; sendGPSData(currentLat, currentLon); fetchPollutionAPI(); },
+                    { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+                );
+            } else { document.getElementById("location-status").innerText = `📍 พิกัดโรงเรียน (สำรอง): อ.ชุมแพ`; sendGPSData(currentLat, currentLon); fetchPollutionAPI(); }
+        }
+        function sendGPSData(lat, lon) { if (client && client.isConnected()) { client.send(new Paho.MQTT.Message(JSON.stringify({ latitude: lat, longitude: lon }), "pollution/robot/gps")); } }
+
+        async function fetchPollutionAPI() {
+            try {
+                const json = await (await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${currentLat}&lon=${currentLon}&appid=${WEATHER_API_KEY}`)).json();
+                latestSensorData.no2 = parseFloat(json.list[0].components.no2 || 25.0).toFixed(2);
+                latestSensorData.so2 = parseFloat(json.list[0].components.so2 || 8.5).toFixed(2);
+                document.getElementById("val-no2").innerText = latestSensorData.no2; document.getElementById("val-so2").innerText = latestSensorData.so2;
+                updateAIPrediction();
+            } catch (e) {
+                document.getElementById("val-no2").innerText = "20.0"; document.getElementById("val-so2").innerText = "5.0";
+            }
+        }
+
+        let activeKeys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
+        let lastCmd = "S";
+        function processKeyCombinations() {
+            let cmd = (activeKeys.ArrowUp && activeKeys.ArrowLeft) ? "G" : (activeKeys.ArrowUp && activeKeys.ArrowRight) ? "I" : (activeKeys.ArrowDown && activeKeys.ArrowLeft) ? "H" : (activeKeys.ArrowDown && activeKeys.ArrowRight) ? "J" : activeKeys.ArrowUp ? "F" : activeKeys.ArrowDown ? "B" : activeKeys.ArrowLeft ? "L" : activeKeys.ArrowRight ? "R" : "S";
+            if (cmd !== lastCmd) {
+                lastCmd = cmd;
+                if (client && client.isConnected()) { let m = new Paho.MQTT.Message(cmd); m.destinationName = "pollution/robot/control"; client.send(m); }
+                ['F', 'B', 'L', 'R'].forEach(k => document.getElementById('btn-' + k).classList.remove('key-active'));
+                if(activeKeys.ArrowUp) document.getElementById('btn-F').classList.add('key-active');
+                if(activeKeys.ArrowDown) document.getElementById('btn-B').classList.add('key-active');
+                if(activeKeys.ArrowLeft) document.getElementById('btn-L').classList.add('key-active');
+                if(activeKeys.ArrowRight) document.getElementById('btn-R').classList.add('key-active');
+            }
+        }
+        document.addEventListener('keydown', e => { if (e.key in activeKeys) { activeKeys[e.key] = true; processKeyCombinations(); } });
+        document.addEventListener('keyup', e => { if (e.key in activeKeys) { activeKeys[e.key] = false; processKeyCombinations(); } });
+
+        const pairs = { 'btn-F': 'ArrowUp', 'btn-B': 'ArrowDown', 'btn-L': 'ArrowLeft', 'btn-R': 'ArrowRight' };
+        Object.keys(pairs).forEach(id => {
+            const btn = document.getElementById(id), key = pairs[id];
+            const start = e => { e.preventDefault(); activeKeys[key] = true; processKeyCombinations(); };
+            const stop = () => { activeKeys[key] = false; processKeyCombinations(); };
+            btn.addEventListener('mousedown', start); btn.addEventListener('touchstart', start);
+            btn.addEventListener('mouseup', stop); btn.addEventListener('mouseleave', stop); btn.addEventListener('touchend', stop);
+        });
+
+        const client = new Paho.MQTT.Client("broker.hivemq.com", Number(8884), "/mqtt", "web_dash_" + Math.random().toString(16).substr(2, 8));
+        client.onConnectionLost = () => { document.getElementById("connection-status").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-red-500/20 text-red-400 border border-red-400/40 animate-pulse"; document.getElementById("connection-status").innerText = "🔴 Disconnected"; setTimeout(connectMQTT, 3000); };
+        client.onMessageArrived = m => {
+            try {
+                const d = JSON.parse(m.payloadString);
+                latestSensorData.temp = parseFloat(d.Temperature || 0); latestSensorData.hum = parseFloat(d.Humidity || 0); latestSensorData.pm25 = parseInt(d.PM25 || 0); latestSensorData.pm10 = parseInt(d.PM10 || 0); latestSensorData.co = parseFloat(d.CO || 0);
+                document.getElementById("val-co").innerText = latestSensorData.co.toFixed(2); document.getElementById("val-pm25").innerText = latestSensorData.pm25; document.getElementById("val-pm10").innerText = latestSensorData.pm10; document.getElementById("txt-temp").innerText = latestSensorData.temp.toFixed(1); document.getElementById("txt-hum").innerText = Math.round(latestSensorData.hum);
+                tempGaugeChart.data.datasets[0].data = [Math.min(Math.max(latestSensorData.temp,0),50), 50-Math.min(Math.max(latestSensorData.temp,0),50)]; tempGaugeChart.update();
+                humGaugeChart.data.datasets[0].data = [Math.min(Math.max(latestSensorData.hum,0),100), 100-Math.min(Math.max(latestSensorData.hum,0),100)]; humGaugeChart.update();
+                updateAIPrediction();
+                const now = new Date(), tl = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
+                if (chartData.labels.length >= maxDataPoints) { chartData.labels.shift(); chartData.datasets.forEach(d => d.data.shift()); }
+                chartData.labels.push(tl); chartData.datasets[0].data.push(latestSensorData.co); chartData.datasets[1].data.push(latestSensorData.no2); chartData.datasets[2].data.push(latestSensorData.so2); chartData.datasets[3].data.push(latestSensorData.pm25); chartData.datasets[4].data.push(latestSensorData.pm10);
+                realtimeChart.update('none');
+            } catch (e) {}
+        };
+        function connectMQTT() {
+            client.connect({ useSSL: true, onSuccess: () => { document.getElementById("connection-status").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-400/40"; document.getElementById("connection-status").innerText = "🟢 Connected Online"; client.subscribe("pollution/env/predicted"); }, onFailure: () => { setTimeout(connectMQTT, 5000); } });
+        }
+        connectMQTT(); getUserLocation();
+    </script>
+</body>
+</html>
