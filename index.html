@@ -585,7 +585,7 @@
                     try {
                         yoloModel = await tf.loadGraphModel(YOLO_MODEL_URL);
                         const dummyTensor = tf.zeros([1, 640, 640, 3]);
-                        await yoloModel.executeAsync(dummyTensor);
+                        yoloModel.execute(dummyTensor);
                         tf.dispose(dummyTensor);
                     } catch (err) {
                         alert("เกิดข้อผิดพลาดในการโหลดโมเดล YOLO!");
