@@ -1,94 +1,170 @@
-/**
- * air_model.js
- * ระบบประมวลผลทำนายคุณภาพอากาศ (Air Quality Prediction Engine)
- * สำหรับโรงเรียนชุมแพศึกษา
- */
-
-/**
- * ฟังก์ชันหลัก: ทำนายความน่าจะเป็นของระดับคุณภาพอากาศ
- * @param {Array<number|string>} inputs - [temp, hum, pm25, pm10, no2, so2, co, proximity, popDensity]
- * @returns {Array<number>} [Good, Moderate, Poor, Hazardous]
- */
-function predictAirQuality(inputs) {
-    // 1. ตรวจสอบความถูกต้องของ Input
-    if (!Array.isArray(inputs) || inputs.length < 9) {
-        console.warn("air_model.js: ข้อมูล Input ไม่ครบถ้วน 9 ตัวแปร ใช้ค่ามาตรฐานสำรอง");
-        return [0.25, 0.25, 0.25, 0.25];
+function predictAirQuality(input) {
+    // 🛡️ ป้องกัน Error กรณีเซ็นเซอร์ส่งค่าไม่ครบ
+    if (!input || input.length < 9) {
+        return [1.0, 0.0, 0.0, 0.0];
     }
 
-    // แปลงค่าทั้งหมดให้เป็น Float ป้องกัน Error จาก String และแก้ค่า NaN เป็น 0
-    const [
-        temp, hum, pm25, pm10,
-        no2, so2, co, proximity, popDensity
-    ] = inputs.map(val => {
-        const parsed = parseFloat(val);
-        return isNaN(parsed) ? 0 : parsed;
-    });
+    return score(input);
 
-    // 2. คำนวณคะแนนความเสี่ยง (Risk Score) จากพารามิเตอร์ทั้งหมด
-    let riskScore = 0;
-
-    // --- ฝุ่นมลพิษหลัก (PM2.5 & PM10) ---
-    if (pm25 > 75.0) riskScore += 3.5;       // มีผลกระทบต่อสุขภาพ
-    else if (pm25 > 37.5) riskScore += 2.0;  // เริ่มมีผลกระทบ (มาตรฐานใหม่ไทย)
-    else if (pm25 > 15.0) riskScore += 1.0;  // ปานกลาง
-
-    if (pm10 > 120.0) riskScore += 1.5;
-    else if (pm10 > 50.0) riskScore += 0.8;
-
-    // --- ก๊าซพิษ และสารเคมี (CO, NO2, SO2) ---
-    if (co > 30.0) riskScore += 2.5;
-    else if (co > 9.0) riskScore += 1.2;
-
-    if (no2 > 170.0) riskScore += 1.2;
-    else if (no2 > 60.0) riskScore += 0.6;
-
-    if (so2 > 100.0) riskScore += 1.2;
-    else if (so2 > 40.0) riskScore += 0.6;
-
-    // --- ปัจจัยสภาพอากาศ (อุณหภูมิ + ความชื้น) ---
-    // สภาพอากาศที่เอื้อให้ฝุ่นและมลพิษสะสมตัว (อากาศนิ่ง/ความชื้นสูง)
-    if (hum > 80.0 && temp > 33.0) riskScore += 0.8;
-    else if (hum > 85.0) riskScore += 0.4;
-
-    // --- ปัจจัยแวดล้อมเชิงพื้นที่ ---
-    if (proximity > 0 && proximity < 3.0) riskScore += 1.0; // ใกล้นิคมอุตสาหกรรม < 3 กม.
-    if (popDensity > 700) riskScore += 0.5;                 // ความหนาแน่นประชากรสูง
-
-    // 3. คำนวณความน่าจะเป็นของแต่ละระดับ [Good, Moderate, Poor, Hazardous]
-    let probs = [0.05, 0.05, 0.05, 0.05];
-
-    if (riskScore < 1.5) {
-        probs = [0.88, 0.08, 0.03, 0.01]; // Good (ดีมาก/ดี)
-    } else if (riskScore < 3.5) {
-        probs = [0.10, 0.78, 0.09, 0.03]; // Moderate (ปานกลาง)
-    } else if (riskScore < 6.0) {
-        probs = [0.03, 0.12, 0.75, 0.10]; // Poor (เริ่มมีผลกระทบ)
-    } else {
-        probs = [0.01, 0.04, 0.10, 0.85]; // Hazardous (มีผลกระทบมาก)
+    function score(input) {
+        var var0;
+        if (input[0] <= 29.25) {
+            if (input[5] <= 8.949999809265137) {
+                if (input[6] <= 1.2549999952316284) {
+                    if (input[7] <= 9.0) {
+                        var0 = [0.0, 1.0, 0.0, 0.0];
+                    } else {
+                        var0 = [1.0, 0.0, 0.0, 0.0];
+                    }
+                } else {
+                    if (input[6] <= 1.7999999523162842) {
+                        if (input[1] <= 90.54999923706055) {
+                            if (input[5] <= 5.25) {
+                                var0 = [0.0392156862745098, 0.8823529411764706, 0.0784313725490196, 0.0];
+                            } else {
+                                var0 = [0.0, 1.0, 0.0, 0.0];
+                            }
+                        } else {
+                            var0 = [0.0, 0.0, 1.0, 0.0];
+                        }
+                    } else {
+                        if (input[7] <= 5.349999904632568) {
+                            if (input[7] <= 3.399999976158142) {
+                                var0 = [0.0, 0.0, 0.0, 1.0];
+                            } else {
+                                var0 = [0.0, 0.0, 1.0, 0.0];
+                            }
+                        } else {
+                            if (input[6] <= 1.8550000190734863) {
+                                var0 = [0.0, 0.0, 1.0, 0.0];
+                            } else {
+                                var0 = [0.0, 1.0, 0.0, 0.0];
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (input[4] <= 34.35000038146973) {
+                    if (input[4] <= 15.449999809265137) {
+                        var0 = [1.0, 0.0, 0.0, 0.0];
+                    } else {
+                        if (input[6] <= 1.9450000524520874) {
+                            if (input[6] <= 1.1549999713897705) {
+                                var0 = [0.8076923076923077, 0.19230769230769232, 0.0, 0.0];
+                            } else {
+                                var0 = [0.0, 0.9504504504504504, 0.04954954954954955, 0.0];
+                            }
+                        } else {
+                            if (input[8] <= 782.5) {
+                                var0 = [0.0, 0.13333333333333333, 0.8666666666666667, 0.0];
+                            } else {
+                                var0 = [0.0, 0.0, 0.0, 1.0];
+                            }
+                        }
+                    }
+                } else {
+                    if (input[1] <= 100.54999923706055) {
+                        if (input[8] <= 762.0) {
+                            if (input[8] <= 376.0) {
+                                var0 = [0.0, 1.0, 0.0, 0.0];
+                            } else {
+                                var0 = [0.0, 0.1875, 0.8125, 0.0];
+                            }
+                        } else {
+                            var0 = [0.0, 0.0, 0.0, 1.0];
+                        }
+                    } else {
+                        var0 = [0.0, 0.0, 0.0, 1.0];
+                    }
+                }
+            }
+        } else {
+            if (input[6] <= 1.8049999475479126) {
+                if (input[4] <= 36.39999961853027) {
+                    if (input[6] <= 1.0649999976158142) {
+                        if (input[4] <= 28.600000381469727) {
+                            if (input[8] <= 598.5) {
+                                var0 = [1.0, 0.0, 0.0, 0.0];
+                            } else {
+                                var0 = [0.0, 1.0, 0.0, 0.0];
+                            }
+                        } else {
+                            if (input[1] <= 73.29999923706055) {
+                                var0 = [0.0, 1.0, 0.0, 0.0];
+                            } else {
+                                var0 = [0.0, 0.0, 1.0, 0.0];
+                            }
+                        }
+                    } else {
+                        if (input[7] <= 4.900000095367432) {
+                            if (input[1] <= 95.70000076293945) {
+                                var0 = [0.0, 0.0, 1.0, 0.0];
+                            } else {
+                                var0 = [0.0, 0.0, 0.3333333333333333, 0.6666666666666666];
+                            }
+                        } else {
+                            if (input[6] <= 1.1899999976158142) {
+                                var0 = [0.41818181818181815, 0.5454545454545454, 0.0, 0.03636363636363636];
+                            } else {
+                                var0 = [0.0018832391713747645, 0.9322033898305084, 0.06591337099811675, 0.0];
+                            }
+                        }
+                    }
+                } else {
+                    if (input[1] <= 62.30000114440918) {
+                        var0 = [0.0, 1.0, 0.0, 0.0];
+                    } else {
+                        if (input[0] <= 34.64999961853027) {
+                            if (input[1] <= 83.1500015258789) {
+                                var0 = [0.0, 0.19999999999999996, 0.7666666666666665, 0.033333333333333326];
+                            } else {
+                                var0 = [0.0, 0.75, 0.125, 0.125];
+                            }
+                        } else {
+                            if (input[7] <= 3.149999976158142) {
+                                var0 = [0.0, 0.0, 0.0, 1.0];
+                            } else {
+                                var0 = [0.0, 0.0, 1.0, 0.0];
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (input[6] <= 2.3049999475479126) {
+                    if (input[7] <= 3.25) {
+                        var0 = [0.0, 0.0, 0.0, 1.0];
+                    } else {
+                        if (input[8] <= 852.0) {
+                            if (input[0] <= 31.050000190734863) {
+                                var0 = [0.0, 0.33333333333333337, 0.5625000000000001, 0.10416666666666669];
+                            } else {
+                                var0 = [0.0, 0.04854368932038835, 0.8252427184466019, 0.1262135922330097];
+                            }
+                        } else {
+                            var0 = [0.0, 0.0, 0.0, 1.0];
+                        }
+                    }
+                } else {
+                    if (input[7] <= 3.350000023841858) {
+                        var0 = [0.0, 0.0, 0.0, 1.0];
+                    } else {
+                        if (input[5] <= 27.300000190734863) {
+                            if (input[4] <= 38.44999885559082) {
+                                var0 = [0.0, 0.0, 0.6589147286821705, 0.34108527131782945];
+                            } else {
+                                var0 = [0.0, 0.0, 0.14634146341463414, 0.8536585365853658];
+                            }
+                        } else {
+                            if (input[0] <= 30.050000190734863) {
+                                var0 = [0.0, 0.0, 1.0, 0.0];
+                            } else {
+                                var0 = [0.0, 0.0, 0.030303030303030304, 0.9696969696969697];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return var0;
     }
-
-    return probs;
-}
-
-/**
- * ฟังก์ชันเสริม: แปลงผลการทำนายเป็น Object สำหรับนำไปแสดงผลบนหน้าเว็บ (UI) ได้ง่ายขึ้น
- * @param {Array<number|string>} inputs 
- * @returns {Object}
- */
-function getAirQualityDetails(inputs) {
-    const labels = ["Good", "Moderate", "Poor", "Hazardous"];
-    const thaiLabels = ["ดีมาก", "ปานกลาง", "เริ่มมีผลกระทบ", "มีผลกระทบมาก"];
-    const colors = ["#22c55e", "#eab308", "#f97316", "#ef4444"];
-
-    const probs = predictAirQuality(inputs);
-    const maxIndex = probs.indexOf(Math.max(...probs));
-
-    return {
-        probabilities: probs,
-        status: labels[maxIndex],
-        statusThai: thaiLabels[maxIndex],
-        color: colors[maxIndex],
-        confidence: (probs[maxIndex] * 100).toFixed(1) + "%"
-    };
 }
