@@ -615,7 +615,7 @@
         async function runYOLOInference(inputSource) {
             return tf.tidy(() => {
                 const imgTensor = tf.browser.fromPixels(inputSource);
-                const resized = tf.image.resizeBilinear(imgTensor, [320, 320]);
+                const resized = tf.image.resizeBilinear(imgTensor, [640, 640]);
                 const normalized = resized.div(255.0);
                 const batched = normalized.expandDims(0);
                 const output = yoloModel.execute(batched);
@@ -634,7 +634,7 @@
         }
 
         let lastDetectTime = 0;
-const DETECT_INTERVAL = 160; // ⚡ สแกนทุกๆ 160ms (~6 FPS) เหมาะมากสำหรับมือถือ
+const DETECT_INTERVAL = 250; // ⚡ หน่วงเวลาสแกนทุกๆ 250ms (~4 FPS) ช่วยให้มือถือรันได้สบายๆ เครื่องไม่ร้อน
 
 async function detectCameraObjects() {
     if (!isAIDetecting) return;
@@ -691,11 +691,11 @@ async function detectCameraObjects() {
         for (let i = 0; i < rawResults.scores.length; i++) {
             if (rawResults.classIds[i] === PERSON_CLASS_ID && rawResults.scores[i] >= 0.40) {
                 const [cx, cy, w, h] = rawResults.boxes[i];
-                // ⚡ ปรับพิกัดอิงตามความละเอียด 320
-                const x = (cx - w / 2) * (imgW / 320);
-                const y = (cy - h / 2) * (imgH / 320);
-                const width = w * (imgW / 320);
-                const height = h * (imgH / 320);
+                // ⚡ คืนค่าเป็น / 640 ตามสเปกโมเดล
+                const x = (cx - w / 2) * (imgW / 640);
+                const y = (cy - h / 2) * (imgH / 640);
+                const width = w * (imgW / 640);
+                const height = h * (imgH / 640);
 
                 candidateBoxes.push([y, x, y + height, x + width]);
                 candidateScores.push(rawResults.scores[i]);
