@@ -849,7 +849,14 @@
                 );
             } else { document.getElementById("location-status").innerText = `📍 พิกัดโรงเรียน (สำรอง): อ.ชุมแพ`; sendGPSData(currentLat, currentLon); fetchPollutionAPI(); }
         }
-        function sendGPSData(lat, lon) { if (client && client.isConnected()) { client.send(new Paho.MQTT.Message(JSON.stringify({ latitude: lat, longitude: lon }), "pollution/robot/gps")); } }
+        // ✅ แก้ไขให้กำหนด destinationName แยกบรรทัด
+        function sendGPSData(lat, lon) { 
+            if (client && client.isConnected()) { 
+                let gpsMsg = new Paho.MQTT.Message(JSON.stringify({ latitude: lat, longitude: lon }));
+                gpsMsg.destinationName = "pollution/robot/gps";
+                client.send(gpsMsg); 
+    } 
+}
 
         async function fetchPollutionAPI() {
             try {
