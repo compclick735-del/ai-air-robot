@@ -387,7 +387,7 @@
         }
 
         const floatingStars = [];
-        for (let i = 0; i < 70; i++) {
+        for (let i = 0; i < 170; i++) {
             floatingStars.push({
                 x: Math.random() * width,
                 y: Math.random() * height,
@@ -615,7 +615,7 @@
         async function runYOLOInference(inputSource) {
             return tf.tidy(() => {
                 const imgTensor = tf.browser.fromPixels(inputSource);
-                const resized = tf.image.resizeBilinear(imgTensor, [640, 640]);
+                const resized = tf.image.resizeBilinear(imgTensor, [320, 320]);
                 const normalized = resized.div(255.0);
                 const batched = normalized.expandDims(0);
                 const output = yoloModel.execute(batched);
@@ -634,7 +634,7 @@
         }
 
         let lastDetectTime = 0;
-const DETECT_INTERVAL = 70; // หน่วงเวลาประมวลผล AI ทุกๆ 70ms (~14 FPS)
+const DETECT_INTERVAL = 180; // หน่วงเวลาประมวลผล AI ทุกๆ 70ms (~14 FPS)
 
 async function detectCameraObjects() {
     if (!isAIDetecting) return;
