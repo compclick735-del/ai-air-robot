@@ -634,139 +634,164 @@
         }
 
         let lastDetectTime = 0;
-const DETECT_INTERVAL = 170; // ⚡ หน่วงเวลาสแกนทุกๆ 250ms (~4 FPS) ช่วยให้มือถือรันได้สบายๆ เครื่องไม่ร้อน
+        const DETECT_INTERVAL = 170; // ⚡ หน่วงเวลาสแกนทุกๆ 170ms ช่วยให้ประมวลผลได้ราบรื่น
 
-async function detectCameraObjects() {
-    if (!isAIDetecting) return;
+        async function detectCameraObjects() {
+            if (!isAIDetecting) return;
 
-    const now = performance.now();
-    if (now - lastDetectTime < DETECT_INTERVAL) {
-        aiRequestFrameId = requestAnimationFrame(detectCameraObjects);
-        return;
-    }
-    lastDetectTime = now;
-    
-    const activeElem = (currentCamMode === 'webcam') 
-        ? document.getElementById("webcam-stream") 
-        : document.getElementById("esp32-stream");
-
-    const canvas = document.getElementById("ai-canvas");
-    const ctx = canvas.getContext("2d");
-
-    const isReady = (currentCamMode === 'webcam') 
-        ? (activeElem.readyState === 4) 
-        : (activeElem.complete && activeElem.naturalWidth > 0);
-
-    if (!isReady || activeElem.classList.contains("hidden")) {
-        aiRequestFrameId = requestAnimationFrame(detectCameraObjects);
-        return;
-    }
-
-    const imgW = (currentCamMode === 'webcam') ? activeElem.videoWidth : activeElem.naturalWidth;
-    const imgH = (currentCamMode === 'webcam') ? activeElem.videoHeight : activeElem.naturalHeight;
-
-    const rect = activeElem.getBoundingClientRect();
-    const displayW = rect.width;
-    const displayH = rect.height;
-
-    canvas.width = displayW; canvas.height = displayH;
-
-    const imgAspect = imgW / imgH;
-    const displayAspect = displayW / displayH;
-    let renderW, renderH, offsetX = 0, offsetY = 0;
-
-    if (imgAspect > displayAspect) {
-        renderW = displayW; renderH = displayW / imgAspect; offsetY = (displayH - renderH) / 2;
-    } else {
-        renderH = displayH; renderW = displayH * imgAspect; offsetX = (displayW - renderW) / 2;
-    }
-
-    const scaleX = renderW / imgW;
-    const scaleY = renderH / imgH;
-
-    try {
-        const rawResults = await runYOLOInference(activeElem);
-        const candidateBoxes = []; const candidateScores = [];
-
-        for (let i = 0; i < rawResults.scores.length; i++) {
-            if (rawResults.classIds[i] === PERSON_CLASS_ID && rawResults.scores[i] >= 0.40) {
-                const [cx, cy, w, h] = rawResults.boxes[i];
-                // ⚡ คืนค่าเป็น / 640 ตามสเปกโมเดล
-                const x = (cx - w / 2) * (imgW / 640);
-                const y = (cy - h / 2) * (imgH / 640);
-                const width = w * (imgW / 640);
-                const height = h * (imgH / 640);
-
-                candidateBoxes.push([y, x, y + height, x + width]);
-                candidateScores.push(rawResults.scores[i]);
+            const now = performance.now();
+            if (now - lastDetectTime < DETECT_INTERVAL) {
+                aiRequestFrameId = requestAnimationFrame(detectCameraObjects);
+                return;
             }
-        }
-
-        let selectedIndices = [];
-        if (candidateBoxes.length > 0) {
-            const tensorBoxes = tf.tensor2d(candidateBoxes);
-            const tensorScores = tf.tensor1d(candidateScores);
-            const nms = await tf.image.nonMaxSuppressionAsync(tensorBoxes, tensorScores, 5, 0.45, 0.40);
-            selectedIndices = await nms.array();
-            tf.dispose([tensorBoxes, tensorScores, nms]);
-        }
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        selectedIndices.forEach(idx => {
-            const score = candidateScores[idx];
-            const box = candidateBoxes[idx];
-            const x = box[1]; const y = box[0];
-            const width = box[3] - box[1]; const height = box[2] - box[0];
-
-            let finalX = (x * scaleX) + offsetX;
-            let finalY = (y * scaleY) + offsetY;
-            let finalW = width * scaleX;
-            let finalH = height * scaleY;
-
-            ctx.strokeStyle = "#00f5a0";
-            ctx.lineWidth = 3;
-            ctx.strokeRect(finalX, finalY, finalW, finalH);
-
-            const label = `🚨 PERSON ${Math.round(score * 100)}%`;
-            ctx.font = "bold 13px 'Orbitron', sans-serif";
-            const textWidth = ctx.measureText(label).width;
-            const labelY = finalY - 22 > 0 ? finalY - 22 : finalY;
+            lastDetectTime = now;
             
-            ctx.fillStyle = "#00f5a0";
-            ctx.fillRect(finalX, labelY, textWidth + 10, 22);
-            ctx.fillStyle = "#000000";
-            ctx.fillText(label, finalX + 5, labelY + 16);
-            
-            if (client && client.isConnected()) {
-                let stopMsg = new Paho.MQTT.Message("S");
-                stopMsg.destinationName = "pollution/robot/control";
-                client.send(stopMsg);
+            const activeElem = (currentCamMode === 'webcam') 
+                ? document.getElementById("webcam-stream") 
+                : document.getElementById("esp32-stream");
+
+            const canvas = document.getElementById("ai-canvas");
+            const ctx = canvas.getContext("2d");
+
+            const isReady = (currentCamMode === 'webcam') 
+                ? (activeElem.readyState === 4) 
+                : (activeElem.complete && activeElem.naturalWidth > 0);
+
+            if (!isReady || activeElem.classList.contains("hidden")) {
+                aiRequestFrameId = requestAnimationFrame(detectCameraObjects);
+                return;
             }
-        });
-    } catch (err) {
-        console.error("YOLO AI Detection Error:", err);
-    }
-    
-    aiRequestFrameId = requestAnimationFrame(detectCameraObjects);
-}
+
+            const imgW = (currentCamMode === 'webcam') ? activeElem.videoWidth : activeElem.naturalWidth;
+            const imgH = (currentCamMode === 'webcam') ? activeElem.videoHeight : activeElem.naturalHeight;
+
+            const rect = activeElem.getBoundingClientRect();
+            const displayW = rect.width;
+            const displayH = rect.height;
+
+            canvas.width = displayW; 
+            canvas.height = displayH;
+
+            const imgAspect = imgW / imgH;
+            const displayAspect = displayW / displayH;
+            let renderW, renderH, offsetX = 0, offsetY = 0;
+
+            if (imgAspect > displayAspect) {
+                renderW = displayW; 
+                renderH = displayW / imgAspect; 
+                offsetY = (displayH - renderH) / 2;
+            } else {
+                renderH = displayH; 
+                renderW = displayH * imgAspect; 
+                offsetX = (displayW - renderW) / 2;
+            }
+
+            const scaleX = renderW / imgW;
+            const scaleY = renderH / imgH;
+
+            try {
+                const rawResults = await runYOLOInference(activeElem);
+                const candidateBoxes = []; 
+                const candidateScores = [];
+
+                for (let i = 0; i < rawResults.scores.length; i++) {
+                    if (rawResults.classIds[i] === PERSON_CLASS_ID && rawResults.scores[i] >= 0.40) {
+                        const [cx, cy, w, h] = rawResults.boxes[i];
+                        const x = (cx - w / 2) * (imgW / 640);
+                        const y = (cy - h / 2) * (imgH / 640);
+                        const width = w * (imgW / 640);
+                        const height = h * (imgH / 640);
+
+                        candidateBoxes.push([y, x, y + height, x + width]);
+                        candidateScores.push(rawResults.scores[i]);
+                    }
+                }
+
+                let selectedIndices = [];
+                if (candidateBoxes.length > 0) {
+                    const tensorBoxes = tf.tensor2d(candidateBoxes);
+                    const tensorScores = tf.tensor1d(candidateScores);
+                    const nms = await tf.image.nonMaxSuppressionAsync(tensorBoxes, tensorScores, 5, 0.45, 0.40);
+                    selectedIndices = await nms.array();
+                    tf.dispose([tensorBoxes, tensorScores, nms]);
+                }
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                selectedIndices.forEach(idx => {
+                    const score = candidateScores[idx];
+                    const box = candidateBoxes[idx];
+                    const x = box[1]; 
+                    const y = box[0];
+                    const width = box[3] - box[1]; 
+                    const height = box[2] - box[0];
+
+                    let finalX = (x * scaleX) + offsetX;
+                    let finalY = (y * scaleY) + offsetY;
+                    let finalW = width * scaleX;
+                    let finalH = height * scaleY;
+
+                    ctx.strokeStyle = "#00f5a0";
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(finalX, finalY, finalW, finalH);
+
+                    const label = `🚨 PERSON ${Math.round(score * 100)}%`;
+                    ctx.font = "bold 13px 'Orbitron', sans-serif";
+                    const textWidth = ctx.measureText(label).width;
+                    const labelY = finalY - 22 > 0 ? finalY - 22 : finalY;
+                    
+                    ctx.fillStyle = "#00f5a0";
+                    ctx.fillRect(finalX, labelY, textWidth + 10, 22);
+                    ctx.fillStyle = "#000000";
+                    ctx.fillText(label, finalX + 5, labelY + 16);
+                    
+                    if (client && client.isConnected()) {
+                        let stopMsg = new Paho.MQTT.Message("S");
+                        stopMsg.destinationName = "pollution/robot/control";
+                        client.send(stopMsg);
+                    }
+                });
+            } catch (err) {
+                console.error("YOLO AI Detection Error:", err);
+            }
+            
+            aiRequestFrameId = requestAnimationFrame(detectCameraObjects);
+        }
 
         // ==========================================
         // 📊 MQTT, Gauges & Real-time Chart
         // ==========================================
         const indexToLabelMap = { 0: "Good", 1: "Moderate", 2: "Poor", 3: "Hazardous" };
         const WEATHER_API_KEY = "4642af1ae8c5becc27c24372d72c8601"; 
-        let currentLat = 16.7164; let currentLon = 102.1158; 
+        let currentLat = 16.7164; 
+        let currentLon = 102.1158; 
         let latestSensorData = { temp: 25.0, hum: 70.0, co: 1.5, no2: 25.0, so2: 8.5, pm25: 20.0, pm10: 25.0 };
 
         function createGaugeConfig(initialValue, maxRange, colorGradient) {
-            return { type: 'doughnut', data: { datasets: [{ data: [initialValue, maxRange - initialValue], backgroundColor: [colorGradient, '#1e293b'], borderWidth: 0 }] }, options: { rotation: 270, circumference: 180, cutout: '80%', plugins: { tooltip: { enabled: false } }, maintainAspectRatio: false, responsive: true } };
+            return { 
+                type: 'doughnut', 
+                data: { 
+                    datasets: [{ 
+                        data: [initialValue, maxRange - initialValue], 
+                        backgroundColor: [colorGradient, '#1e293b'], 
+                        borderWidth: 0 
+                    }] 
+                }, 
+                options: { 
+                    rotation: 270, 
+                    circumference: 180, 
+                    cutout: '80%', 
+                    plugins: { tooltip: { enabled: false } }, 
+                    maintainAspectRatio: false, 
+                    responsive: true 
+                } 
+            };
         }
 
         const tempGaugeChart = new Chart(document.getElementById('tempGauge').getContext('2d'), createGaugeConfig(0, 50, '#06b6d4'));
         const humGaugeChart = new Chart(document.getElementById('humGauge').getContext('2d'), createGaugeConfig(0, 100, '#10b981'));
 
-        const ctx = document.getElementById('realtimeChart').getContext('2d');
+        const chartCtx = document.getElementById('realtimeChart').getContext('2d');
         const maxDataPoints = 30; 
         const chartData = { 
             labels: [], 
@@ -779,7 +804,7 @@ async function detectCameraObjects() {
             ] 
         };
 
-        const realtimeChart = new Chart(ctx, { 
+        const realtimeChart = new Chart(chartCtx, { 
             type: 'line', 
             data: chartData, 
             options: { 
@@ -810,7 +835,8 @@ async function detectCameraObjects() {
             const popDensity = parseFloat(document.getElementById("num-pop").value) || 545;
             const x_input = [latestSensorData.temp, latestSensorData.hum, latestSensorData.pm25, latestSensorData.pm10, latestSensorData.no2, latestSensorData.so2, latestSensorData.co, proximity, popDensity];
 
-            let prediction = "Unknown"; let confidenceText = "";
+            let prediction = "Unknown"; 
+            let confidenceText = "";
             try {
                 if (typeof predictAirQuality === "function") {
                     let rawOutput = predictAirQuality(x_input); 
@@ -822,7 +848,9 @@ async function detectCameraObjects() {
                         confidenceText = `(${(maxProbability * 100).toFixed(1)}%)`;
                     }
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.warn("AI Predict Execution Warning:", e);
+            }
 
             if (prediction === "Unknown") {
                 let score = 0;
@@ -854,40 +882,70 @@ async function detectCameraObjects() {
         function getUserLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.watchPosition(
-                    (pos) => { currentLat = pos.coords.latitude; currentLon = pos.coords.longitude; document.getElementById("location-status").innerText = `📍 พิกัด GPS จริง: ${currentLat.toFixed(5)}, ${currentLon.toFixed(5)}`; sendGPSData(currentLat, currentLon); fetchPollutionAPI(); },
-                    (err) => { document.getElementById("location-status").innerText = `📍 พิกัดโรงเรียน (สำรอง): อ.ชุมแพ`; sendGPSData(currentLat, currentLon); fetchPollutionAPI(); },
+                    (pos) => { 
+                        currentLat = pos.coords.latitude; 
+                        currentLon = pos.coords.longitude; 
+                        document.getElementById("location-status").innerText = `📍 พิกัด GPS จริง: ${currentLat.toFixed(5)}, ${currentLon.toFixed(5)}`; 
+                        sendGPSData(currentLat, currentLon); 
+                        fetchPollutionAPI(); 
+                    },
+                    (err) => { 
+                        document.getElementById("location-status").innerText = `📍 พิกัดโรงเรียน (สำรอง): อ.ชุมแพ`; 
+                        sendGPSData(currentLat, currentLon); 
+                        fetchPollutionAPI(); 
+                    },
                     { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
                 );
-            } else { document.getElementById("location-status").innerText = `📍 พิกัดโรงเรียน (สำรอง): อ.ชุมแพ`; sendGPSData(currentLat, currentLon); fetchPollutionAPI(); }
+            } else { 
+                document.getElementById("location-status").innerText = `📍 พิกัดโรงเรียน (สำรอง): อ.ชุมแพ`; 
+                sendGPSData(currentLat, currentLon); 
+                fetchPollutionAPI(); 
+            }
         }
-        // ✅ แก้ไขให้กำหนด destinationName แยกบรรทัด
+
         function sendGPSData(lat, lon) { 
             if (client && client.isConnected()) { 
                 let gpsMsg = new Paho.MQTT.Message(JSON.stringify({ latitude: lat, longitude: lon }));
                 gpsMsg.destinationName = "pollution/robot/gps";
                 client.send(gpsMsg); 
-    } 
-}
+            } 
+        }
 
         async function fetchPollutionAPI() {
             try {
                 const json = await (await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${currentLat}&lon=${currentLon}&appid=${WEATHER_API_KEY}`)).json();
                 latestSensorData.no2 = parseFloat(json.list[0].components.no2 || 25.0).toFixed(2);
                 latestSensorData.so2 = parseFloat(json.list[0].components.so2 || 8.5).toFixed(2);
-                document.getElementById("val-no2").innerText = latestSensorData.no2; document.getElementById("val-so2").innerText = latestSensorData.so2;
+                document.getElementById("val-no2").innerText = latestSensorData.no2; 
+                document.getElementById("val-so2").innerText = latestSensorData.so2;
                 updateAIPrediction();
             } catch (e) {
-                document.getElementById("val-no2").innerText = "20.0"; document.getElementById("val-so2").innerText = "5.0";
+                document.getElementById("val-no2").innerText = "20.0"; 
+                document.getElementById("val-so2").innerText = "5.0";
             }
         }
 
         let activeKeys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
         let lastCmd = "S";
+        
         function processKeyCombinations() {
-            let cmd = (activeKeys.ArrowUp && activeKeys.ArrowLeft) ? "G" : (activeKeys.ArrowUp && activeKeys.ArrowRight) ? "I" : (activeKeys.ArrowDown && activeKeys.ArrowLeft) ? "H" : (activeKeys.ArrowDown && activeKeys.ArrowRight) ? "J" : activeKeys.ArrowUp ? "F" : activeKeys.ArrowDown ? "B" : activeKeys.ArrowLeft ? "L" : activeKeys.ArrowRight ? "R" : "S";
+            let cmd = (activeKeys.ArrowUp && activeKeys.ArrowLeft) ? "G" 
+                    : (activeKeys.ArrowUp && activeKeys.ArrowRight) ? "I" 
+                    : (activeKeys.ArrowDown && activeKeys.ArrowLeft) ? "H" 
+                    : (activeKeys.ArrowDown && activeKeys.ArrowRight) ? "J" 
+                    : activeKeys.ArrowUp ? "F" 
+                    : activeKeys.ArrowDown ? "B" 
+                    : activeKeys.ArrowLeft ? "L" 
+                    : activeKeys.ArrowRight ? "R" 
+                    : "S";
+
             if (cmd !== lastCmd) {
                 lastCmd = cmd;
-                if (client && client.isConnected()) { let m = new Paho.MQTT.Message(cmd); m.destinationName = "pollution/robot/control"; client.send(m); }
+                if (client && client.isConnected()) { 
+                    let m = new Paho.MQTT.Message(cmd); 
+                    m.destinationName = "pollution/robot/control"; 
+                    client.send(m); 
+                }
                 ['F', 'B', 'L', 'R'].forEach(k => document.getElementById('btn-' + k).classList.remove('key-active'));
                 if(activeKeys.ArrowUp) document.getElementById('btn-F').classList.add('key-active');
                 if(activeKeys.ArrowDown) document.getElementById('btn-B').classList.add('key-active');
@@ -895,38 +953,101 @@ async function detectCameraObjects() {
                 if(activeKeys.ArrowRight) document.getElementById('btn-R').classList.add('key-active');
             }
         }
-        document.addEventListener('keydown', e => { if (e.key in activeKeys) { activeKeys[e.key] = true; processKeyCombinations(); } });
-        document.addEventListener('keyup', e => { if (e.key in activeKeys) { activeKeys[e.key] = false; processKeyCombinations(); } });
+
+        document.addEventListener('keydown', e => { 
+            if (e.key in activeKeys) { 
+                activeKeys[e.key] = true; 
+                processKeyCombinations(); 
+            } 
+        });
+
+        document.addEventListener('keyup', e => { 
+            if (e.key in activeKeys) { 
+                activeKeys[e.key] = false; 
+                processKeyCombinations(); 
+            } 
+        });
 
         const pairs = { 'btn-F': 'ArrowUp', 'btn-B': 'ArrowDown', 'btn-L': 'ArrowLeft', 'btn-R': 'ArrowRight' };
         Object.keys(pairs).forEach(id => {
             const btn = document.getElementById(id), key = pairs[id];
             const start = e => { e.preventDefault(); activeKeys[key] = true; processKeyCombinations(); };
             const stop = () => { activeKeys[key] = false; processKeyCombinations(); };
-            btn.addEventListener('mousedown', start); btn.addEventListener('touchstart', start);
-            btn.addEventListener('mouseup', stop); btn.addEventListener('mouseleave', stop); btn.addEventListener('touchend', stop);
+            btn.addEventListener('mousedown', start); 
+            btn.addEventListener('touchstart', start);
+            btn.addEventListener('mouseup', stop); 
+            btn.addEventListener('mouseleave', stop); 
+            btn.addEventListener('touchend', stop);
         });
 
         const client = new Paho.MQTT.Client("broker.hivemq.com", Number(8884), "/mqtt", "web_dash_" + Math.random().toString(16).substr(2, 8));
-        client.onConnectionLost = () => { document.getElementById("connection-status").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-red-950/80 text-red-300 border border-red-500/50 animate-pulse"; document.getElementById("connection-status").innerText = "🔴 Disconnected"; setTimeout(connectMQTT, 3000); };
+        
+        client.onConnectionLost = () => { 
+            document.getElementById("connection-status").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-red-950/80 text-red-300 border border-red-500/50 animate-pulse"; 
+            document.getElementById("connection-status").innerText = "🔴 Disconnected"; 
+            setTimeout(connectMQTT, 3000); 
+        };
+
         client.onMessageArrived = m => {
             try {
                 const d = JSON.parse(m.payloadString);
-                latestSensorData.temp = parseFloat(d.Temperature || 0); latestSensorData.hum = parseFloat(d.Humidity || 0); latestSensorData.pm25 = parseInt(d.PM25 || 0); latestSensorData.pm10 = parseInt(d.PM10 || 0); latestSensorData.co = parseFloat(d.CO || 0);
-                document.getElementById("val-co").innerText = latestSensorData.co.toFixed(2); document.getElementById("val-pm25").innerText = latestSensorData.pm25; document.getElementById("val-pm10").innerText = latestSensorData.pm10; document.getElementById("txt-temp").innerText = latestSensorData.temp.toFixed(1); document.getElementById("txt-hum").innerText = Math.round(latestSensorData.hum);
-                tempGaugeChart.data.datasets[0].data = [Math.min(Math.max(latestSensorData.temp,0),50), 50-Math.min(Math.max(latestSensorData.temp,0),50)]; tempGaugeChart.update();
-                humGaugeChart.data.datasets[0].data = [Math.min(Math.max(latestSensorData.hum,0),100), 100-Math.min(Math.max(latestSensorData.hum,0),100)]; humGaugeChart.update();
+                latestSensorData.temp = parseFloat(d.Temperature || 0); 
+                latestSensorData.hum = parseFloat(d.Humidity || 0); 
+                latestSensorData.pm25 = parseInt(d.PM25 || 0); 
+                latestSensorData.pm10 = parseInt(d.PM10 || 0); 
+                latestSensorData.co = parseFloat(d.CO || 0);
+
+                document.getElementById("val-co").innerText = latestSensorData.co.toFixed(2); 
+                document.getElementById("val-pm25").innerText = latestSensorData.pm25; 
+                document.getElementById("val-pm10").innerText = latestSensorData.pm10; 
+                document.getElementById("txt-temp").innerText = latestSensorData.temp.toFixed(1); 
+                document.getElementById("txt-hum").innerText = Math.round(latestSensorData.hum);
+
+                tempGaugeChart.data.datasets[0].data = [Math.min(Math.max(latestSensorData.temp,0),50), 50-Math.min(Math.max(latestSensorData.temp,0),50)]; 
+                tempGaugeChart.update();
+
+                humGaugeChart.data.datasets[0].data = [Math.min(Math.max(latestSensorData.hum,0),100), 100-Math.min(Math.max(latestSensorData.hum,0),100)]; 
+                humGaugeChart.update();
+
                 updateAIPrediction();
-                const now = new Date(), tl = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
-                if (chartData.labels.length >= maxDataPoints) { chartData.labels.shift(); chartData.datasets.forEach(d => d.data.shift()); }
-                chartData.labels.push(tl); chartData.datasets[0].data.push(latestSensorData.co); chartData.datasets[1].data.push(latestSensorData.no2); chartData.datasets[2].data.push(latestSensorData.so2); chartData.datasets[3].data.push(latestSensorData.pm25); chartData.datasets[4].data.push(latestSensorData.pm10);
+
+                const now = new Date();
+                const tl = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
+                
+                if (chartData.labels.length >= maxDataPoints) { 
+                    chartData.labels.shift(); 
+                    chartData.datasets.forEach(d => d.data.shift()); 
+                }
+
+                chartData.labels.push(tl); 
+                chartData.datasets[0].data.push(latestSensorData.co); 
+                chartData.datasets[1].data.push(latestSensorData.no2); 
+                chartData.datasets[2].data.push(latestSensorData.so2); 
+                chartData.datasets[3].data.push(latestSensorData.pm25); 
+                chartData.datasets[4].data.push(latestSensorData.pm10); 
+                
                 realtimeChart.update('none');
-            } catch (e) {}
+            } catch (e) {
+                console.error("MQTT Message Parsing Error:", e);
+            }
         };
+
         function connectMQTT() {
-            client.connect({ useSSL: true, onSuccess: () => { document.getElementById("connection-status").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/50"; document.getElementById("connection-status").innerText = "🟢 Connected Online"; client.subscribe("pollution/env/predicted"); }, onFailure: () => { setTimeout(connectMQTT, 5000); } });
+            client.connect({ 
+                useSSL: true, 
+                onSuccess: () => { 
+                    document.getElementById("connection-status").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/50"; 
+                    document.getElementById("connection-status").innerText = "🟢 Connected Online"; 
+                    client.subscribe("pollution/env/predicted"); 
+                }, 
+                onFailure: () => { 
+                    setTimeout(connectMQTT, 5000); 
+                } 
+            });
         }
-        connectMQTT(); getUserLocation();
+
+        connectMQTT(); 
+        getUserLocation();
     </script>
 </body>
 </html>
