@@ -512,11 +512,23 @@
                 badge.innerText = "● WEBCAM ONLINE";
                 badge.className = "text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse font-bold";
             } catch (err) {
-                console.error("Webcam Access Error:", err);
-                alert("ไม่สามารถเข้าถึงกล้องได้!");
-                badge.innerText = "เข้าถึงกล้องล้มเหลว";
-                badge.className = "text-xs px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/40 font-bold";
-            }
+    console.error("Webcam Access Error:", err);
+
+    // เช็กประเภท Error เพื่อแสดง Message ให้ตรงจุด
+    let errorMessage = "ไม่สามารถเข้าถึงกล้องได้!";
+    
+    if (err.name === 'NotReadableError') {
+        errorMessage = "ไม่สามารถเข้าถึงกล้องได้! กล้องกำลังถูกใช้งานโดยโปรแกรมอื่น (เช่น OBS, Discord, Zoom) กรุณาปิดโปรแกรมเหล่านั้นแล้วลองใหม่อีกครั้ง";
+    } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        errorMessage = "ไม่สามารถเข้าถึงกล้องได้! กรุณากดอนุญาตให้สิทธิ์ใช้งานกล้องในเบราว์เซอร์";
+    } else if (err.name === 'NotFoundError') {
+        errorMessage = "ไม่สามารถเข้าถึงกล้องได้! ไม่พบอุปกรณ์กล้องเชื่อมต่อกับเครื่อง";
+    }
+
+    alert(errorMessage);
+    badge.innerText = "เข้าถึงกล้องล้มเหลว";
+    badge.className = "text-xs px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30";
+}
         }
 
         function stopWebcam() {
