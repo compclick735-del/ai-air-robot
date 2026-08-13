@@ -627,44 +627,28 @@
         }
 
         async function runYOLOInference(inputSource) {
-    // 1. ประมวลผล Tensor ใน tf.tidy
-    const { boxes, maxScores, classIds } = tf.tidy(() => {
-        const imgTensor = tf.browser.fromPixels(inputSource);
-        // 💡 ถ้ารันบนมือถือ แนะนำปรับเป็น [320, 320] หรือ [416, 416] จะลื่นขึ้นมาก
-        const isMobile = window.innerWidth < 768;
-        const targetSize = isMobile ? [320, 320] : [640, 640];
+            return tf.tidy(() => {
+                const imgTensor = tf.browser.fromPixels(inputSource);
+                const resized = tf.image.resizeBilinear(imgTensor, [640, 640]);
+                const normalized = resized.div(255.0);
+                const batched = normalized.expandDims(0);
+                const output = yoloModel.execute(batched);
+                const transposed = output.squeeze([0]).transpose([1, 0]);
+                const boxes = transposed.slice([0, 0], [-1, 4]);
+                const scores = transposed.slice([0, 4], [-1, -1]);
+                const maxScores = scores.max(1);
+                const classIds = scores.argMax(1);
 
-        const resized = tf.image.resizeBilinear(imgTensor, targetSize);
-        const normalized = resized.div(255.0);
-        const batched = normalized.expandDims(0);
-        const output = yoloModel.execute(batched);
-        const transposed = output.squeeze([0]).transpose([1, 0]);
-        
-        return {
-            boxes: transposed.slice([0, 0], [-1, 4]),
-            scores: transposed.slice([0, 4], [-1, -1]),
-            maxScores: transposed.slice([0, 4], [-1, -1]).max(1),
-            classIds: transposed.slice([0, 4], [-1, -1]).argMax(1)
-        };
-    });
-
-    // 2. ดึงข้อมูลกลับแบบ Async เพื่อไม่ให้ล็อก UI Thread
-    const [b, s, c] = await Promise.all([
-        boxes.array(),
-        maxScores.array(),
-        classIds.array()
-    ]);
-
-    // เคลียร์ Tensor ที่ส่งออกมาคืนหน่วยความจำ
-    tf.dispose([boxes, maxScores, classIds]);
-
-    return { boxes: b, scores: s, classIds: c };
-}
+                return {
+                    boxes: boxes.arraySync(),
+                    scores: maxScores.arraySync(),
+                    classIds: classIds.arraySync()
+                };
+            });
+        }
 
         let lastDetectTime = 0;
-        // ปรับความถี่ตามประเภทอุปกรณ์ (มือถือสแกนทุก 300ms ~ 3 FPS ก็เพียงพอสำหรับ AI ตรวจจับ)
-        const isMobile = window.innerWidth < 768;
-        const DETECT_INTERVAL = isMobile ? 300 : 170;
+        const DETECT_INTERVAL = 170; // ⚡ หน่วงเวลาสแกนทุกๆ 170ms ช่วยให้ประมวลผลได้ราบรื่น
 
         async function detectCameraObjects() {
             if (!isAIDetecting) return;
