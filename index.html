@@ -53,7 +53,6 @@
             pointer-events: none;
         }
 
-        /* 💎 โครงสร้าง Glassmorphism Card + Multi-Color Neon Border */
         .glass-card {
             position: relative;
             border-radius: 1.25rem;
@@ -70,7 +69,6 @@
             box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.7);
         }
 
-        /* 🟢 Cyber Cyan & Emerald Theme */
         .card-cyan-glow {
             border: 1px solid rgba(6, 182, 212, 0.3);
             box-shadow: 0 0 20px rgba(6, 182, 212, 0.08);
@@ -80,7 +78,6 @@
             box-shadow: 0 0 30px rgba(6, 182, 212, 0.2);
         }
 
-        /* 🟣 Neon Purple/Violet Theme */
         .card-purple-glow {
             border: 1px solid rgba(168, 85, 247, 0.3);
             box-shadow: 0 0 20px rgba(168, 85, 247, 0.08);
@@ -90,13 +87,6 @@
             box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
         }
 
-        /* 🟡 Gold Accent Theme */
-        .card-gold-glow {
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            box-shadow: 0 0 20px rgba(245, 158, 11, 0.08);
-        }
-
-        /* ⚔️ ปุ่มกด Cyber Gaming Button */
         .cyber-btn {
             position: relative;
             background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%);
@@ -143,26 +133,12 @@
             box-shadow: 0 0 15px rgba(241, 245, 249, 0.2);
         }
 
-        /* Gradient Headings */
         .text-cyan-gradient {
             background: linear-gradient(135deg, #a5f3fc 0%, #06b6d4 50%, #0284c7 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        
-        .text-gold-gradient {
-            background: linear-gradient(135deg, #fffbeb 0%, #f59e0b 50%, #d97706 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
 
-        .text-purple-gradient {
-            background: linear-gradient(135deg, #f3e8ff 0%, #a855f7 50%, #7e22ce 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* Statuses */
         .status-good { background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.4)); border: 1px solid #10b981; color: #34d399; box-shadow: 0 0 25px rgba(16, 185, 129, 0.3); }
         .status-moderate { background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.4)); border: 1px solid #f59e0b; color: #fbbf24; box-shadow: 0 0 25px rgba(245, 158, 11, 0.3); }
         .status-poor { background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(185, 28, 28, 0.4)); border: 1px solid #ef4444; color: #f87171; box-shadow: 0 0 25px rgba(239, 68, 68, 0.3); }
@@ -182,11 +158,9 @@
 </head>
 <body class="min-h-screen no-select">
 
-    <!-- Canvas ฉากหลังดาวระยิบระยับ Multi-Color Particle -->
     <canvas id="starfield" class="fixed inset-0 pointer-events-none z-0"></canvas>
     <div class="aurora-bg"></div>
 
-    <!-- 📌 Header เรียบหรูสไตล์ Sci-Fi -->
     <header class="bg-slate-950/80 border-b border-slate-800 shadow-2xl py-4 px-6 sticky top-0 z-50 backdrop-blur-xl">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
             <div class="text-center md:text-left flex items-center space-x-3">
@@ -207,20 +181,17 @@
 
     <main class="max-w-7xl mx-auto px-4 py-8 space-y-8 relative z-10">
         
-        <!-- แถวที่ 1: กล้อง AI และ แผงควบคุมหุ่นยนต์ -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <!-- กล่องที่ 1: ภาพสดกล้อง + AI YOLO -->
             <div class="lg:col-span-2 glass-card card-cyan-glow p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                         <h3 class="text-cyan-300 font-bold text-lg tracking-wide cyber-font flex items-center">
-                            <span class="mr-2.5 animate-pulse text-emerald-400">📹</span> AI VISION (YOLO Person Detector)
+                            <span class="mr-2.5 animate-pulse text-emerald-400">📹</span> AI VISION (YOLO Person Detector - High Performance Mode)
                         </h3>
                         <span id="cam-status-badge" class="text-xs px-3 py-1 rounded-full bg-slate-900 text-slate-400 border border-slate-700 font-bold">ยังไม่ได้เชื่อมต่อ</span>
                     </div>
 
-                    <!-- แถบเลือกโหมดกล้อง -->
                     <div class="flex space-x-2 mb-3">
                         <button id="tab-webcam" onclick="switchCamSource('webcam')" class="cam-tab-btn active px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-900/80 border border-slate-700 text-slate-300">📷 กล้อง WebCam / โทรศัพท์</button>
                         <button id="tab-esp32" onclick="switchCamSource('esp32')" class="cam-tab-btn px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-900/80 border border-slate-700 text-slate-300">🌐 กล้อง IP (ESP32-CAM)</button>
@@ -238,7 +209,6 @@
                     </div>
                 </div>
 
-                <!-- แผงควบคุมกล้อง -->
                 <div class="mt-5 pt-4 border-t border-slate-800 flex flex-wrap gap-3 items-center justify-between">
                     <div id="controls-webcam" class="flex flex-wrap gap-3 items-center w-full md:w-auto">
                         <button onclick="startWebcam()" class="cyber-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm">
@@ -262,7 +232,6 @@
                 </div>
             </div>
 
-            <!-- กล่องที่ 2: แผงควบคุมหุ่นยนต์ D-Pad Cyberpunk Neon -->
             <div class="lg:col-span-1 glass-card card-purple-glow p-6 flex flex-col justify-center items-center text-center">
                 <div class="mb-6">
                     <h3 class="text-purple-300 font-bold text-xl tracking-wide flex items-center justify-center cyber-font">🕹️ ROBOT CONTROLLER</h3>
@@ -285,9 +254,7 @@
             </div>
         </div>
 
-        <!-- แถวที่ 2: ปัจจัยบริบท + ผลลัพธ์ AI (มลพิษ) -->
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- ปรับแต่งปัจจัย -->
             <div class="lg:col-span-1 glass-card card-purple-glow p-6 flex flex-col justify-center">
                 <h3 class="text-purple-300 font-bold text-sm mb-5 flex items-center tracking-wide cyber-font"><span class="mr-2 text-lg">📡</span> ปรับแต่งปัจจัยพื้นที่</h3>
                 <div class="space-y-6">
@@ -304,7 +271,6 @@
                 </div>
             </div>
             
-            <!-- ผลการทำนาย AI -->
             <div class="lg:col-span-2 glass-card card-cyan-glow p-6 flex flex-col justify-between">
                 <div>
                     <h2 class="text-cyan-400 text-xs font-black tracking-widest uppercase mb-3 cyber-font">ผลการทำนายประมวลผลคุณภาพอากาศ (Air Model)</h2>
@@ -321,13 +287,11 @@
             </div>
         </div>
 
-        <!-- แถวที่ 3: เกจวัดอุณหภูมิและความชื้น -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="glass-card card-cyan-glow p-6 flex flex-col items-center"><p class="text-cyan-400 text-xs font-bold tracking-wider uppercase mb-4 cyber-font">อุณหภูมิห้องจริง</p><div class="gauge-container"><canvas id="tempGauge"></canvas><div class="gauge-value text-xl cyber-font text-cyan-300"><span id="txt-temp" class="text-3xl">0.0</span> °C</div></div></div>
             <div class="glass-card card-cyan-glow p-6 flex flex-col items-center"><p class="text-cyan-400 text-xs font-bold tracking-wider uppercase mb-4 cyber-font">ความชื้นอากาศจริง</p><div class="gauge-container"><canvas id="humGauge"></canvas><div class="gauge-value text-xl cyber-font text-emerald-300"><span id="txt-hum" class="text-3xl">0</span> %</div></div></div>
         </div>
 
-        <!-- แถวที่ 4: การ์ดตัวเลขมลพิษ สีสันสดใสแบบแยกการ์ด -->
         <div>
             <h3 class="text-slate-200 font-bold text-lg mb-4 flex items-center tracking-wide cyber-font">📊 ตารางสรุปค่ามลพิษที่ได้รับ (หุ่นยนต์ และ API สภาพอากาศ)</h3>
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -339,7 +303,6 @@
             </div>
         </div>
 
-        <!-- แถวที่ 5: กราฟแนวโน้มมลพิษ Multi-Color Cyber Graph -->
         <div class="glass-card card-cyan-glow p-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                 <h3 class="text-cyan-300 font-bold tracking-wide cyber-font">📊 กราฟแนวโน้มมลพิษทางอากาศ Real-time</h3>
@@ -364,7 +327,6 @@
             height = starfield.height = window.innerHeight;
         });
 
-        // พาเลตต์สีดวงดาวหลากสี
         const starColors = ['#38bdf8', '#818cf8', '#c084fc', '#34d399', '#fbbf24', '#ffffff'];
 
         function draw4PointStar(ctx, x, y, size, angle, color, alpha) {
@@ -512,23 +474,20 @@
                 badge.innerText = "● WEBCAM ONLINE";
                 badge.className = "text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse font-bold";
             } catch (err) {
-    console.error("Webcam Access Error:", err);
+                console.error("Webcam Access Error:", err);
+                let errorMessage = "ไม่สามารถเข้าถึงกล้องได้!";
+                if (err.name === 'NotReadableError') {
+                    errorMessage = "ไม่สามารถเข้าถึงกล้องได้! กล้องกำลังถูกใช้งานโดยโปรแกรมอื่น (เช่น OBS, Discord, Zoom) กรุณาปิดโปรแกรมเหล่านั้นแล้วลองใหม่อีกครั้ง";
+                } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    errorMessage = "ไม่สามารถเข้าถึงกล้องได้! กรุณากดอนุญาตให้สิทธิ์ใช้งานกล้องในเบราว์เซอร์";
+                } else if (err.name === 'NotFoundError') {
+                    errorMessage = "ไม่สามารถเข้าถึงกล้องได้! ไม่พบอุปกรณ์กล้องเชื่อมต่อกับเครื่อง";
+                }
 
-    // เช็กประเภท Error เพื่อแสดง Message ให้ตรงจุด
-    let errorMessage = "ไม่สามารถเข้าถึงกล้องได้!";
-    
-    if (err.name === 'NotReadableError') {
-        errorMessage = "ไม่สามารถเข้าถึงกล้องได้! กล้องกำลังถูกใช้งานโดยโปรแกรมอื่น (เช่น OBS, Discord, Zoom) กรุณาปิดโปรแกรมเหล่านั้นแล้วลองใหม่อีกครั้ง";
-    } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        errorMessage = "ไม่สามารถเข้าถึงกล้องได้! กรุณากดอนุญาตให้สิทธิ์ใช้งานกล้องในเบราว์เซอร์";
-    } else if (err.name === 'NotFoundError') {
-        errorMessage = "ไม่สามารถเข้าถึงกล้องได้! ไม่พบอุปกรณ์กล้องเชื่อมต่อกับเครื่อง";
-    }
-
-    alert(errorMessage);
-    badge.innerText = "เข้าถึงกล้องล้มเหลว";
-    badge.className = "text-xs px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30";
-}
+                alert(errorMessage);
+                badge.innerText = "เข้าถึงกล้องล้มเหลว";
+                badge.className = "text-xs px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30";
+            }
         }
 
         function stopWebcam() {
@@ -579,11 +538,12 @@
         }
 
         // ==========================================
-        // 🎯 AI YOLO Person Detector
+        // 🎯 AI YOLO Person Detector (High Performance Uncapped Edition)
         // ==========================================
         let yoloModel = null;
         let isAIDetecting = false;
         let aiRequestFrameId = null;
+        let isInferencing = false; // ป้องกันคิวประมวลผลทับซ้อนกัน
 
         const YOLO_MODEL_URL = "https://cdn.jsdelivr.net/gh/compclick735-del/yolo-web-model@main/model/model.json";
         const PERSON_CLASS_ID = 0; 
@@ -594,14 +554,21 @@
 
             if (!isAIDetecting) {
                 if (!yoloModel) {
-                    btn.innerText = "⏳ โหลดโมเดล YOLO...";
+                    btn.innerText = "⏳ กำลังเร่งสปีดและโหลด GPU YOLO...";
                     btn.classList.add("opacity-75", "cursor-wait");
                     try {
+                        // บังคับเปลี่ยน Backend ไปใช้ WebGL และเร่งความเร็วในการบรรจุข้อมูลลง GPU
+                        await tf.setBackend('webgl');
+                        tf.env().set('WEBGL_PACK', true);
+
                         yoloModel = await tf.loadGraphModel(YOLO_MODEL_URL);
+                        
+                        // Warmup GPU Model 1 เฟรมล่วงหน้า
                         const dummyTensor = tf.zeros([1, 640, 640, 3]);
-                        yoloModel.execute(dummyTensor);
-                        tf.dispose(dummyTensor);
+                        const warmupResult = yoloModel.execute(dummyTensor);
+                        tf.dispose([dummyTensor, warmupResult]);
                     } catch (err) {
+                        console.error("TensorFlow initialization error:", err);
                         alert("เกิดข้อผิดพลาดในการโหลดโมเดล YOLO!");
                         btn.innerText = "🤖 เปิดโหมด AI YOLO ตรวจจับคน";
                         btn.classList.remove("opacity-75", "cursor-wait");
@@ -626,40 +593,47 @@
             }
         }
 
+        // ฟังก์ชันสั่งงาน YOLO แบบ Non-Blocking Asynchronous
         async function runYOLOInference(inputSource) {
-            return tf.tidy(() => {
+            const tensors = tf.tidy(() => {
                 const imgTensor = tf.browser.fromPixels(inputSource);
                 const resized = tf.image.resizeBilinear(imgTensor, [640, 640]);
                 const normalized = resized.div(255.0);
                 const batched = normalized.expandDims(0);
                 const output = yoloModel.execute(batched);
                 const transposed = output.squeeze([0]).transpose([1, 0]);
-                const boxes = transposed.slice([0, 0], [-1, 4]);
-                const scores = transposed.slice([0, 4], [-1, -1]);
-                const maxScores = scores.max(1);
-                const classIds = scores.argMax(1);
-
+                
                 return {
-                    boxes: boxes.arraySync(),
-                    scores: maxScores.arraySync(),
-                    classIds: classIds.arraySync()
+                    boxes: transposed.slice([0, 0], [-1, 4]),
+                    scores: transposed.slice([0, 4], [-1, -1])
                 };
             });
+
+            const maxScoresTensor = tf.tidy(() => tensors.scores.max(1));
+            const classIdsTensor = tf.tidy(() => tensors.scores.argMax(1));
+
+            // ใช้ Promise.all ดึงข้อมูลแบบ Asynchronous โดยไม่หยุด Main Thread
+            const [boxes, scores, classIds] = await Promise.all([
+                tensors.boxes.array(),
+                maxScoresTensor.array(),
+                classIdsTensor.array()
+            ]);
+
+            tf.dispose([tensors.boxes, tensors.scores, maxScoresTensor, classIdsTensor]);
+
+            return { boxes, scores, classIds };
         }
 
-        let lastDetectTime = 0;
-        const DETECT_INTERVAL = 170; // ⚡ หน่วงเวลาสแกนทุกๆ 170ms ช่วยให้ประมวลผลได้ราบรื่น
-
+        // สแกน AI ทุกๆ เฟรมแบบเต็มสปีด (Uncapped FPS)
         async function detectCameraObjects() {
             if (!isAIDetecting) return;
 
-            const now = performance.now();
-            if (now - lastDetectTime < DETECT_INTERVAL) {
+            // หากการ์ดจอกำลังประมวลผลเฟรมที่แล้วอยู่ ให้ข้ามไปขอเฟรมถัดไปทันที
+            if (isInferencing) {
                 aiRequestFrameId = requestAnimationFrame(detectCameraObjects);
                 return;
             }
-            lastDetectTime = now;
-            
+
             const activeElem = (currentCamMode === 'webcam') 
                 ? document.getElementById("webcam-stream") 
                 : document.getElementById("esp32-stream");
@@ -676,6 +650,8 @@
                 return;
             }
 
+            isInferencing = true; // ล็อกสถานะเพื่อประมวลผลเฟรมปัจจุบัน
+
             const imgW = (currentCamMode === 'webcam') ? activeElem.videoWidth : activeElem.naturalWidth;
             const imgH = (currentCamMode === 'webcam') ? activeElem.videoHeight : activeElem.naturalHeight;
 
@@ -683,8 +659,10 @@
             const displayW = rect.width;
             const displayH = rect.height;
 
-            canvas.width = displayW; 
-            canvas.height = displayH;
+            if (canvas.width !== displayW || canvas.height !== displayH) {
+                canvas.width = displayW; 
+                canvas.height = displayH;
+            }
 
             const imgAspect = imgW / imgH;
             const displayAspect = displayW / displayH;
@@ -767,8 +745,11 @@
                 });
             } catch (err) {
                 console.error("YOLO AI Detection Error:", err);
+            } finally {
+                isInferencing = false; // ปลดล็อกพร้อมรับเฟรมถัดไป
             }
             
+            // เรียกประมวลผลเฟรมถัดไปทันที
             aiRequestFrameId = requestAnimationFrame(detectCameraObjects);
         }
 
@@ -1060,7 +1041,6 @@
             });
         }
 
-        // เริ่มต้นการเชื่อมต่อและดึงตำแหน่ง
         connectMQTT(); 
         getUserLocation();
     </script>
