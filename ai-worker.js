@@ -10,8 +10,7 @@ let yoloModel = null;
 let isInferencing = false;
 
 // URL ของ YOLO26 Graph Model
-const YOLO_MODEL_URL =
-    'https://github.com/compclick735-del/yolo-26/releases/download/v1.0.0/model.json';
+const YOLO_MODEL_URL = 'https://cdn.jsdelivr.net/gh/compclick735-del/yolo-26@v1.0.0/model.json';
 
 // COCO Class 0 = person
 const PERSON_CLASS_ID = 0;
