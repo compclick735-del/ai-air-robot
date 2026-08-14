@@ -1,80 +1,111 @@
-importScripts('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs');
-importScripts('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd');
+importScripts('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js');
 
-let model = null;
-let nextTrackId = 1;
-let trackedObjects = [];
+let yoloModel = null;
+const YOLO_MODEL_URL = "https://cdn.jsdelivr.net/gh/compclick735-del/yolo-web-model@main/model/model.json";
+const PERSON_CLASS_ID = 0;
+let isInferencing = false;
 
-// โหลดโมเดล AI ใน Worker Background
-async function init() {
-  model = await cocoSsd.load();
-  self.postMessage({ type: 'READY' });
+// 1. โหลดโมเดล YOLOv8 ใน Background Worker
+async function initWorker() {
+  try {
+    await tf.ready();
+    yoloModel = await tf.loadGraphModel(YOLO_MODEL_URL);
+    
+    // Warmup Model ป้องกันอาการกระตุกในเฟรมแรก
+    const dummyTensor = tf.zeros([1, 640, 640, 3]);
+    yoloModel.execute(dummyTensor);
+    tf.dispose(dummyTensor);
+
+    self.postMessage({ type: 'MODEL_READY' });
+  } catch (err) {
+    self.postMessage({ type: 'MODEL_ERROR', error: err.message });
+  }
 }
-init();
+initWorker();
 
-// คำนวณ Intersection over Union (IoU) สำหรับ Tracking
-function calculateIoU(boxA, boxB) {
-  const [x1, y1, w1, h1] = boxA;
-  const [x2, y2, w2, h2] = boxB;
-
-  const xA = Math.max(x1, x2);
-  const yA = Math.max(y1, y2);
-  const xB = Math.min(x1 + w1, x2 + w2);
-  const yB = Math.min(y1 + h1, y2 + h2);
-
-  const interArea = Math.max(0, xB - xA) * Math.max(0, yB - yA);
-  const boxAArea = w1 * h1;
-  const boxBArea = w2 * h2;
-
-  return interArea / (boxAArea + boxBArea - interArea);
-}
-
-// Simple IoU Tracker
-function updateTracking(detections) {
-  const currentTracks = [];
-
-  detections.forEach(det => {
-    let bestMatch = null;
-    let highestIoU = 0.3; // Threshold
-
-    trackedObjects.forEach(track => {
-      const iou = calculateIoU(det.bbox, track.bbox);
-      if (iou > highestIoU) {
-        highestIoU = iou;
-        bestMatch = track;
-      }
-    });
-
-    if (bestMatch) {
-      currentTracks.push({ ...det, id: bestMatch.id });
-    } else {
-      currentTracks.push({ ...det, id: nextTrackId++ });
-    }
-  });
-
-  trackedObjects = currentTracks;
-  return trackedObjects;
-}
-
-// รับเฟรมภาพจาก Main Thread
+// 2. รับเฟรมภาพจาก Main Thread
 self.onmessage = async (e) => {
-  if (e.data.type === 'PROCESS_FRAME' && model) {
+  if (e.data.type === 'PROCESS_FRAME' && yoloModel && !isInferencing) {
+    isInferencing = true;
     const imageBitmap = e.data.imageBitmap;
-    
-    // Run Inference
-    const predictions = await model.detect(imageBitmap);
-    const people = predictions.filter(p => p.class === 'person');
-    
-    // Run Tracker
-    const trackedPeople = updateTracking(people);
-    
-    // คืน Memory Bitmap
-    imageBitmap.close();
 
-    self.postMessage({
-      type: 'DETECTION_RESULT',
-      results: trackedPeople,
-      count: trackedPeople.length
-    });
+    try {
+      // 2.1 Pre-processing & Inference ผ่าน TensorFlow.js
+      const rawResults = tf.tidy(() => {
+        const imgTensor = tf.browser.fromPixels(imageBitmap);
+        const resized = tf.image.resizeBilinear(imgTensor, [640, 640]);
+        const normalized = resized.div(255.0);
+        const batched = normalized.expandDims(0);
+        
+        const output = yoloModel.execute(batched);
+        const transposed = output.squeeze([0]).transpose([1, 0]);
+        
+        const boxes = transposed.slice([0, 0], [-1, 4]);
+        const scores = transposed.slice([0, 4], [-1, -1]);
+        const maxScores = scores.max(1);
+        const classIds = scores.argMax(1);
+
+        return {
+          boxes: boxes.arraySync(),
+          scores: maxScores.arraySync(),
+          classIds: classIds.arraySync(),
+          imgW: imageBitmap.width,
+          imgH: imageBitmap.height
+        };
+      });
+
+      // 2.2 กรองคัดเลือกเฉพาะ Person (Class 0) ที่ Confidence >= 40%
+      const candidateBoxes = [];
+      const candidateScores = [];
+
+      for (let i = 0; i < rawResults.scores.length; i++) {
+        if (rawResults.classIds[i] === PERSON_CLASS_ID && rawResults.scores[i] >= 0.40) {
+          const [cx, cy, w, h] = rawResults.boxes[i];
+          const x = (cx - w / 2) * (rawResults.imgW / 640);
+          const y = (cy - h / 2) * (rawResults.imgH / 640);
+          const width = w * (rawResults.imgW / 640);
+          const height = h * (rawResults.imgH / 640);
+
+          candidateBoxes.push([y, x, y + height, x + width]);
+          candidateScores.push(rawResults.scores[i]);
+        }
+      }
+
+      // 2.3 คำนวณ NMS (Non-Max Suppression) ตัด Bounding Box ที่ซ้ำซ้อน
+      let detections = [];
+      if (candidateBoxes.length > 0) {
+        const tensorBoxes = tf.tensor2d(candidateBoxes);
+        const tensorScores = tf.tensor1d(candidateScores);
+        const nms = await tf.image.nonMaxSuppressionAsync(tensorBoxes, tensorScores, 5, 0.45, 0.40);
+        const selectedIndices = await nms.array();
+        tf.dispose([tensorBoxes, tensorScores, nms]);
+
+        detections = selectedIndices.map(idx => ({
+          x: candidateBoxes[idx][1],
+          y: candidateBoxes[idx][0],
+          width: candidateBoxes[idx][3] - candidateBoxes[idx][1],
+          height: candidateBoxes[idx][2] - candidateBoxes[idx][0],
+          score: candidateScores[idx],
+          imgW: rawResults.imgW,
+          imgH: rawResults.imgH
+        }));
+      }
+
+      // คืนความจำ RAM
+      imageBitmap.close();
+
+      // ส่งผลลัพธ์พิกัดกลับ Main Thread
+      self.postMessage({
+        type: 'DETECTION_RESULT',
+        results: detections,
+        count: detections.length
+      });
+
+    } catch (err) {
+      if (imageBitmap) imageBitmap.close();
+      self.postMessage({ type: 'DETECTION_ERROR', error: err.message });
+    } finally {
+      isInferencing = false;
+    }
   }
 };

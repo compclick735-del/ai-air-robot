@@ -37,6 +37,7 @@
             overflow-x: hidden; 
             position: relative;
             user-select: none;
+            -webkit-user-select: none;
         }
 
         .cyber-font { font-family: 'Orbitron', sans-serif; }
@@ -109,6 +110,7 @@
             text-shadow: 0 0 8px rgba(0, 245, 160, 0.6);
             clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
             transition: all 0.2s ease-in-out;
+            touch-action: manipulation;
         }
 
         .cyber-btn:hover {
@@ -251,7 +253,7 @@
                     </div>
 
                     <div id="controls-esp32" class="hidden flex-wrap gap-3 items-center w-full md:w-auto flex-grow">
-                        <input type="text" id="cam-ip-input" value="10.151.196.140" placeholder="เช่น 192.168.1.50" class="bg-slate-900 border border-cyan-500/40 rounded-xl px-4 py-2.5 text-sm text-cyan-300 w-full md:w-auto flex-grow focus:outline-none focus:border-cyan-400 cyber-font shadow-inner">
+                        <input type="text" id="cam-ip-input" value="10.151.196.140" placeholder="เช่น 192.168.1.50 หรือ URL เต็ม" class="bg-slate-900 border border-cyan-500/40 rounded-xl px-4 py-2.5 text-sm text-cyan-300 w-full md:w-auto flex-grow focus:outline-none focus:border-cyan-400 cyber-font shadow-inner">
                         <button onclick="connectESP32Camera()" class="cyber-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm whitespace-nowrap">
                             🔌 เชื่อมต่อกล้อง IP
                         </button>
@@ -267,7 +269,7 @@
             <div class="lg:col-span-1 glass-card card-purple-glow p-6 flex flex-col justify-center items-center text-center">
                 <div class="mb-6">
                     <h3 class="text-purple-300 font-bold text-xl tracking-wide flex items-center justify-center cyber-font">🕹️ ROBOT CONTROLLER</h3>
-                    <p class="text-xs text-purple-200/60 font-medium mt-2">💡 กดปุ่มลูกศรบนคีย์บอร์ดเพื่อสั่งงาน</p>
+                    <p class="text-xs text-purple-200/60 font-medium mt-2">💡 กดปุ่มลูกศรบนคีย์บอร์ดหรือทัชปุ่มเพื่อสั่งงาน</p>
                 </div>
                 
                 <div class="relative w-[250px] h-[250px] bg-slate-950/80 rounded-full shadow-[inset_0_0_30px_rgba(0,0,0,0.9)] p-4 border border-purple-500/30 flex items-center justify-center">
@@ -567,8 +569,11 @@
         function connectESP32Camera() {
             let rawIp = document.getElementById("cam-ip-input").value.trim();
             if (!rawIp) return;
-            let cleanIp = rawIp.replace("http://", "").replace("/", "");
-            let streamUrl = `http://${cleanIp}/`;
+            
+            let streamUrl = rawIp;
+            if (!streamUrl.startsWith("http://") && !streamUrl.startsWith("https://")) {
+                streamUrl = "http://" + streamUrl;
+            }
 
             const imgStream = document.getElementById("esp32-stream");
             const placeholder = document.getElementById("cam-placeholder");
@@ -578,20 +583,22 @@
             badge.innerText = "กำลังเชื่อมต่อ ESP32...";
             badge.className = "text-xs px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 animate-pulse font-bold";
 
-            imgStream.src = streamUrl;
-            imgStream.classList.remove("hidden");
-            placeholder.classList.add("hidden");
-            btnAI.classList.remove("hidden");
-            
-            badge.innerText = "● ESP32 LIVE";
-            badge.className = "text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse font-bold";
+            imgStream.onload = () => {
+                badge.innerText = "● ESP32 LIVE";
+                badge.className = "text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse font-bold";
+            };
 
             imgStream.onerror = () => {
                 badge.innerText = "เชื่อมต่อ ESP32 ล้มเหลว";
                 badge.className = "text-xs px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/40 font-bold";
                 imgStream.classList.add("hidden");
-                placeholder.classList.remove("hidden");
+                if (currentCamMode === 'esp32') placeholder.classList.remove("hidden");
             };
+
+            imgStream.src = streamUrl;
+            imgStream.classList.remove("hidden");
+            placeholder.classList.add("hidden");
+            btnAI.classList.remove("hidden");
         }
 
         // ==========================================
@@ -617,10 +624,14 @@
                     try {
                         await tf.ready(); // มั่นใจว่า WebGL / GPU เร่งความเร็วพร้อมใช้งาน
                         yoloModel = await tf.loadGraphModel(YOLO_MODEL_URL);
-                        const dummyTensor = tf.zeros([1, 640, 640, 3]);
-                        yoloModel.execute(dummyTensor);
-                        tf.dispose(dummyTensor);
+                        
+                        // Warm up โมเดลอย่างปลอดภัยด้วย tf.tidy
+                        tf.tidy(() => {
+                            const dummyTensor = tf.zeros([1, 640, 640, 3]);
+                            yoloModel.execute(dummyTensor);
+                        });
                     } catch (err) {
+                        console.error("YOLO Model Load Error:", err);
                         alert("เกิดข้อผิดพลาดในการโหลดโมเดล YOLO!");
                         btn.innerText = "🤖 เปิดโหมด AI YOLO ตรวจจับคน";
                         btn.classList.remove("opacity-75", "cursor-wait");
@@ -703,6 +714,12 @@
             const rect = activeElem.getBoundingClientRect();
             const displayW = rect.width;
             const displayH = rect.height;
+
+            if (!displayW || !displayH || !imgW || !imgH) {
+                isInferencing = false;
+                aiRequestFrameId = requestAnimationFrame(detectCameraObjects);
+                return;
+            }
 
             canvas.width = displayW; 
             canvas.height = displayH;
@@ -950,15 +967,21 @@
 
         async function fetchPollutionAPI() {
             try {
-                const json = await (await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${currentLat}&lon=${currentLon}&appid=${WEATHER_API_KEY}`)).json();
-                latestSensorData.no2 = parseFloat(json.list[0].components.no2 || 25.0).toFixed(2);
-                latestSensorData.so2 = parseFloat(json.list[0].components.so2 || 8.5).toFixed(2);
-                document.getElementById("val-no2").innerText = latestSensorData.no2; 
-                document.getElementById("val-so2").innerText = latestSensorData.so2;
+                const res = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${currentLat}&lon=${currentLon}&appid=${WEATHER_API_KEY}`);
+                if (!res.ok) throw new Error("API Network response error");
+                const json = await res.json();
+                if (json && json.list && json.list.length > 0) {
+                    latestSensorData.no2 = parseFloat(json.list[0].components.no2 || 25.0).toFixed(2);
+                    latestSensorData.so2 = parseFloat(json.list[0].components.so2 || 8.5).toFixed(2);
+                    document.getElementById("val-no2").innerText = latestSensorData.no2; 
+                    document.getElementById("val-so2").innerText = latestSensorData.so2;
+                }
                 updateAIPrediction();
             } catch (e) {
-                document.getElementById("val-no2").innerText = "20.0"; 
-                document.getElementById("val-so2").innerText = "5.0";
+                console.warn("Pollution API Fetch Warning:", e);
+                document.getElementById("val-no2").innerText = parseFloat(latestSensorData.no2).toFixed(2); 
+                document.getElementById("val-so2").innerText = parseFloat(latestSensorData.so2).toFixed(2);
+                updateAIPrediction();
             }
         }
 
@@ -1008,18 +1031,32 @@
         const pairs = { 'btn-F': 'ArrowUp', 'btn-B': 'ArrowDown', 'btn-L': 'ArrowLeft', 'btn-R': 'ArrowRight' };
         Object.keys(pairs).forEach(id => {
             const btn = document.getElementById(id), key = pairs[id];
-            const start = e => { e.preventDefault(); activeKeys[key] = true; processKeyCombinations(); };
-            const stop = () => { activeKeys[key] = false; processKeyCombinations(); };
+            if (!btn) return;
+
+            const start = e => { 
+                if (e.cancelable) e.preventDefault(); 
+                activeKeys[key] = true; 
+                processKeyCombinations(); 
+            };
+            const stop = e => { 
+                if (e.cancelable) e.preventDefault(); 
+                activeKeys[key] = false; 
+                processKeyCombinations(); 
+            };
+
             btn.addEventListener('mousedown', start); 
-            btn.addEventListener('touchstart', start);
+            btn.addEventListener('touchstart', start, { passive: false });
             btn.addEventListener('mouseup', stop); 
             btn.addEventListener('mouseleave', stop); 
-            btn.addEventListener('touchend', stop);
+            btn.addEventListener('touchend', stop, { passive: false });
+            btn.addEventListener('touchcancel', stop, { passive: false });
         });
 
         const client = new Paho.MQTT.Client("broker.hivemq.com", Number(8884), "/mqtt", "web_dash_" + Math.random().toString(16).substr(2, 8));
-        
+        let isConnectingMQTT = false;
+
         client.onConnectionLost = () => { 
+            isConnectingMQTT = false;
             document.getElementById("connection-status").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-red-950/80 text-red-300 border border-red-500/50 animate-pulse"; 
             document.getElementById("connection-status").innerText = "🔴 Disconnected"; 
             setTimeout(connectMQTT, 3000); 
@@ -1070,14 +1107,22 @@
         };
 
         function connectMQTT() {
+            if (client.isConnected() || isConnectingMQTT) return;
+            isConnectingMQTT = true;
+
             client.connect({ 
                 useSSL: true, 
+                timeout: 5,
                 onSuccess: () => { 
+                    isConnectingMQTT = false;
                     document.getElementById("connection-status").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/50"; 
                     document.getElementById("connection-status").innerText = "🟢 Connected Online"; 
                     client.subscribe("pollution/env/predicted"); 
                 }, 
-                onFailure: () => { 
+                onFailure: (err) => { 
+                    isConnectingMQTT = false;
+                    document.getElementById("connection-status").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-red-950/80 text-red-300 border border-red-500/50"; 
+                    document.getElementById("connection-status").innerText = "🔴 Disconnected"; 
                     setTimeout(connectMQTT, 5000); 
                 } 
             });
