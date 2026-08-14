@@ -53,7 +53,7 @@
             pointer-events: none;
         }
 
-        /* 💎 โครงสร้าง Glassmorphism Card + Multi-Color Neon Border */
+        /* 💎 Glassmorphism Card Design */
         .glass-card {
             position: relative;
             border-radius: 1.25rem;
@@ -70,7 +70,6 @@
             box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.7);
         }
 
-        /* 🟢 Cyber Cyan & Emerald Theme */
         .card-cyan-glow {
             border: 1px solid rgba(6, 182, 212, 0.3);
             box-shadow: 0 0 20px rgba(6, 182, 212, 0.08);
@@ -80,7 +79,6 @@
             box-shadow: 0 0 30px rgba(6, 182, 212, 0.2);
         }
 
-        /* 🟣 Neon Purple/Violet Theme */
         .card-purple-glow {
             border: 1px solid rgba(168, 85, 247, 0.3);
             box-shadow: 0 0 20px rgba(168, 85, 247, 0.08);
@@ -90,7 +88,7 @@
             box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
         }
 
-        /* ⚔️ ปุ่มกด Cyber Gaming Button */
+        /* ⚔️ Cyber Gaming Button */
         .cyber-btn {
             position: relative;
             background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%);
@@ -178,7 +176,7 @@
                 </div>
                 <div>
                     <h1 class="text-2xl md:text-3xl font-black tracking-wider cyber-font text-cyan-gradient">AI AIR ROBOT</h1>
-                    <p class="text-slate-400 text-xs md:text-sm mt-0.5 font-medium">โรงเรียนชุมแพศึกษา | 🏎️ GPS Real-time Telemetry Control System</p>
+                    <p class="text-slate-400 text-xs md:text-sm mt-0.5 font-medium">โรงเรียนชุมแพศึกษา | 🏎️ YOLO26 AI & Telemetry Dashboard</p>
                 </div>
             </div>
             <div class="mt-4 md:mt-0 flex items-center space-x-3">
@@ -190,17 +188,22 @@
 
     <main class="max-w-7xl mx-auto px-4 py-8 space-y-8 relative z-10">
         
-        <!-- แถวที่ 1: กล้องสด และ แผงควบคุมหุ่นยนต์ -->
+        <!-- แถวที่ 1: กล้องสด + AI YOLO26 Canvas และ แผงควบคุมหุ่นยนต์ -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <!-- กล่องที่ 1: ภาพสดกล้อง -->
+            <!-- กล่องที่ 1: ภาพสดกล้อง + YOLO26 Overlay -->
             <div class="lg:col-span-2 glass-card card-cyan-glow p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                         <h3 class="text-cyan-300 font-bold text-lg tracking-wide cyber-font flex items-center">
-                            <span class="mr-2.5 animate-pulse text-emerald-400">📹</span> LIVE CAMERA STREAM
+                            <span class="mr-2.5 animate-pulse text-emerald-400">📹</span> LIVE CAMERA & YOLO26
                         </h3>
-                        <span id="cam-status-badge" class="text-xs px-3 py-1 rounded-full bg-slate-900 text-slate-400 border border-slate-700 font-bold">ยังไม่ได้เชื่อมต่อ</span>
+                        <div class="flex items-center space-x-2">
+                            <span id="yolo-status-badge" class="text-xs px-3 py-1 rounded-full bg-slate-900 text-amber-400 border border-amber-500/40 font-bold animate-pulse">
+                                ⏳ โหลดโมเดล YOLO26...
+                            </span>
+                            <span id="cam-status-badge" class="text-xs px-3 py-1 rounded-full bg-slate-900 text-slate-400 border border-slate-700 font-bold">ยังไม่ได้เชื่อมต่อ</span>
+                        </div>
                     </div>
 
                     <!-- แถบเลือกโหมดกล้อง -->
@@ -213,6 +216,9 @@
                         <video id="webcam-stream" autoplay playsinline muted class="w-full h-full object-contain hidden z-0"></video>
                         <img id="esp32-stream" src="" crossorigin="anonymous" class="w-full h-full object-contain hidden z-0" alt="ESP32 Stream">
                         
+                        <!-- Layer วาดกรอบตรวจจับ YOLO26 -->
+                        <canvas id="ai-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-10"></canvas>
+
                         <div id="cam-placeholder" class="text-center p-4 z-20">
                             <span class="text-6xl block mb-4 opacity-80 animate-bounce">📷</span>
                             <p class="text-sm text-cyan-200/70 font-medium">เลือกโหมดกล้องแล้วกดเปิดใช้งานได้เลยครับ</p>
@@ -220,7 +226,7 @@
                     </div>
                 </div>
 
-                <!-- แผงควบคุมกล้อง -->
+                <!-- แผงควบคุมกล้อง & สวิตช์เปิด/ปิด YOLO26 -->
                 <div class="mt-5 pt-4 border-t border-slate-800 flex flex-wrap gap-3 items-center justify-between">
                     <div id="controls-webcam" class="flex flex-wrap gap-3 items-center w-full md:w-auto">
                         <button onclick="startWebcam()" class="cyber-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm">
@@ -237,6 +243,10 @@
                             🔌 เชื่อมต่อกล้อง IP
                         </button>
                     </div>
+
+                    <button id="toggle-yolo-btn" onclick="toggleYOLO26()" class="cyber-btn cyber-btn-purple px-5 py-2.5 rounded-xl text-xs sm:text-sm flex items-center">
+                        🧠 AI YOLO26: <span id="yolo-btn-state" class="ml-1 text-emerald-400 font-bold">เปิดใช้งาน</span>
+                    </button>
                 </div>
             </div>
 
@@ -282,7 +292,7 @@
                 </div>
             </div>
             
-            <!-- ผลการทำนาย AI -->
+            <!-- ผลการทำนาย AI Air Model -->
             <div class="lg:col-span-2 glass-card card-cyan-glow p-6 flex flex-col justify-between">
                 <div>
                     <h2 class="text-cyan-400 text-xs font-black tracking-widest uppercase mb-3 cyber-font">ผลการทำนายประมวลผลคุณภาพอากาศ (Air Model)</h2>
@@ -327,6 +337,266 @@
         </div>
     </main>
 
+    <!-- Inline Web Worker Code for YOLO26 -->
+    <script id="yolo-worker-code" type="text/plain">
+        importScripts('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js');
+
+        let yoloModel = null;
+        let isInferencing = false;
+
+        const YOLO_MODEL_URL = 'https://github.com/compclick735-del/yolo-26/releases/download/v1.0.0/model.json';
+        const PERSON_CLASS_ID = 0;
+        const INPUT_SIZE = 640;
+        const CONFIDENCE_THRESHOLD = 0.40;
+        const NMS_IOU_THRESHOLD = 0.45;
+        const MAX_DETECTIONS = 5;
+
+        function postError(message, details = '') {
+            self.postMessage({
+                type: 'MODEL_ERROR',
+                error: details ? `${message}: ${details}` : message
+            });
+        }
+
+        function clamp(value, min, max) {
+            return Math.max(min, Math.min(max, value));
+        }
+
+        function sigmoid(value) {
+            return 1 / (1 + Math.exp(-value));
+        }
+
+        function disposeTensors(output) {
+            if (!output) return;
+            if (output instanceof tf.Tensor) {
+                output.dispose();
+            } else if (Array.isArray(output)) {
+                output.forEach(tensor => tensor instanceof tf.Tensor && tensor.dispose());
+            } else if (typeof output === 'object') {
+                Object.values(output).forEach(tensor => tensor instanceof tf.Tensor && tensor.dispose());
+            }
+        }
+
+        function flattenModelOutputs(output) {
+            if (output == null) return [];
+            if (output instanceof tf.Tensor) {
+                return [{ values: output.dataSync(), shape: output.shape.slice() }];
+            }
+            if (Array.isArray(output)) {
+                const result = [];
+                for (const item of output) { result.push(...flattenModelOutputs(item)); }
+                return result;
+            }
+            if (typeof output === 'object') {
+                const result = [];
+                for (const key of Object.keys(output)) { result.push(...flattenModelOutputs(output[key])); }
+                return result;
+            }
+            return [];
+        }
+
+        function decodeTensorOutput(outputInfo, imageW, imageH) {
+            const { values, shape } = outputInfo;
+            if (!values || values.length === 0 || !shape || shape.length === 0) return [];
+
+            let dims = shape.slice();
+            if (dims.length > 1 && dims[0] === 1) dims = dims.slice(1);
+            if (dims.length !== 2) return [];
+
+            const isTransposed = (dims[0] >= 5 && dims[0] <= 85) && (dims[1] > dims[0]);
+            const numDetections = isTransposed ? dims[1] : dims[0];
+            const numFeatures = isTransposed ? dims[0] : dims[1];
+            const getValue = (r, c) => isTransposed ? values[c * numDetections + r] : values[r * numFeatures + c];
+
+            const detections = [];
+
+            if (numFeatures === 6) {
+                for (let r = 0; r < numDetections; r++) {
+                    const score = Number(getValue(r, 4));
+                    const classId = Number(getValue(r, 5));
+                    if (!Number.isFinite(score) || !Number.isFinite(classId)) continue;
+                    if (classId !== PERSON_CLASS_ID || score < CONFIDENCE_THRESHOLD) continue;
+
+                    const x1 = Number(getValue(r, 0));
+                    const y1 = Number(getValue(r, 1));
+                    const x2 = Number(getValue(r, 2));
+                    const y2 = Number(getValue(r, 3));
+
+                    const minX = clamp(Math.min(x1, x2), 0, INPUT_SIZE);
+                    const minY = clamp(Math.min(y1, y2), 0, INPUT_SIZE);
+                    const maxX = clamp(Math.max(x1, x2), 0, INPUT_SIZE);
+                    const maxY = clamp(Math.max(y1, y2), 0, INPUT_SIZE);
+
+                    const width = maxX - minX;
+                    const height = maxY - minY;
+                    if (width <= 0 || height <= 0) continue;
+
+                    detections.push({
+                        x: minX * (imageW / INPUT_SIZE),
+                        y: minY * (imageH / INPUT_SIZE),
+                        width: width * (imageW / INPUT_SIZE),
+                        height: height * (imageH / INPUT_SIZE),
+                        score: score,
+                        imgW: imageW,
+                        imgH: imageH
+                    });
+                }
+                return detections;
+            }
+
+            if (numFeatures >= 5) {
+                const numClasses = numFeatures - 4;
+                for (let r = 0; r < numDetections; r++) {
+                    let cx = Number(getValue(r, 0));
+                    let cy = Number(getValue(r, 1));
+                    let w = Number(getValue(r, 2));
+                    let h = Number(getValue(r, 3));
+                    if (!Number.isFinite(cx) || !Number.isFinite(cy) || !Number.isFinite(w) || !Number.isFinite(h)) continue;
+
+                    let bestClass = -1;
+                    let bestScore = -Infinity;
+                    for (let c = 0; c < numClasses; c++) {
+                        let score = Number(getValue(r, 4 + c));
+                        if (!Number.isFinite(score)) continue;
+                        if (score < 0 || score > 1) score = sigmoid(score);
+                        if (score > bestScore) { bestScore = score; bestClass = c; }
+                    }
+
+                    if (bestClass !== PERSON_CLASS_ID || bestScore < CONFIDENCE_THRESHOLD) continue;
+
+                    const maxBoxValue = Math.max(Math.abs(cx), Math.abs(cy), Math.abs(w), Math.abs(h));
+                    if (maxBoxValue <= 2) {
+                        cx *= INPUT_SIZE; cy *= INPUT_SIZE;
+                        w *= INPUT_SIZE; h *= INPUT_SIZE;
+                    }
+
+                    const x1 = cx - (w / 2);
+                    const y1 = cy - (h / 2);
+                    const x2 = cx + (w / 2);
+                    const y2 = cy + (h / 2);
+
+                    const clippedX1 = clamp(x1, 0, INPUT_SIZE);
+                    const clippedY1 = clamp(y1, 0, INPUT_SIZE);
+                    const clippedX2 = clamp(x2, 0, INPUT_SIZE);
+                    const clippedY2 = clamp(y2, 0, INPUT_SIZE);
+
+                    const width = clippedX2 - clippedX1;
+                    const height = clippedY2 - clippedY1;
+                    if (width <= 0 || height <= 0) continue;
+
+                    detections.push({
+                        x: clippedX1 * (imageW / INPUT_SIZE),
+                        y: clippedY1 * (imageH / INPUT_SIZE),
+                        width: width * (imageW / INPUT_SIZE),
+                        height: height * (imageH / INPUT_SIZE),
+                        score: bestScore,
+                        imgW: imageW,
+                        imgH: imageH
+                    });
+                }
+            }
+            return detections;
+        }
+
+        async function runInference(imageBitmap) {
+            const imageW = imageBitmap.width;
+            const imageH = imageBitmap.height;
+
+            const input = tf.tidy(() => {
+                const imgTensor = tf.browser.fromPixels(imageBitmap);
+                const resized = tf.image.resizeBilinear(imgTensor, [INPUT_SIZE, INPUT_SIZE]);
+                const normalized = resized.div(255.0);
+                return normalized.expandDims(0);
+            });
+
+            let rawOutput = null;
+            try {
+                rawOutput = yoloModel.execute(input);
+                const outputInfos = flattenModelOutputs(rawOutput);
+
+                let detections = [];
+                for (const outputInfo of outputInfos) {
+                    const decoded = decodeTensorOutput(outputInfo, imageW, imageH);
+                    detections.push(...decoded);
+                }
+
+                detections.sort((a, b) => b.score - a.score);
+                detections = detections.slice(0, 100);
+                if (detections.length === 0) return [];
+
+                const boxes = detections.map(d => [d.y, d.x, d.y + d.height, d.x + d.width]);
+                const scores = detections.map(d => d.score);
+
+                const tensorBoxes = tf.tensor2d(boxes);
+                const tensorScores = tf.tensor1d(scores);
+
+                try {
+                    const selected = await tf.image.nonMaxSuppressionAsync(
+                        tensorBoxes, tensorScores, MAX_DETECTIONS, NMS_IOU_THRESHOLD, CONFIDENCE_THRESHOLD
+                    );
+                    const selectedIndices = await selected.array();
+                    selected.dispose();
+                    return selectedIndices.map(index => detections[index]);
+                } finally {
+                    tensorBoxes.dispose();
+                    tensorScores.dispose();
+                }
+            } finally {
+                disposeTensors(rawOutput);
+                input.dispose();
+            }
+        }
+
+        async function initWorker() {
+            try {
+                console.log('[YOLO26] กำลังเริ่มต้น Worker...');
+                await tf.ready();
+                console.log(`[YOLO26] TensorFlow.js พร้อมใช้งาน (Backend: ${tf.getBackend()})`);
+
+                console.log('[YOLO26] กำลังโหลดโมเดล...');
+                yoloModel = await tf.loadGraphModel(YOLO_MODEL_URL);
+                console.log('[YOLO26] โหลดโมเดลสำเร็จ');
+
+                const dummyTensor = tf.zeros([1, INPUT_SIZE, INPUT_SIZE, 3]);
+                const warmupOutput = yoloModel.execute(dummyTensor);
+                disposeTensors(warmupOutput);
+                dummyTensor.dispose();
+
+                console.log('[YOLO26] Warmup สำเร็จ');
+                self.postMessage({ type: 'MODEL_READY', model: 'YOLO26', inputSize: INPUT_SIZE });
+            } catch (err) {
+                console.error('[YOLO26] Worker initialization error:', err);
+                postError('โหลดโมเดล YOLO26 ไม่สำเร็จ', err?.message || String(err));
+            }
+        }
+
+        initWorker();
+
+        self.onmessage = async (event) => {
+            if (event.data?.type !== 'PROCESS_FRAME') return;
+            if (!yoloModel) {
+                self.postMessage({ type: 'DETECTION_ERROR', error: 'YOLO26 model ยังโหลดไม่เสร็จ' });
+                return;
+            }
+            if (isInferencing) return;
+            isInferencing = true;
+
+            const imageBitmap = event.data.imageBitmap;
+            try {
+                if (!imageBitmap) throw new Error('ไม่พบ imageBitmap');
+                const detections = await runInference(imageBitmap);
+                self.postMessage({ type: 'DETECTION_RESULT', results: detections, count: detections.length });
+            } catch (err) {
+                console.error('[YOLO26] Inference Error:', err);
+                self.postMessage({ type: 'DETECTION_ERROR', error: err?.message || String(err) });
+            } finally {
+                if (imageBitmap) { try { imageBitmap.close(); } catch (_) {} }
+                isInferencing = false;
+            }
+        };
+    </script>
+
+    <!-- Main Logic Script -->
     <script>
         // ==========================================
         // 🌌 ฉากหลัง Multi-Color Starfield Canvas
@@ -441,7 +711,153 @@
         renderStarfield();
 
         // ==========================================
-        // 📷 ระบบจัดการกล้อง (WebCam / มือถือ / ESP32)
+        // 🧠 YOLO26 Web Worker Integration
+        // ==========================================
+        let yoloWorker = null;
+        let isYoloWorkerReady = false;
+        let isYoloEnabled = true;
+        let isWorkerBusy = false;
+
+        const aiCanvas = document.getElementById('ai-canvas');
+        const aiCtx = aiCanvas.getContext('2d');
+
+        function initYoloWorker() {
+            try {
+                const workerCodeText = document.getElementById('yolo-worker-code').textContent;
+                const blob = new Blob([workerCodeText], { type: 'application/javascript' });
+                yoloWorker = new Worker(URL.createObjectURL(blob));
+
+                yoloWorker.onmessage = (e) => {
+                    const data = e.data;
+                    if (!data) return;
+
+                    if (data.type === 'MODEL_READY') {
+                        isYoloWorkerReady = true;
+                        const badge = document.getElementById('yolo-status-badge');
+                        badge.innerText = '● YOLO26 พร้อมใช้งาน';
+                        badge.className = 'text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold animate-pulse';
+                        sendNextFrameToWorker();
+                    } 
+                    else if (data.type === 'DETECTION_RESULT') {
+                        isWorkerBusy = false;
+                        drawYoloDetections(data.results || []);
+                        const badge = document.getElementById('yolo-status-badge');
+                        if (data.count > 0) {
+                            badge.innerText = `● ตรวจพบคน (${data.count} คน)`;
+                            badge.className = 'text-xs px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold';
+                        } else if (isYoloEnabled) {
+                            badge.innerText = '● YOLO26 ทำงานสแกนปกติ';
+                            badge.className = 'text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold';
+                        }
+                        requestAnimationFrame(sendNextFrameToWorker);
+                    } 
+                    else if (data.type === 'DETECTION_ERROR' || data.type === 'MODEL_ERROR') {
+                        isWorkerBusy = false;
+                        console.error("YOLO Worker Error:", data.error);
+                        const badge = document.getElementById('yolo-status-badge');
+                        badge.innerText = '⚠️ เกิดข้อผิดพลาด AI';
+                        badge.className = 'text-xs px-3 py-1 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 font-bold';
+                    }
+                };
+            } catch (err) {
+                console.error("Failed to initialize YOLO Web Worker:", err);
+            }
+        }
+
+        async function sendNextFrameToWorker() {
+            if (!isYoloEnabled || !isYoloWorkerReady || isWorkerBusy) return;
+
+            const webcamElem = document.getElementById("webcam-stream");
+            const esp32Elem = document.getElementById("esp32-stream");
+            let activeSource = null;
+
+            if (currentCamMode === 'webcam' && !webcamElem.classList.contains('hidden') && webcamElem.readyState >= 2) {
+                activeSource = webcamElem;
+            } else if (currentCamMode === 'esp32' && !esp32Elem.classList.contains('hidden') && esp32Elem.complete && esp32Elem.naturalWidth > 0) {
+                activeSource = esp32Elem;
+            }
+
+            if (!activeSource) {
+                aiCtx.clearRect(0, 0, aiCanvas.width, aiCanvas.height);
+                setTimeout(sendNextFrameToWorker, 300);
+                return;
+            }
+
+            try {
+                isWorkerBusy = true;
+                const bitmap = await createImageBitmap(activeSource);
+                yoloWorker.postMessage({ type: 'PROCESS_FRAME', imageBitmap: bitmap }, [bitmap]);
+            } catch (err) {
+                isWorkerBusy = false;
+                setTimeout(sendNextFrameToWorker, 300);
+            }
+        }
+
+        function drawYoloDetections(results) {
+            aiCanvas.width = aiCanvas.clientWidth;
+            aiCanvas.height = aiCanvas.clientHeight;
+            aiCtx.clearRect(0, 0, aiCanvas.width, aiCanvas.height);
+
+            if (!isYoloEnabled || results.length === 0) return;
+
+            const firstRes = results[0];
+            const origW = firstRes.imgW || 640;
+            const origH = firstRes.imgH || 480;
+
+            const scaleX = aiCanvas.width / origW;
+            const scaleY = aiCanvas.height / origH;
+
+            results.forEach(res => {
+                const x = res.x * scaleX;
+                const y = res.y * scaleY;
+                const w = res.width * scaleX;
+                const h = res.height * scaleY;
+                const scorePct = Math.round(res.score * 100);
+
+                // กรอบ Neon Cyber
+                aiCtx.strokeStyle = '#00f5a0';
+                aiCtx.lineWidth = 3;
+                aiCtx.shadowColor = '#00f5a0';
+                aiCtx.shadowBlur = 12;
+                aiCtx.strokeRect(x, y, w, h);
+
+                // ป้ายข้อความ
+                aiCtx.fillStyle = '#00f5a0';
+                aiCtx.shadowBlur = 0;
+                aiCtx.font = 'bold 12px Orbitron, Sarabun, sans-serif';
+                const label = `PERSON ${scorePct}%`;
+                const textWidth = aiCtx.measureText(label).width;
+
+                aiCtx.fillRect(x, Math.max(0, y - 22), textWidth + 12, 22);
+                aiCtx.fillStyle = '#07090e';
+                aiCtx.fillText(label, x + 6, Math.max(14, y - 6));
+            });
+        }
+
+        function toggleYOLO26() {
+            isYoloEnabled = !isYoloEnabled;
+            const btnState = document.getElementById('yolo-btn-state');
+            const badge = document.getElementById('yolo-status-badge');
+
+            if (isYoloEnabled) {
+                btnState.innerText = 'เปิดใช้งาน';
+                btnState.className = 'ml-1 text-emerald-400 font-bold';
+                if (isYoloWorkerReady) {
+                    badge.innerText = '● YOLO26 เปิดทำงาน';
+                    badge.className = 'text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold';
+                    sendNextFrameToWorker();
+                }
+            } else {
+                btnState.innerText = 'ปิดใช้งาน';
+                btnState.className = 'ml-1 text-rose-400 font-bold';
+                badge.innerText = '⏸️ ปิด AI YOLO26';
+                badge.className = 'text-xs px-3 py-1 rounded-full bg-slate-900 text-slate-400 border border-slate-700 font-bold';
+                aiCtx.clearRect(0, 0, aiCanvas.width, aiCanvas.height);
+            }
+        }
+
+        // ==========================================
+        // 📷 ระบบจัดการกล้อง (WebCam / ESP32)
         // ==========================================
         let currentCamMode = 'webcam'; 
         let localMediaStream = null;
@@ -469,6 +885,8 @@
                 if (esp32Img.src && !esp32Img.classList.contains("hidden")) esp32Img.classList.remove("hidden");
                 else placeholder.classList.remove("hidden");
             }
+            aiCtx.clearRect(0, 0, aiCanvas.width, aiCanvas.height);
+            sendNextFrameToWorker();
         }
 
         async function startWebcam() {
@@ -486,17 +904,10 @@
 
                 badge.innerText = "● WEBCAM ONLINE";
                 badge.className = "text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse font-bold";
+                sendNextFrameToWorker();
             } catch (err) {
                 console.error("Webcam Access Error:", err);
-                let errorMessage = "ไม่สามารถเข้าถึงกล้องได้!";
-                if (err.name === 'NotReadableError') {
-                    errorMessage = "ไม่สามารถเข้าถึงกล้องได้! กล้องกำลังถูกใช้งานโดยโปรแกรมอื่น";
-                } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                    errorMessage = "ไม่สามารถเข้าถึงกล้องได้! กรุณากดอนุญาตให้สิทธิ์ใช้งานกล้องในเบราว์เซอร์";
-                } else if (err.name === 'NotFoundError') {
-                    errorMessage = "ไม่สามารถเข้าถึงกล้องได้! ไม่พบอุปกรณ์กล้องเชื่อมต่อกับเครื่อง";
-                }
-                alert(errorMessage);
+                alert("ไม่สามารถเข้าถึงกล้องได้! กรุณาเปิดสิทธิ์กล้องบนเบราว์เซอร์");
                 badge.innerText = "เข้าถึงกล้องล้มเหลว";
                 badge.className = "text-xs px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30";
             }
@@ -517,6 +928,7 @@
 
             badge.innerText = "ปิดกล้องแล้ว";
             badge.className = "text-xs px-3 py-1 rounded-full bg-slate-900 text-slate-400 border border-slate-700 font-bold";
+            aiCtx.clearRect(0, 0, aiCanvas.width, aiCanvas.height);
         }
 
         function connectESP32Camera() {
@@ -538,6 +950,7 @@
             imgStream.onload = () => {
                 badge.innerText = "● ESP32 LIVE";
                 badge.className = "text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse font-bold";
+                sendNextFrameToWorker();
             };
 
             imgStream.onerror = () => {
@@ -642,9 +1055,7 @@
                         confidenceText = `(${(maxProbability * 100).toFixed(1)}%)`;
                     }
                 }
-            } catch (e) {
-                console.warn("AI Predict Execution Warning:", e);
-            }
+            } catch (e) { console.warn("AI Predict Warning:", e); }
 
             if (prediction === "Unknown") {
                 let score = 0;
@@ -708,7 +1119,7 @@
         async function fetchPollutionAPI() {
             try {
                 const res = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${currentLat}&lon=${currentLon}&appid=${WEATHER_API_KEY}`);
-                if (!res.ok) throw new Error("API Network response error");
+                if (!res.ok) throw new Error("API Error");
                 const json = await res.json();
                 if (json && json.list && json.list.length > 0) {
                     latestSensorData.no2 = parseFloat(json.list[0].components.no2 || 25.0).toFixed(2);
@@ -718,7 +1129,6 @@
                 }
                 updateAIPrediction();
             } catch (e) {
-                console.warn("Pollution API Fetch Warning:", e);
                 document.getElementById("val-no2").innerText = parseFloat(latestSensorData.no2).toFixed(2); 
                 document.getElementById("val-so2").innerText = parseFloat(latestSensorData.so2).toFixed(2);
                 updateAIPrediction();
@@ -755,34 +1165,19 @@
         }
 
         document.addEventListener('keydown', e => { 
-            if (e.key in activeKeys) { 
-                activeKeys[e.key] = true; 
-                processKeyCombinations(); 
-            } 
+            if (e.key in activeKeys) { activeKeys[e.key] = true; processKeyCombinations(); } 
         });
 
         document.addEventListener('keyup', e => { 
-            if (e.key in activeKeys) { 
-                activeKeys[e.key] = false; 
-                processKeyCombinations(); 
-            } 
+            if (e.key in activeKeys) { activeKeys[e.key] = false; processKeyCombinations(); } 
         });
 
         const pairs = { 'btn-F': 'ArrowUp', 'btn-B': 'ArrowDown', 'btn-L': 'ArrowLeft', 'btn-R': 'ArrowRight' };
         Object.keys(pairs).forEach(id => {
             const btn = document.getElementById(id), key = pairs[id];
             if (!btn) return;
-
-            const start = e => { 
-                if (e.cancelable) e.preventDefault(); 
-                activeKeys[key] = true; 
-                processKeyCombinations(); 
-            };
-            const stop = e => { 
-                if (e.cancelable) e.preventDefault(); 
-                activeKeys[key] = false; 
-                processKeyCombinations(); 
-            };
+            const start = e => { if (e.cancelable) e.preventDefault(); activeKeys[key] = true; processKeyCombinations(); };
+            const stop = e => { if (e.cancelable) e.preventDefault(); activeKeys[key] = false; processKeyCombinations(); };
 
             btn.addEventListener('mousedown', start); 
             btn.addEventListener('touchstart', start, { passive: false });
@@ -842,7 +1237,7 @@
                 
                 realtimeChart.update('none');
             } catch (e) {
-                console.error("MQTT Message Parsing Error:", e);
+                console.error("MQTT Parsing Error:", e);
             }
         };
 
@@ -868,7 +1263,8 @@
             });
         }
 
-        // เริ่มต้นการเชื่อมต่อและดึงตำแหน่ง
+        // เริ่มต้นการทำงานทั้งหมด
+        initYoloWorker();
         connectMQTT(); 
         getUserLocation();
     </script>
