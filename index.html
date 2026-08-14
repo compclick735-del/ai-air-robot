@@ -10,7 +10,6 @@
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     
     <!-- Custom Air Model Script -->
@@ -91,12 +90,6 @@
             box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
         }
 
-        /* 🟡 Gold Accent Theme */
-        .card-gold-glow {
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            box-shadow: 0 0 20px rgba(245, 158, 11, 0.08);
-        }
-
         /* ⚔️ ปุ่มกด Cyber Gaming Button */
         .cyber-btn {
             position: relative;
@@ -151,18 +144,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        
-        .text-gold-gradient {
-            background: linear-gradient(135deg, #fffbeb 0%, #f59e0b 50%, #d97706 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .text-purple-gradient {
-            background: linear-gradient(135deg, #f3e8ff 0%, #a855f7 50%, #7e22ce 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
 
         /* Statuses */
         .status-good { background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.4)); border: 1px solid #10b981; color: #34d399; box-shadow: 0 0 25px rgba(16, 185, 129, 0.3); }
@@ -188,7 +169,7 @@
     <canvas id="starfield" class="fixed inset-0 pointer-events-none z-0"></canvas>
     <div class="aurora-bg"></div>
 
-    <!-- 📌 Header เรียบหรูสไตล์ Sci-Fi -->
+    <!-- 📌 Header -->
     <header class="bg-slate-950/80 border-b border-slate-800 shadow-2xl py-4 px-6 sticky top-0 z-50 backdrop-blur-xl">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
             <div class="text-center md:text-left flex items-center space-x-3">
@@ -201,7 +182,6 @@
                 </div>
             </div>
             <div class="mt-4 md:mt-0 flex items-center space-x-3">
-                <span id="device-mode-badge" class="px-3 py-1.5 rounded-full text-xs font-bold bg-slate-900 border border-purple-500/50 text-purple-300">⚙️ Detecting Mode...</span>
                 <span id="location-status" class="px-4 py-1.5 rounded-full text-xs font-bold bg-slate-900/90 border border-slate-700 text-cyan-300 shadow-inner">📍 กำลังดาวน์โหลดพิกัดดาวเทียม...</span>
                 <span id="connection-status" class="px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 animate-pulse">🟢 Connected Online</span>
             </div>
@@ -210,15 +190,15 @@
 
     <main class="max-w-7xl mx-auto px-4 py-8 space-y-8 relative z-10">
         
-        <!-- แถวที่ 1: กล้อง AI และ แผงควบคุมหุ่นยนต์ -->
+        <!-- แถวที่ 1: กล้องสด และ แผงควบคุมหุ่นยนต์ -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <!-- กล่องที่ 1: ภาพสดกล้อง + AI YOLO -->
+            <!-- กล่องที่ 1: ภาพสดกล้อง -->
             <div class="lg:col-span-2 glass-card card-cyan-glow p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                         <h3 class="text-cyan-300 font-bold text-lg tracking-wide cyber-font flex items-center">
-                            <span class="mr-2.5 animate-pulse text-emerald-400">📹</span> AI VISION (YOLO Person Detector)
+                            <span class="mr-2.5 animate-pulse text-emerald-400">📹</span> LIVE CAMERA STREAM
                         </h3>
                         <span id="cam-status-badge" class="text-xs px-3 py-1 rounded-full bg-slate-900 text-slate-400 border border-slate-700 font-bold">ยังไม่ได้เชื่อมต่อ</span>
                     </div>
@@ -232,7 +212,6 @@
                     <div class="relative w-full h-[350px] lg:h-[400px] bg-slate-950/90 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center shadow-inner">
                         <video id="webcam-stream" autoplay playsinline muted class="w-full h-full object-contain hidden z-0"></video>
                         <img id="esp32-stream" src="" crossorigin="anonymous" class="w-full h-full object-contain hidden z-0" alt="ESP32 Stream">
-                        <canvas id="ai-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-10 hidden"></canvas>
                         
                         <div id="cam-placeholder" class="text-center p-4 z-20">
                             <span class="text-6xl block mb-4 opacity-80 animate-bounce">📷</span>
@@ -258,10 +237,6 @@
                             🔌 เชื่อมต่อกล้อง IP
                         </button>
                     </div>
-
-                    <button id="btn-toggle-ai" onclick="toggleAIDetection()" class="cyber-btn cyber-btn-purple px-6 py-2.5 rounded-xl text-xs sm:text-sm whitespace-nowrap hidden">
-                        🤖 เปิดโหมด AI YOLO ตรวจจับคน
-                    </button>
                 </div>
             </div>
 
@@ -330,7 +305,7 @@
             <div class="glass-card card-cyan-glow p-6 flex flex-col items-center"><p class="text-cyan-400 text-xs font-bold tracking-wider uppercase mb-4 cyber-font">ความชื้นอากาศจริง</p><div class="gauge-container"><canvas id="humGauge"></canvas><div class="gauge-value text-xl cyber-font text-emerald-300"><span id="txt-hum" class="text-3xl">0</span> %</div></div></div>
         </div>
 
-        <!-- แถวที่ 4: การ์ดตัวเลขมลพิษ สีสันสดใสแบบแยกการ์ด -->
+        <!-- แถวที่ 4: การ์ดตัวเลขมลพิษ -->
         <div>
             <h3 class="text-slate-200 font-bold text-lg mb-4 flex items-center tracking-wide cyber-font">📊 ตารางสรุปค่ามลพิษที่ได้รับ (หุ่นยนต์ และ API สภาพอากาศ)</h3>
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -342,7 +317,7 @@
             </div>
         </div>
 
-        <!-- แถวที่ 5: กราฟแนวโน้มมลพิษ Multi-Color Cyber Graph -->
+        <!-- แถวที่ 5: กราฟแนวโน้มมลพิษ -->
         <div class="glass-card card-cyan-glow p-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                 <h3 class="text-cyan-300 font-bold tracking-wide cyber-font">📊 กราฟแนวโน้มมลพิษทางอากาศ Real-time</h3>
@@ -353,26 +328,6 @@
     </main>
 
     <script>
-        // ==========================================
-        // 💻📱 ตรวจสอบประเภทอุปกรณ์ (Hardware Detection)
-        // ==========================================
-        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                               ('ontouchstart' in window && window.innerWidth <= 1024);
-
-        // คอมพิวเตอร์ = 0ms (Scan ทุกเฟรมเต็มสปีด), มือถือ = 200ms (ลดภาระเครื่อง ป้องกันการค้าง)
-        const DETECT_INTERVAL = isMobileDevice ? 200 : 0; 
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const badge = document.getElementById("device-mode-badge");
-            if (isMobileDevice) {
-                badge.innerHTML = "📱 Mobile Mode (Optimized)";
-                badge.className = "px-3 py-1.5 rounded-full text-xs font-bold bg-amber-950/80 border border-amber-500/50 text-amber-300";
-            } else {
-                badge.innerHTML = "💻 PC Max Speed (Every Frame)";
-                badge.className = "px-3 py-1.5 rounded-full text-xs font-bold bg-cyan-950/80 border border-cyan-500/50 text-cyan-300";
-            }
-        });
-
         // ==========================================
         // 🌌 ฉากหลัง Multi-Color Starfield Canvas
         // ==========================================
@@ -520,7 +475,6 @@
             const webcamVideo = document.getElementById("webcam-stream");
             const placeholder = document.getElementById("cam-placeholder");
             const badge = document.getElementById("cam-status-badge");
-            const btnAI = document.getElementById("btn-toggle-ai");
 
             try {
                 localMediaStream = await navigator.mediaDevices.getUserMedia({
@@ -529,7 +483,6 @@
                 webcamVideo.srcObject = localMediaStream;
                 webcamVideo.classList.remove("hidden");
                 placeholder.classList.add("hidden");
-                btnAI.classList.remove("hidden");
 
                 badge.innerText = "● WEBCAM ONLINE";
                 badge.className = "text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse font-bold";
@@ -537,7 +490,7 @@
                 console.error("Webcam Access Error:", err);
                 let errorMessage = "ไม่สามารถเข้าถึงกล้องได้!";
                 if (err.name === 'NotReadableError') {
-                    errorMessage = "ไม่สามารถเข้าถึงกล้องได้! กล้องกำลังถูกใช้งานโดยโปรแกรมอื่น กรุณาปิดโปรแกรมเหล่านั้นแล้วลองใหม่อีกครั้ง";
+                    errorMessage = "ไม่สามารถเข้าถึงกล้องได้! กล้องกำลังถูกใช้งานโดยโปรแกรมอื่น";
                 } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
                     errorMessage = "ไม่สามารถเข้าถึงกล้องได้! กรุณากดอนุญาตให้สิทธิ์ใช้งานกล้องในเบราว์เซอร์";
                 } else if (err.name === 'NotFoundError') {
@@ -578,7 +531,6 @@
             const imgStream = document.getElementById("esp32-stream");
             const placeholder = document.getElementById("cam-placeholder");
             const badge = document.getElementById("cam-status-badge");
-            const btnAI = document.getElementById("btn-toggle-ai");
 
             badge.innerText = "กำลังเชื่อมต่อ ESP32...";
             badge.className = "text-xs px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 animate-pulse font-bold";
@@ -598,218 +550,6 @@
             imgStream.src = streamUrl;
             imgStream.classList.remove("hidden");
             placeholder.classList.add("hidden");
-            btnAI.classList.remove("hidden");
-        }
-
-        // ==========================================
-        // 🎯 AI YOLO Person Detector (High Performance Engine)
-        // ==========================================
-        let yoloModel = null;
-        let isAIDetecting = false;
-        let aiRequestFrameId = null;
-        let isInferencing = false; 
-        let lastDetectTime = 0;
-
-        const YOLO_MODEL_URL = "https://cdn.jsdelivr.net/gh/compclick735-del/yolo-web-model@main/model/model.json";
-        const PERSON_CLASS_ID = 0; 
-
-        async function toggleAIDetection() {
-            const btn = document.getElementById("btn-toggle-ai");
-            const canvas = document.getElementById("ai-canvas");
-
-            if (!isAIDetecting) {
-                if (!yoloModel) {
-                    btn.innerText = "⏳ โหลดโมเดล YOLO...";
-                    btn.classList.add("opacity-75", "cursor-wait");
-                    try {
-                        await tf.ready(); // มั่นใจว่า WebGL / GPU เร่งความเร็วพร้อมใช้งาน
-                        yoloModel = await tf.loadGraphModel(YOLO_MODEL_URL);
-                        
-                        // Warm up โมเดลอย่างปลอดภัยด้วย tf.tidy
-                        tf.tidy(() => {
-                            const dummyTensor = tf.zeros([1, 640, 640, 3]);
-                            yoloModel.execute(dummyTensor);
-                        });
-                    } catch (err) {
-                        console.error("YOLO Model Load Error:", err);
-                        alert("เกิดข้อผิดพลาดในการโหลดโมเดล YOLO!");
-                        btn.innerText = "🤖 เปิดโหมด AI YOLO ตรวจจับคน";
-                        btn.classList.remove("opacity-75", "cursor-wait");
-                        return;
-                    }
-                }
-                
-                isAIDetecting = true;
-                btn.innerText = "🛑 ปิดโหมด AI YOLO";
-                btn.classList.add("cyber-btn-secondary");
-                btn.classList.remove("opacity-75", "cursor-wait");
-                canvas.classList.remove("hidden");
-                detectCameraObjects();
-            } else {
-                isAIDetecting = false;
-                btn.innerText = "🤖 เปิดโหมด AI YOLO ตรวจจับคน";
-                btn.classList.remove("cyber-btn-secondary");
-                canvas.classList.add("hidden");
-                if (aiRequestFrameId) cancelAnimationFrame(aiRequestFrameId);
-                const ctx = canvas.getContext("2d");
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-            }
-        }
-
-        async function runYOLOInference(inputSource) {
-            return tf.tidy(() => {
-                const imgTensor = tf.browser.fromPixels(inputSource);
-                const resized = tf.image.resizeBilinear(imgTensor, [640, 640]);
-                const normalized = resized.div(255.0);
-                const batched = normalized.expandDims(0);
-                const output = yoloModel.execute(batched);
-                const transposed = output.squeeze([0]).transpose([1, 0]);
-                const boxes = transposed.slice([0, 0], [-1, 4]);
-                const scores = transposed.slice([0, 4], [-1, -1]);
-                const maxScores = scores.max(1);
-                const classIds = scores.argMax(1);
-
-                return {
-                    boxes: boxes.arraySync(),
-                    scores: maxScores.arraySync(),
-                    classIds: classIds.arraySync()
-                };
-            });
-        }
-
-        async function detectCameraObjects() {
-            if (!isAIDetecting) return;
-
-            const now = performance.now();
-            
-            // บน PC (DETECT_INTERVAL = 0): ข้ามเงื่อนไขเวลาเพื่อสแกนทุกเฟรม
-            // บน Mobile (DETECT_INTERVAL = 200): จะรอกระทั่งครบกำหนดเวลา
-            if ((DETECT_INTERVAL > 0 && now - lastDetectTime < DETECT_INTERVAL) || isInferencing) {
-                aiRequestFrameId = requestAnimationFrame(detectCameraObjects);
-                return;
-            }
-
-            const activeElem = (currentCamMode === 'webcam') 
-                ? document.getElementById("webcam-stream") 
-                : document.getElementById("esp32-stream");
-
-            const canvas = document.getElementById("ai-canvas");
-            const ctx = canvas.getContext("2d");
-
-            const isReady = (currentCamMode === 'webcam') 
-                ? (activeElem.readyState === 4) 
-                : (activeElem.complete && activeElem.naturalWidth > 0);
-
-            if (!isReady || activeElem.classList.contains("hidden")) {
-                aiRequestFrameId = requestAnimationFrame(detectCameraObjects);
-                return;
-            }
-
-            lastDetectTime = now;
-            isInferencing = true; // ล็อค Flag เพื่อป้องกันการเรียกทับซ้อน
-
-            const imgW = (currentCamMode === 'webcam') ? activeElem.videoWidth : activeElem.naturalWidth;
-            const imgH = (currentCamMode === 'webcam') ? activeElem.videoHeight : activeElem.naturalHeight;
-
-            const rect = activeElem.getBoundingClientRect();
-            const displayW = rect.width;
-            const displayH = rect.height;
-
-            if (!displayW || !displayH || !imgW || !imgH) {
-                isInferencing = false;
-                aiRequestFrameId = requestAnimationFrame(detectCameraObjects);
-                return;
-            }
-
-            canvas.width = displayW; 
-            canvas.height = displayH;
-
-            const imgAspect = imgW / imgH;
-            const displayAspect = displayW / displayH;
-            let renderW, renderH, offsetX = 0, offsetY = 0;
-
-            if (imgAspect > displayAspect) {
-                renderW = displayW; 
-                renderH = displayW / imgAspect; 
-                offsetY = (displayH - renderH) / 2;
-            } else {
-                renderH = displayH; 
-                renderW = displayH * imgAspect; 
-                offsetX = (displayW - renderW) / 2;
-            }
-
-            const scaleX = renderW / imgW;
-            const scaleY = renderH / imgH;
-
-            try {
-                const rawResults = await runYOLOInference(activeElem);
-                const candidateBoxes = []; 
-                const candidateScores = [];
-
-                for (let i = 0; i < rawResults.scores.length; i++) {
-                    if (rawResults.classIds[i] === PERSON_CLASS_ID && rawResults.scores[i] >= 0.40) {
-                        const [cx, cy, w, h] = rawResults.boxes[i];
-                        const x = (cx - w / 2) * (imgW / 640);
-                        const y = (cy - h / 2) * (imgH / 640);
-                        const width = w * (imgW / 640);
-                        const height = h * (imgH / 640);
-
-                        candidateBoxes.push([y, x, y + height, x + width]);
-                        candidateScores.push(rawResults.scores[i]);
-                    }
-                }
-
-                let selectedIndices = [];
-                if (candidateBoxes.length > 0) {
-                    const tensorBoxes = tf.tensor2d(candidateBoxes);
-                    const tensorScores = tf.tensor1d(candidateScores);
-                    const nms = await tf.image.nonMaxSuppressionAsync(tensorBoxes, tensorScores, 5, 0.45, 0.40);
-                    selectedIndices = await nms.array();
-                    tf.dispose([tensorBoxes, tensorScores, nms]);
-                }
-
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                selectedIndices.forEach(idx => {
-                    const score = candidateScores[idx];
-                    const box = candidateBoxes[idx];
-                    const x = box[1]; 
-                    const y = box[0];
-                    const width = box[3] - box[1]; 
-                    const height = box[2] - box[0];
-
-                    let finalX = (x * scaleX) + offsetX;
-                    let finalY = (y * scaleY) + offsetY;
-                    let finalW = width * scaleX;
-                    let finalH = height * scaleY;
-
-                    ctx.strokeStyle = "#00f5a0";
-                    ctx.lineWidth = 3;
-                    ctx.strokeRect(finalX, finalY, finalW, finalH);
-
-                    const label = `🚨 PERSON ${Math.round(score * 100)}%`;
-                    ctx.font = "bold 13px 'Orbitron', sans-serif";
-                    const textWidth = ctx.measureText(label).width;
-                    const labelY = finalY - 22 > 0 ? finalY - 22 : finalY;
-                    
-                    ctx.fillStyle = "#00f5a0";
-                    ctx.fillRect(finalX, labelY, textWidth + 10, 22);
-                    ctx.fillStyle = "#000000";
-                    ctx.fillText(label, finalX + 5, labelY + 16);
-                    
-                    if (client && client.isConnected()) {
-                        let stopMsg = new Paho.MQTT.Message("S");
-                        stopMsg.destinationName = "pollution/robot/control";
-                        client.send(stopMsg);
-                    }
-                });
-            } catch (err) {
-                console.error("YOLO AI Detection Error:", err);
-            } finally {
-                isInferencing = false; // ปลดล็อค Flag พร้อมประมวลผลเฟรมถัดไปทันที
-            }
-            
-            aiRequestFrameId = requestAnimationFrame(detectCameraObjects);
         }
 
         // ==========================================
