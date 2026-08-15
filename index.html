@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI AIR ROBOT - โรงเรียนชุมแพศึกษา (Cyber-Glass Edition)</title>
+    
+    <!-- Libraries CDN (ตัด TensorFlow.js ออกจาก HTML แล้ว) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    
+    <!-- Custom Air Model Script -->
+    <script src="air_model.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Orbitron:wght@400;600;800;900&family=Sarabun:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');
+        
+        @property --border-angle {
+            syntax: "<angle>";
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        @keyframes rotateCyberBorder {
+            0% { --border-angle: 0deg; }
+            100% { --border-angle: 360deg; }
+        }
+
+        body { 
+            background: #07090e; 
+            color: #f3f4f6; 
+            font-family: 'Sarabun', sans-serif; 
+            overflow-x: hidden; 
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .cyber-font { font-family: 'Orbitron', sans-serif; }
+        .rpg-font { font-family: 'Cinzel', 'Sarabun', serif; }
+        
+        .aurora-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(6, 182, 212, 0.12), transparent 40%),
+                radial-gradient(circle at 85% 15%, rgba(168, 85, 247, 0.12), transparent 40%),
+                radial-gradient(circle at 50% 85%, rgba(16, 185, 129, 0.08), transparent 50%);
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .glass-card {
+            position: relative;
+            border-radius: 1.25rem;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.7);
+        }
+
+        .card-cyan-glow {
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.08);
+        }
+        .card-cyan-glow:hover {
+            border-color: rgba(6, 182, 212, 0.6);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.2);
+        }
+
+        .card-purple-glow {
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.08);
+        }
+        .card-purple-glow:hover {
+            border-color: rgba(168, 85, 247, 0.6);
+            box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
+        }
+
+        .cyber-btn {
+            position: relative;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%);
+            border: 1px solid #00f5a0;
+            color: #00f5a0;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            text-shadow: 0 0 8px rgba(0, 245, 160, 0.6);
+            clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+            transition: all 0.2s ease-in-out;
+            touch-action: manipulation;
+        }
+
+        .cyber-btn:hover {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.5) 0%, rgba(6, 182, 212, 0.5) 100%);
+            color: #ffffff;
+            box-shadow: 0 0 20px rgba(0, 245, 160, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .cyber-btn-purple {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
+            border-color: #a855f7;
+            color: #d8b4fe;
+            text-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
+        }
+        .cyber-btn-purple:hover {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.5) 0%, rgba(236, 72, 153, 0.5) 100%);
+            color: #ffffff;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+        }
+
+        .cyber-btn-secondary {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            color: #94a3b8;
+            text-shadow: none;
+        }
+        .cyber-btn-secondary:hover {
+            background: rgba(51, 65, 85, 0.9);
+            border-color: #f1f5f9;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(241, 245, 249, 0.2);
+        }
+
+        .text-cyan-gradient {
+            background: linear-gradient(135deg, #a5f3fc 0%, #06b6d4 50%, #0284c7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-good { background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.4)); border: 1px solid #10b981; color: #34d399; box-shadow: 0 0 25px rgba(16, 185, 129, 0.3); }
+        .status-moderate { background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.4)); border: 1px solid #f59e0b; color: #fbbf24; box-shadow: 0 0 25px rgba(245, 158, 11, 0.3); }
+        .status-poor { background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(185, 28, 28, 0.4)); border: 1px solid #ef4444; color: #f87171; box-shadow: 0 0 25px rgba(239, 68, 68, 0.3); }
+        .status-hazardous { background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(190, 24, 93, 0.5)); border: 2px solid #ec4899; color: #f472b6; box-shadow: 0 0 30px rgba(236, 72, 153, 0.5); }
+        
+        .gauge-container { position: relative; width: 100%; height: 140px; }
+        .gauge-value { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-weight: 800; text-shadow: 0 0 10px rgba(6,182,212,0.5); }
+        .key-active { background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%) !important; color: #ffffff !important; transform: scale(0.92); box-shadow: 0 0 25px rgba(168, 85, 247, 0.8) !important; border-color: #f472b6 !important; }
+        .no-select { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+        
+        input[type="range"] { background: #1e293b; accent-color: #06b6d4; }
+        input[type="range"]::-webkit-slider-thumb { background: #06b6d4; border: 2px solid #ffffff; border-radius: 9999px; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 10px #06b6d4; appearance: none; width: 18px; height: 18px; }
+        
+        .cam-tab-btn { transition: all 0.2s ease; }
+        .cam-tab-btn.active { background: rgba(6, 182, 212, 0.2); color: #38bdf8; border-color: #06b6d4; box-shadow: 0 0 15px rgba(6, 182, 212, 0.3); }
+    </style>
+</head>
+<body class="min-h-screen no-select">
+
+    <canvas id="starfield" class="fixed inset-0 pointer-events-none z-0"></canvas>
+    <div class="aurora-bg"></div>
+
+    <header class="bg-slate-950/80 border-b border-slate-800 shadow-2xl py-4 px-6 sticky top-0 z-50 backdrop-blur-xl">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div class="text-center md:text-left flex items-center space-x-3">
+                <div class="p-2.5 bg-gradient-to-br from-cyan-500/20 to-purple-500/20 rounded-2xl border border-cyan-500/30">
+                    <span class="text-2xl">🤖</span>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-black tracking-wider cyber-font text-cyan-gradient">AI AIR ROBOT</h1>
+                    <p class="text-slate-400 text-xs md:text-sm mt-0.5 font-medium">โรงเรียนชุมแพศึกษา | 🏎️ GPS Real-time Telemetry Control System</p>
+                </div>
+            </div>
+            <div class="mt-4 md:mt-0 flex items-center space-x-3">
+                <span id="device-mode-badge" class="px-3 py-1.5 rounded-full text-xs font-bold bg-slate-900 border border-purple-500/50 text-purple-300">⚙️ Web Worker Enabled</span>
+                <span id="location-status" class="px-4 py-1.5 rounded-full text-xs font-bold bg-slate-900/90 border border-slate-700 text-cyan-300 shadow-inner">📍 กำลังดาวน์โหลดพิกัดดาวเทียม...</span>
+                <span id="connection-status" class="px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 animate-pulse">🟢 Connected Online</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 space-y-8 relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 glass-card card-cyan-glow p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                        <h3 class="text-cyan-300 font-bold text-lg tracking-wide cyber-font flex items-center">
+                            <span class="mr-2.5 animate-pulse text-emerald-400">📹</span> AI VISION (YOLO Worker Mode)
+                        </h3>
+                        <span id="cam-status-badge" class="text-xs px-3 py-1 rounded-full bg-slate-900 text-slate-400 border border-slate-700 font-bold">ยังไม่ได้เชื่อมต่อ</span>
+                    </div>
+
+                    <div class="flex space-x-2 mb-3">
+                        <button id="tab-webcam" onclick="switchCamSource('webcam')" class="cam-tab-btn active px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-900/80 border border-slate-700 text-slate-300">📷 กล้อง WebCam / โทรศัพท์</button>
+                        <button id="tab-esp32" onclick="switchCamSource('esp32')" class="cam-tab-btn px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-900/80 border border-slate-700 text-slate-300">🌐 กล้อง IP (ESP32-CAM)</button>
+                    </div>
+                    
+                    <div class="relative w-full h-[350px] lg:h-[400px] bg-slate-950/90 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center shadow-inner">
+                        <video id="webcam-stream" autoplay playsinline muted class="w-full h-full object-contain hidden z-0"></video>
+                        <img id="esp32-stream" src="" crossorigin="anonymous" class="w-full h-full object-contain hidden z-0" alt="ESP32 Stream">
+                        <canvas id="ai-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-10 hidden"></canvas>
+                        
+                        <div id="cam-placeholder" class="text-center p-4 z-20">
+                            <span class="text-6xl block mb-4 opacity-80 animate-bounce">📷</span>
+                            <p class="text-sm text-cyan-200/70 font-medium">เลือกโหมดกล้องแล้วกดเปิดใช้งานได้เลยครับ</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5 pt-4 border-t border-slate-800 flex flex-wrap gap-3 items-center justify-between">
+                    <div id="controls-webcam" class="flex flex-wrap gap-3 items-center w-full md:w-auto">
+                        <button onclick="startWebcam()" class="cyber-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm">
+                            📹 เปิดกล้อง WebCam / มือถือ
+                        </button>
+                        <button onclick="stopWebcam()" class="cyber-btn cyber-btn-secondary px-4 py-2.5 rounded-xl text-xs sm:text-sm">
+                            🛑 ปิดกล้อง
+                        </button>
+                    </div>
+
+                    <div id="controls-esp32" class="hidden flex-wrap gap-3 items-center w-full md:w-auto flex-grow">
+                        <input type="text" id="cam-ip-input" value="10.151.196.140" placeholder="เช่น 192.168.1.50" class="bg-slate-900 border border-cyan-500/40 rounded-xl px-4 py-2.5 text-sm text-cyan-300 w-full md:w-auto flex-grow focus:outline-none focus:border-cyan-400 cyber-font shadow-inner">
+                        <button onclick="connectESP32Camera()" class="cyber-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm whitespace-nowrap">
+                            🔌 เชื่อมต่อกล้อง IP
+                        </button>
+                    </div>
+
+                    <button id="btn-toggle-ai" onclick="toggleAIDetection()" class="cyber-btn cyber-btn-purple px-6 py-2.5 rounded-xl text-xs sm:text-sm whitespace-nowrap hidden">
+                        🤖 เปิดโหมด AI YOLO (Worker)
+                    </button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1 glass-card card-purple-glow p-6 flex flex-col justify-center items-center text-center">
+                <div class="mb-6">
+                    <h3 class="text-purple-300 font-bold text-xl tracking-wide flex items-center justify-center cyber-font">🕹️ ROBOT CONTROLLER</h3>
+                    <p class="text-xs text-purple-200/60 font-medium mt-2">💡 กดปุ่มลูกศร / WASD บนคีย์บอร์ดหรือทัชปุ่มเพื่อสั่งงาน</p>
+                </div>
+                
+                <div class="relative w-[250px] h-[250px] bg-slate-950/80 rounded-full shadow-[inset_0_0_30px_rgba(0,0,0,0.9)] p-4 border border-purple-500/30 flex items-center justify-center">
+                    <div class="grid grid-cols-3 gap-2 w-full h-full rounded-full overflow-hidden">
+                        <div></div>
+                        <button id="btn-F" class="cyber-btn cyber-btn-purple rounded-t-2xl flex items-center justify-center text-2xl">▲</button>
+                        <div></div>
+                        <button id="btn-L" class="cyber-btn cyber-btn-purple rounded-l-2xl flex items-center justify-center text-2xl">◀</button>
+                        <div class="flex items-center justify-center text-purple-400 font-bold text-xs cyber-font opacity-50">CORE</div> 
+                        <button id="btn-R" class="cyber-btn cyber-btn-purple rounded-r-2xl flex items-center justify-center text-2xl">▶</button>
+                        <div></div>
+                        <button id="btn-B" class="cyber-btn cyber-btn-purple rounded-b-2xl flex items-center justify-center text-2xl">▼</button>
+                        <div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div class="lg:col-span-1 glass-card card-purple-glow p-6 flex flex-col justify-center">
+                <h3 class="text-purple-300 font-bold text-sm mb-5 flex items-center tracking-wide cyber-font"><span class="mr-2 text-lg">📡</span> ปรับแต่งปัจจัยพื้นที่</h3>
+                <div class="space-y-6">
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-2"><label class="text-slate-300">ห่างนิคมอุตสาหกรรม</label><div class="text-cyan-400 cyber-font"><span id="txt-prox-val" class="font-bold text-base">7.4</span> กม.</div></div>
+                        <input type="range" id="slide-prox" min="0.1" max="25" step="0.1" value="7.4" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
+                        <input type="hidden" id="num-prox" value="7.4">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-2"><label class="text-slate-300">หนาแน่นประชากร</label><div class="text-cyan-400 cyber-font"><span id="txt-pop-val" class="font-bold text-base">545</span> คน/กม²</div></div>
+                        <input type="range" id="slide-pop" min="100" max="1000" step="1" value="545" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
+                        <input type="hidden" id="num-pop" value="545">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-2 glass-card card-cyan-glow p-6 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-cyan-400 text-xs font-black tracking-widest uppercase mb-3 cyber-font">ผลการทำนายประมวลผลคุณภาพอากาศ (Air Model)</h2>
+                    <div class="flex items-baseline mt-3"><span id="ai-prediction-text" class="text-3xl md:text-4xl font-black text-white tracking-wider cyber-font">รอข้อมูล...</span></div>
+                </div>
+                <div class="mt-6 pt-4 border-t border-slate-800">
+                    <p class="text-slate-300 text-sm flex items-center"><span class="mr-2 text-xl">💡</span> <span id="ai-advice">ระบบกำลังสแตนด์บายรอสัญญาณข้อมูลดิบจากท่อ MQTT</span></p>
+                </div>
+            </div>
+
+            <div id="status-color-box" class="lg:col-span-1 rounded-2xl p-6 flex flex-col justify-center items-center bg-slate-900/80 border border-slate-800 text-slate-300 transition-all duration-500 shadow-2xl min-h-[160px]">
+                <span id="status-emoji" class="text-5xl mb-3 animate-bounce">📡</span>
+                <span id="status-label" class="text-lg font-black uppercase tracking-widest cyber-font">No Data</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="glass-card card-cyan-glow p-6 flex flex-col items-center"><p class="text-cyan-400 text-xs font-bold tracking-wider uppercase mb-4 cyber-font">อุณหภูมิห้องจริง</p><div class="gauge-container"><canvas id="tempGauge"></canvas><div class="gauge-value text-xl cyber-font text-cyan-300"><span id="txt-temp" class="text-3xl">0.0</span> °C</div></div></div>
+            <div class="glass-card card-cyan-glow p-6 flex flex-col items-center"><p class="text-cyan-400 text-xs font-bold tracking-wider uppercase mb-4 cyber-font">ความชื้นอากาศจริง</p><div class="gauge-container"><canvas id="humGauge"></canvas><div class="gauge-value text-xl cyber-font text-emerald-300"><span id="txt-hum" class="text-3xl">0</span> %</div></div></div>
+        </div>
+
+        <div>
+            <h3 class="text-slate-200 font-bold text-lg mb-4 flex items-center tracking-wide cyber-font">📊 ตารางสรุปค่ามลพิษที่ได้รับ (หุ่นยนต์ และ API สภาพอากาศ)</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="glass-card p-5 border-l-4 border-l-cyan-400"><p class="text-cyan-400 text-xs font-bold uppercase tracking-wider cyber-font">ก๊าซ CO</p><p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-co">0.00</span> <span class="text-xs font-normal text-cyan-400">ppm</span></p></div>
+                <div class="glass-card p-5 border-l-4 border-l-emerald-400"><p class="text-emerald-400 text-xs font-bold uppercase tracking-wider cyber-font">PM2.5</p><p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-pm25">0</span> <span class="text-xs font-normal text-emerald-400">µg/m³</span></p></div>
+                <div class="glass-card p-5 border-l-4 border-l-purple-400"><p class="text-purple-400 text-xs font-bold uppercase tracking-wider cyber-font">PM10</p><p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-pm10">0</span> <span class="text-xs font-normal text-purple-400">µg/m³</span></p></div>
+                <div class="glass-card p-5 border-l-4 border-l-amber-400"><p class="text-amber-400 text-xs font-bold uppercase tracking-wider cyber-font">ก๊าซ NO2</p><p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-no2">0.00</span> <span class="text-xs font-normal text-amber-400">ppm</span></p></div>
+                <div class="glass-card p-5 border-l-4 border-l-rose-400 col-span-2 md:col-span-1"><p class="text-rose-400 text-xs font-bold uppercase tracking-wider cyber-font">ก๊าซ SO2</p><p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-so2">0.00</span> <span class="text-xs font-normal text-rose-400">ppm</span></p></div>
+            </div>
+        </div>
+
+        <div class="glass-card card-cyan-glow p-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                <h3 class="text-cyan-300 font-bold tracking-wide cyber-font">📊 กราฟแนวโน้มมลพิษทางอากาศ Real-time</h3>
+                <button onclick="resetChartZoom()" class="cyber-btn cyber-btn-secondary px-4 py-1.5 text-xs font-bold rounded-lg shadow">🔄 รีเซ็ตการซูม</button>
+            </div>
+            <div style="position: relative; height:340px; width:100%"><canvas id="realtimeChart"></canvas></div>
+        </div>
+    </main>
+
+    <script>
+        if (typeof Chart !== 'undefined' && typeof window['chartjs-plugin-zoom'] !== 'undefined') {
+            Chart.register(window['chartjs-plugin-zoom']);
+        }
+
+        // ==========================================
+        // 🌌 Starfield Background Animation
+        // ==========================================
+        const starfield = document.getElementById('starfield');
+        const starCtx = starfield.getContext('2d');
+        let width = starfield.width = window.innerWidth;
+        let height = starfield.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = starfield.width = window.innerWidth;
+            height = starfield.height = window.innerHeight;
+        });
+
+        const starColors = ['#38bdf8', '#818cf8', '#c084fc', '#34d399', '#fbbf24', '#ffffff'];
+
+        function draw4PointStar(ctx, x, y, size, angle, color, alpha) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.fillStyle = color;
+            ctx.globalAlpha = Math.max(0, alpha);
+            ctx.shadowBlur = size * 2.5;
+            ctx.shadowColor = color;
+            ctx.beginPath();
+            ctx.moveTo(0, -size);
+            ctx.quadraticCurveTo(0, 0, size, 0);
+            ctx.quadraticCurveTo(0, 0, 0, size);
+            ctx.quadraticCurveTo(0, 0, -size, 0);
+            ctx.quadraticCurveTo(0, 0, 0, -size);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        const floatingStars = [];
+        for (let i = 0; i < 70; i++) {
+            floatingStars.push({
+                x: Math.random() * width, y: Math.random() * height, size: Math.random() * 6 + 2,
+                color: starColors[Math.floor(Math.random() * starColors.length)],
+                vx: (Math.random() - 0.5) * 0.3, vy: -(Math.random() * 0.5 + 0.1),
+                angle: Math.random() * Math.PI, angularVel: (Math.random() - 0.5) * 0.02,
+                alpha: Math.random(), twinkleSpeed: Math.random() * 0.02 + 0.005
+            });
+        }
+
+        function renderStarfield() {
+            starCtx.clearRect(0, 0, width, height);
+            floatingStars.forEach(star => {
+                star.alpha += star.twinkleSpeed;
+                if (star.alpha > 1 || star.alpha < 0.2) star.twinkleSpeed = -star.twinkleSpeed;
+                star.angle += star.angularVel; star.x += star.vx; star.y += star.vy;
+                if (star.y < -20) { star.y = height + 20; star.x = Math.random() * width; }
+                draw4PointStar(starCtx, star.x, star.y, star.size, star.angle, star.color, star.alpha);
+            });
+            requestAnimationFrame(renderStarfield);
+        }
+        renderStarfield();
+
+        // ==========================================
+        // 📷 Camera Manager
+        // ==========================================
+        let currentCamMode = 'webcam'; 
+        let localMediaStream = null;
+
+        function switchCamSource(mode) {
+            currentCamMode = mode;
+            const tabWebcam = document.getElementById("tab-webcam");
+            const tabEsp32 = document.getElementById("tab-esp32");
+            const ctrlWebcam = document.getElementById("controls-webcam");
+            const ctrlEsp32 = document.getElementById("controls-esp32");
+            const webcamVideo = document.getElementById("webcam-stream");
+            const esp32Img = document.getElementById("esp32-stream");
+            const placeholder = document.getElementById("cam-placeholder");
+
+            if (mode === 'webcam') {
+                tabWebcam.classList.add("active"); tabEsp32.classList.remove("active");
+                ctrlWebcam.classList.remove("hidden"); ctrlEsp32.classList.add("hidden");
+                esp32Img.classList.add("hidden");
+                if (localMediaStream) webcamVideo.classList.remove("hidden");
+                else placeholder.classList.remove("hidden");
+            } else {
+                tabEsp32.classList.add("active"); tabWebcam.classList.remove("active");
+                ctrlEsp32.classList.remove("hidden"); ctrlWebcam.classList.add("hidden");
+                stopWebcam(); webcamVideo.classList.add("hidden");
+                if (esp32Img.src && !esp32Img.classList.contains("hidden")) esp32Img.classList.remove("hidden");
+                else placeholder.classList.remove("hidden");
+            }
+        }
+
+        async function startWebcam() {
+            const webcamVideo = document.getElementById("webcam-stream");
+            const placeholder = document.getElementById("cam-placeholder");
+            const badge = document.getElementById("cam-status-badge");
+            const btnAI = document.getElementById("btn-toggle-ai");
+
+            try {
+                localMediaStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
+                });
+                webcamVideo.srcObject = localMediaStream;
+                webcamVideo.classList.remove("hidden");
+                placeholder.classList.add("hidden");
+                btnAI.classList.remove("hidden");
+
+                badge.innerText = "● WEBCAM ONLINE";
+                badge.className = "text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse font-bold";
+            } catch (err) {
+                alert("ไม่สามารถเข้าถึงกล้องได้!");
+                badge.innerText = "เข้าถึงกล้องล้มเหลว";
+                badge.className = "text-xs px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30";
+            }
+        }
+
+        function stopWebcam() {
+            const webcamVideo = document.getElementById("webcam-stream");
+            const placeholder = document.getElementById("cam-placeholder");
+            const badge = document.getElementById("cam-status-badge");
+
+            if (localMediaStream) {
+                localMediaStream.getTracks().forEach(track => track.stop());
+                localMediaStream = null;
+            }
+            webcamVideo.srcObject = null;
+            webcamVideo.classList.add("hidden");
+            if (currentCamMode === 'webcam') placeholder.classList.remove("hidden");
+
+            badge.innerText = "ปิดกล้องแล้ว";
+            badge.className = "text-xs px-3 py-1 rounded-full bg-slate-900 text-slate-400 border border-slate-700 font-bold";
+        }
+
+        function connectESP32Camera() {
+            let rawIp = document.getElementById("cam-ip-input").value.trim();
+            if (!rawIp) return;
+            
+            let streamUrl = rawIp;
+            if (!streamUrl.startsWith("http://") && !streamUrl.startsWith("https://")) {
+                streamUrl = "http://" + streamUrl;
+            }
+
+            const imgStream = document.getElementById("esp32-stream");
+            const placeholder = document.getElementById("cam-placeholder");
+            const badge = document.getElementById("cam-status-badge");
+            const btnAI = document.getElementById("btn-toggle-ai");
+
+            badge.innerText = "กำลังเชื่อมต่อ ESP32...";
+            badge.className = "text-xs px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 animate-pulse font-bold";
+
+            imgStream.onload = () => {
+                badge.innerText = "● ESP32 LIVE";
+                badge.className = "text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 animate-pulse font-bold";
+            };
+
+            imgStream.onerror = () => {
+                badge.innerText = "เชื่อมต่อ ESP32 ล้มเหลว";
+                badge.className = "text-xs px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/40 font-bold";
+                imgStream.classList.add("hidden");
+                if (currentCamMode === 'esp32') placeholder.classList.remove("hidden");
+            };
+
+            imgStream.src = streamUrl;
+            imgStream.classList.remove("hidden");
+            placeholder.classList.add("hidden");
+            btnAI.classList.remove("hidden");
+        }
+
+        // ==========================================
+        // ⚡ Web Worker Integration for AI Detection
+        // ==========================================
+        let aiWorker = null;
+        let isAIDetecting = false;
+        let isProcessingWorkerFrame = false;
+
+        function initAIWorker() {
+            if (!aiWorker) {
+                aiWorker = new Worker('ai-worker.js');
+                aiWorker.onmessage = (e) => {
+                    const { type, success, detections, error } = e.data;
+                    
+                    if (type === 'MODEL_LOADED') {
+                        const btn = document.getElementById("btn-toggle-ai");
+                        btn.classList.remove("opacity-75", "cursor-wait");
+                        if (success) {
+                            isAIDetecting = true;
+                            btn.innerText = "🛑 ปิดโหมด AI YOLO";
+                            btn.classList.add("cyber-btn-secondary");
+                            document.getElementById("ai-canvas").classList.remove("hidden");
+                            requestAnimationFrame(sendFrameToWorker);
+                        } else {
+                            alert("โหลดโมเดลใน Worker ล้มเหลว: " + error);
+                            btn.innerText = "🤖 เปิดโหมด AI YOLO (Worker)";
+                        }
+                    } else if (type === 'DETECTION_RESULT') {
+                        renderDetections(detections);
+                        isProcessingWorkerFrame = false;
+                        if (isAIDetecting) {
+                            requestAnimationFrame(sendFrameToWorker);
+                        }
+                    } else if (type === 'DETECTION_ERROR') {
+                        isProcessingWorkerFrame = false;
+                        if (isAIDetecting) {
+                            requestAnimationFrame(sendFrameToWorker);
+                        }
+                    }
+                };
+            }
+        }
+
+        async function toggleAIDetection() {
+            const btn = document.getElementById("btn-toggle-ai");
+            const canvas = document.getElementById("ai-canvas");
+
+            if (!isAIDetecting) {
+                initAIWorker();
+                btn.innerText = "⏳ โหลดโมเดล YOLO...";
+                btn.classList.add("opacity-75", "cursor-wait");
+                aiWorker.postMessage({ type: 'INIT_MODEL' });
+            } else {
+                isAIDetecting = false;
+                btn.innerText = "🤖 เปิดโหมด AI YOLO (Worker)";
+                btn.classList.remove("cyber-btn-secondary");
+                canvas.classList.add("hidden");
+                const ctx = canvas.getContext("2d");
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        async function sendFrameToWorker() {
+            if (!isAIDetecting || isProcessingWorkerFrame) return;
+
+            const activeElem = (currentCamMode === 'webcam') 
+                ? document.getElementById("webcam-stream") 
+                : document.getElementById("esp32-stream");
+
+            const isReady = (currentCamMode === 'webcam') 
+                ? (activeElem.readyState === 4) 
+                : (activeElem.complete && activeElem.naturalWidth > 0);
+
+            if (!isReady || activeElem.classList.contains("hidden")) {
+                if (isAIDetecting) requestAnimationFrame(sendFrameToWorker);
+                return;
+            }
+
+            isProcessingWorkerFrame = true;
+            const imgW = (currentCamMode === 'webcam') ? activeElem.videoWidth : activeElem.naturalWidth;
+            const imgH = (currentCamMode === 'webcam') ? activeElem.videoHeight : activeElem.naturalHeight;
+
+            try {
+                // สร้าง ImageBitmap เพื่อส่งข้าม Worker แบบ Zero-Copy (Transferable)
+                const imageBitmap = await createImageBitmap(activeElem);
+                aiWorker.postMessage({
+                    type: 'DETECT',
+                    payload: { imageBitmap, imgW, imgH }
+                }, [imageBitmap]);
+            } catch (err) {
+                isProcessingWorkerFrame = false;
+                if (isAIDetecting) requestAnimationFrame(sendFrameToWorker);
+            }
+        }
+
+        function renderDetections(detections) {
+            const activeElem = (currentCamMode === 'webcam') 
+                ? document.getElementById("webcam-stream") 
+                : document.getElementById("esp32-stream");
+            const canvas = document.getElementById("ai-canvas");
+            const ctx = canvas.getContext("2d");
+
+            const imgW = (currentCamMode === 'webcam') ? activeElem.videoWidth : activeElem.naturalWidth;
+            const imgH = (currentCamMode === 'webcam') ? activeElem.videoHeight : activeElem.naturalHeight;
+            const rect = activeElem.getBoundingClientRect();
+            const displayW = rect.width;
+            const displayH = rect.height;
+
+            if (!displayW || !displayH || !imgW || !imgH) return;
+
+            canvas.width = displayW; 
+            canvas.height = displayH;
+
+            const imgAspect = imgW / imgH;
+            const displayAspect = displayW / displayH;
+            let renderW, renderH, offsetX = 0, offsetY = 0;
+
+            if (imgAspect > displayAspect) {
+                renderW = displayW; 
+                renderH = displayW / imgAspect; 
+                offsetY = (displayH - renderH) / 2;
+            } else {
+                renderH = displayH; 
+                renderW = displayH * imgAspect; 
+                offsetX = (displayW - renderW) / 2;
+            }
+
+            const scaleX = renderW / imgW;
+            const scaleY = renderH / imgH;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            detections.forEach(({ box, score }) => {
+                const x = box[1]; 
+                const y = box[0];
+                const width = box[3] - box[1]; 
+                const height = box[2] - box[0];
+
+                let finalX = (x * scaleX) + offsetX;
+                let finalY = (y * scaleY) + offsetY;
+                let finalW = width * scaleX;
+                let finalH = height * scaleY;
+
+                ctx.strokeStyle = "#00f5a0";
+                ctx.lineWidth = 3;
+                ctx.strokeRect(finalX, finalY, finalW, finalH);
+
+                const label = `🚨 PERSON ${Math.round(score * 100)}%`;
+                ctx.font = "bold 13px 'Orbitron', sans-serif";
+                const textWidth = ctx.measureText(label).width;
+                const labelY = finalY - 22 > 0 ? finalY - 22 : finalY;
+                
+                ctx.fillStyle = "#00f5a0";
+                ctx.fillRect(finalX, labelY, textWidth + 10, 22);
+                ctx.fillStyle = "#000000";
+                ctx.fillText(label, finalX + 5, labelY + 16);
+                
+                if (client && typeof client.isConnected === 'function' && client.isConnected()) {
+                    let stopMsg = new Paho.MQTT.Message("S");
+                    stopMsg.destinationName = "pollution/robot/control";
+                    client.send(stopMsg);
+                }
+            });
+        }
+
+        // ==========================================
+        // 📊 Gauges & Chart setup
+        // ==========================================
+        const indexToLabelMap = { 0: "Good", 1: "Moderate", 2: "Poor", 3: "Hazardous" };
+        const WEATHER_API_KEY = "4642af1ae8c5becc27c24372d72c8601"; 
+        let currentLat = 16.7164, currentLon = 102.1158; 
+        let latestSensorData = { temp: 25.0, hum: 70.0, co: 1.5, no2: 25.0, so2: 8.5, pm25: 20.0, pm10: 25.0 };
+
+        function createGaugeConfig(initialValue, maxRange, colorGradient) {
+            return { 
+                type: 'doughnut', 
+                data: { datasets: [{ data: [initialValue, maxRange - initialValue], backgroundColor: [colorGradient, '#1e293b'], borderWidth: 0 }] }, 
+                options: { rotation: 270, circumference: 180, cutout: '80%', plugins: { tooltip: { enabled: false } }, maintainAspectRatio: false, responsive: true } 
+            };
+        }
+
+        const tempGaugeChart = new Chart(document.getElementById('tempGauge').getContext('2d'), createGaugeConfig(0, 50, '#06b6d4'));
+        const humGaugeChart = new Chart(document.getElementById('humGauge').getContext('2d'), createGaugeConfig(0, 100, '#10b981'));
+
+        const chartCtx = document.getElementById('realtimeChart').getContext('2d');
+        const maxDataPoints = 30; 
+        const chartData = { 
+            labels: [], 
+            datasets: [ 
+                { label: 'CO (ppm)', data: [], borderColor: '#06b6d4', backgroundColor: '#06b6d4', tension: 0.3, fill: false, borderWidth: 2.5 }, 
+                { label: 'NO2 (ppm)', data: [], borderColor: '#f59e0b', backgroundColor: '#f59e0b', tension: 0.3, fill: false, borderWidth: 2 }, 
+                { label: 'SO2 (ppm)', data: [], borderColor: '#f43f5e', backgroundColor: '#f43f5e', tension: 0.3, fill: false, borderWidth: 2 }, 
+                { label: 'PM2.5 (µg/m³)', data: [], borderColor: '#10b981', backgroundColor: '#10b981', tension: 0.3, fill: false, borderWidth: 2.5 }, 
+                { label: 'PM10 (µg/m³)', data: [], borderColor: '#a855f7', backgroundColor: '#a855f7', tension: 0.3, fill: false, borderWidth: 2 } 
+            ] 
+        };
+
+        const realtimeChart = new Chart(chartCtx, { 
+            type: 'line', 
+            data: chartData, 
+            options: { 
+                responsive: true, maintainAspectRatio: false, 
+                scales: { 
+                    x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', font: { family: 'Orbitron' } } }, 
+                    y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', font: { family: 'Orbitron' } } } 
+                }, 
+                plugins: { 
+                    legend: { labels: { color: '#f1f5f9', font: { weight: 'bold', family: 'Orbitron' } } }, 
+                    zoom: { pan: { enabled: true, mode: 'x' }, zoom: { wheel: { enabled: true, speed: 0.08 }, pinch: { enabled: true }, mode: 'x' } } 
+                } 
+            } 
+        });
+
+        function resetChartZoom() { realtimeChart.resetZoom(); }
+
+        const airQualityConfig = {
+            "Good": { emoji: "🟢 😊", label: "อากาศดีมาก", class: "status-good", advice: "คุณภาพอากาศดีมาก เหมาะแก่การทำกิจกรรมกลางแจ้งทุกประเภท" },
+            "Moderate": { emoji: "🟡 😐", label: "อากาศปานกลาง", class: "status-moderate", advice: "คุณภาพอากาศปานกลาง ผู้ที่แพ้ง่ายควรลดระยะเวลาทำกิจกรรมกลางแจ้ง" },
+            "Poor": { emoji: "🔴 😷", label: "เริ่มมีผลกระทบ", class: "status-poor", advice: "ตรวจพบมลพิษสารแก๊สหรือค่าฝุ่นเลเซอร์เริ่มเกินเกณฑ์มาตรฐาน!" },
+            "Hazardous": { emoji: "🟣 🚨", label: "อันตรายร้ายแรง", class: "status-hazardous", advice: "ระดับมลพิษโดยรวมเข้าขั้นวิกฤตอันตราย! กรุณางดกิจกรรมนอกอาคาร" }
+        };
+
+        function updateAIPrediction() {
+            const proximity = parseFloat(document.getElementById("num-prox").value) || 7.4;
+            const popDensity = parseFloat(document.getElementById("num-pop").value) || 545;
+            const x_input = [latestSensorData.temp, latestSensorData.hum, latestSensorData.pm25, latestSensorData.pm10, latestSensorData.no2, latestSensorData.so2, latestSensorData.co, proximity, popDensity];
+
+            let prediction = "Unknown"; 
+            let confidenceText = "";
+            try {
+                if (typeof predictAirQuality === "function") {
+                    let rawOutput = predictAirQuality(x_input); 
+                    let probabilities = Array.isArray(rawOutput) ? (Array.isArray(rawOutput[0]) ? rawOutput[0] : rawOutput) : [];
+                    if (probabilities.length > 0 && !isNaN(probabilities[0])) {
+                        const maxProbability = Math.max(...probabilities);
+                        const predictedIndex = probabilities.indexOf(maxProbability);
+                        prediction = indexToLabelMap[predictedIndex] || "Unknown";
+                        confidenceText = `(${(maxProbability * 100).toFixed(1)}%)`;
+                    }
+                }
+            } catch (e) {
+                console.warn("AI Predict Warning:", e);
+            }
+
+            if (prediction === "Unknown") {
+                let score = 0;
+                score += (latestSensorData.pm25 > 35 ? 2 : (latestSensorData.pm25 > 15 ? 1 : 0));
+                score += (latestSensorData.co > 30.0 ? 3 : (latestSensorData.co > 9.0 ? 1 : 0)); 
+                prediction = score >= 4 ? "Hazardous" : (score === 3 ? "Poor" : (score === 2 ? "Moderate" : "Good"));
+            }
+
+            if (airQualityConfig[prediction]) {
+                const ui = airQualityConfig[prediction];
+                document.getElementById("ai-prediction-text").innerText = `${prediction} ${confidenceText}`;
+                document.getElementById("ai-advice").innerText = ui.advice;
+                document.getElementById("status-color-box").className = `lg:col-span-1 rounded-2xl p-6 flex flex-col justify-center items-center shadow-2xl transition-all duration-500 ${ui.class}`;
+                document.getElementById("status-emoji").innerText = ui.emoji;
+                document.getElementById("status-label").innerText = ui.label;
+            }
+        }
+
+        ["slide-prox", "slide-pop"].forEach((id, idx) => {
+            const numId = ["num-prox", "num-pop"][idx];
+            const textId = ["txt-prox-val", "txt-pop-val"][idx];
+            document.getElementById(id).addEventListener("input", (e) => {
+                document.getElementById(numId).value = e.target.value;
+                document.getElementById(textId).innerText = e.target.value;
+                updateAIPrediction();
+            });
+        });
+
+        function getUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(
+                    (pos) => { 
+                        currentLat = pos.coords.latitude; 
+                        currentLon = pos.coords.longitude; 
+                        document.getElementById("location-status").innerText = `📍 พิกัด GPS จริง: ${currentLat.toFixed(5)}, ${currentLon.toFixed(5)}`; 
+                        sendGPSData(currentLat, currentLon); 
+                        fetchPollutionAPI(); 
+                    },
+                    () => { 
+                        document.getElementById("location-status").innerText = `📍 พิกัดโรงเรียน (สำรอง): อ.ชุมแพ`; 
+                        sendGPSData(currentLat, currentLon); 
+                        fetchPollutionAPI(); 
+                    },
+                    { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+                );
+            } else { 
+                document.getElementById("location-status").innerText = `📍 พิกัดโรงเรียน (สำรอง): อ.ชุมแพ`; 
+                sendGPSData(currentLat, currentLon); 
+                fetchPollutionAPI(); 
+            }
+        }
+
+        function sendGPSData(lat, lon) { 
+            if (client && typeof client.isConnected === 'function' && client.isConnected()) { 
+                let gpsMsg = new Paho.MQTT.Message(JSON.stringify({ latitude: lat, longitude: lon }));
+                gpsMsg.destinationName = "pollution/robot/gps";
+                client.send(gpsMsg); 
+            } 
+        }
+
+        async function fetchPollutionAPI() {
+            try {
+                const res = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${currentLat}&lon=${currentLon}&appid=${WEATHER_API_KEY}`);
+                if (!res.ok) throw new Error("Network error");
+                const json = await res.json();
+                if (json && json.list && json.list.length > 0) {
+                    latestSensorData.no2 = parseFloat(json.list[0].components.no2 || 25.0).toFixed(2);
+                    latestSensorData.so2 = parseFloat(json.list[0].components.so2 || 8.5).toFixed(2);
+                    document.getElementById("val-no2").innerText = latestSensorData.no2; 
+                    document.getElementById("val-so2").innerText = latestSensorData.so2;
+                }
+                updateAIPrediction();
+            } catch (e) {
+                document.getElementById("val-no2").innerText = parseFloat(latestSensorData.no2).toFixed(2); 
+                document.getElementById("val-so2").innerText = parseFloat(latestSensorData.so2).toFixed(2);
+                updateAIPrediction();
+            }
+        }
+
+        // ==========================================
+        // 🕹️ Controls (Arrow Keys + WASD)
+        // ==========================================
+        let activeKeys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
+        let lastCmd = "S";
+
+        const keyMap = {
+            'ArrowUp': 'ArrowUp', 'w': 'ArrowUp', 'W': 'ArrowUp',
+            'ArrowDown': 'ArrowDown', 's': 'ArrowDown', 'S': 'ArrowDown',
+            'ArrowLeft': 'ArrowLeft', 'a': 'ArrowLeft', 'A': 'ArrowLeft',
+            'ArrowRight': 'ArrowRight', 'd': 'ArrowRight', 'D': 'ArrowRight'
+        };
+        
+        function processKeyCombinations() {
+            let cmd = (activeKeys.ArrowUp && activeKeys.ArrowLeft) ? "G" 
+                    : (activeKeys.ArrowUp && activeKeys.ArrowRight) ? "I" 
+                    : (activeKeys.ArrowDown && activeKeys.ArrowLeft) ? "H" 
+                    : (activeKeys.ArrowDown && activeKeys.ArrowRight) ? "J" 
+                    : activeKeys.ArrowUp ? "F" 
+                    : activeKeys.ArrowDown ? "B" 
+                    : activeKeys.ArrowLeft ? "L" 
+                    : activeKeys.ArrowRight ? "R" 
+                    : "S";
+
+            if (cmd !== lastCmd) {
+                lastCmd = cmd;
+                if (client && typeof client.isConnected === 'function' && client.isConnected()) { 
+                    let m = new Paho.MQTT.Message(cmd); 
+                    m.destinationName = "pollution/robot/control"; 
+                    client.send(m); 
+                }
+                ['F', 'B', 'L', 'R'].forEach(k => document.getElementById('btn-' + k).classList.remove('key-active'));
+                if(activeKeys.ArrowUp) document.getElementById('btn-F').classList.add('key-active');
+                if(activeKeys.ArrowDown) document.getElementById('btn-B').classList.add('key-active');
+                if(activeKeys.ArrowLeft) document.getElementById('btn-L').classList.add('key-active');
+                if(activeKeys.ArrowRight) document.getElementById('btn-R').classList.add('key-active');
+            }
+        }
+
+        document.addEventListener('keydown', e => { 
+            const mapped = keyMap[e.key];
+            if (mapped) { activeKeys[mapped] = true; processKeyCombinations(); } 
+        });
+
+        document.addEventListener('keyup', e => { 
+            const mapped = keyMap[e.key];
+            if (mapped) { activeKeys[mapped] = false; processKeyCombinations(); } 
+        });
+
+        const pairs = { 'btn-F': 'ArrowUp', 'btn-B': 'ArrowDown', 'btn-L': 'ArrowLeft', 'btn-R': 'ArrowRight' };
+        Object.keys(pairs).forEach(id => {
+            const btn = document.getElementById(id), key = pairs[id];
+            if (!btn) return;
+            const start = e => { if (e.cancelable) e.preventDefault(); activeKeys[key] = true; processKeyCombinations(); };
+            const stop = e => { if (e.cancelable) e.preventDefault(); activeKeys[key] = false; processKeyCombinations(); };
+
+            btn.addEventListener('mousedown', start); 
+            btn.addEventListener('touchstart', start, { passive: false });
+            btn.addEventListener('mouseup', stop); 
+            btn.addEventListener('mouseleave', stop); 
+            btn.addEventListener('touchend', stop, { passive: false });
+            btn.addEventListener('touchcancel', stop, { passive: false });
+        });
+
+        // ==========================================
+        // 📡 MQTT Connection
+        // ==========================================
+        const client = new Paho.MQTT.Client("broker.hivemq.com", Number(8884), "/mqtt", "web_dash_" + Math.random().toString(16).substr(2, 8));
+        let isConnectingMQTT = false;
+
+        client.onConnectionLost = () => { 
+            isConnectingMQTT = false;
+            document.getElementById("connection-status").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-red-950/80 text-red-300 border border-red-500/50 animate-pulse"; 
+            document.getElementById("connection-status").innerText = "🔴 Disconnected"; 
+            setTimeout(connectMQTT, 3000); 
+        };
+
+        client.onMessageArrived = m => {
+            try {
+                const d = JSON.parse(m.payloadString);
+                latestSensorData.temp = parseFloat(d.Temperature || 0); 
+                latestSensorData.hum = parseFloat(d.Humidity || 0); 
+                latestSensorData.pm25 = parseInt(d.PM25 || 0); 
+                latestSensorData.pm10 = parseInt(d.PM10 || 0); 
+                latestSensorData.co = parseFloat(d.CO || 0);
+
+                document.getElementById("val-co").innerText = latestSensorData.co.toFixed(2); 
+                document.getElementById("val-pm25").innerText = latestSensorData.pm25; 
+                document.getElementById("val-pm10").innerText = latestSensorData.pm10; 
+                document.getElementById("txt-temp").innerText = latestSensorData.temp.toFixed(1); 
+                document.getElementById("txt-hum").innerText = Math.round(latestSensorData.hum);
+
+                tempGaugeChart.data.datasets[0].data = [Math.min(Math.max(latestSensorData.temp,0),50), 50-Math.min(Math.max(latestSensorData.temp,0),50)]; 
+                tempGaugeChart.update('none');
+
+                humGaugeChart.data.datasets[0].data = [Math.min(Math.max(latestSensorData.hum,0),100), 100-Math.min(Math.max(latestSensorData.hum,0),100)]; 
+                humGaugeChart.update('none');
+
+                updateAIPrediction();
+
+                const now = new Date();
+                const tl = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
+                
+                if (chartData.labels.length >= maxDataPoints) { 
+                    chartData.labels.shift(); 
+                    chartData.datasets.forEach(d => d.data.shift()); 
+                }
+
+                chartData.labels.push(tl); 
+                chartData.datasets[0].data.push(latestSensorData.co); 
+                chartData.datasets[1].data.push(latestSensorData.no2); 
+                chartData.datasets[2].data.push(latestSensorData.so2); 
+                chartData.datasets[3].data.push(latestSensorData.pm25); 
+                chartData.datasets[4].data.push(latestSensorData.pm10); 
+                
+                realtimeChart.update('none');
+            } catch (e) {
+                console.error("MQTT Parsing Error:", e);
+            }
+        };
+
+        function connectMQTT() {
+            try {
+                if ((typeof client.isConnected === 'function' && client.isConnected()) || isConnectingMQTT) return;
+            } catch (e) {}
+
+            isConnectingMQTT = true;
+
+            client.connect({ 
+                useSSL: true, 
+                timeout: 5,
+                onSuccess: () => { 
+                    isConnectingMQTT = false;
+                    document.getElementById("connection-status").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/50"; 
+                    document.getElementById("connection-status").innerText = "🟢 Connected Online"; 
+                    client.subscribe("pollution/env/predicted"); 
+                }, 
+                onFailure: () => { 
+                    isConnectingMQTT = false;
+                    document.getElementById("connection-status").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-red-950/80 text-red-300 border border-red-500/50"; 
+                    document.getElementById("connection-status").innerText = "🔴 Disconnected"; 
+                    setTimeout(connectMQTT, 5000); 
+                } 
+            });
+        }
+
+        connectMQTT(); 
+        getUserLocation();
+    </script>
+</body>
+</html>
