@@ -11,7 +11,7 @@ self.onmessage = async (e) => {
   if (type === 'INIT_MODEL') {
     try {
       await tf.ready();
-      model = await tf.loadGraphModel('./model/yolov8n_web_model/model.json');
+      model = await tf.loadGraphModel('/model/model.json');
 
       // Model Warmup
       const dummyInput = tf.zeros([1, INPUT_SIZE, INPUT_SIZE, 3]);
