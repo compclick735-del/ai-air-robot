@@ -3,21 +3,30 @@ importScripts(
 );
 
 // ============================================================
-// YOLO26 TensorFlow.js Web Worker
+// YOLO26 TensorFlow.js Web Worker (Optimized Version)
 // ============================================================
 
 let yoloModel = null;
 let isInferencing = false;
 
-// URL ของ Model (เลือกใช้แบบ Local path หรือ CDN)
-// หากใช้ไฟล์ Local ให้เปลี่ยนเป็น: './model/model.json'
-const YOLO_MODEL_URL = './model/model.json';
+// URL ของ YOLO26 Graph Model
+const YOLO_MODEL_URL = 'https://cdn.jsdelivr.net/gh/compclick735-del/yolo-26@v1.0.0/model.json';
 
+// COCO Class 0 = person
 const PERSON_CLASS_ID = 0;
+
+// ============================================================
+// Inference Settings
+// ============================================================
+
 const INPUT_SIZE = 640;
 const CONFIDENCE_THRESHOLD = 0.40;
 const NMS_IOU_THRESHOLD = 0.45;
 const MAX_DETECTIONS = 5;
+
+// ============================================================
+// Utility Functions
+// ============================================================
 
 function postError(message, details = '') {
     self.postMessage({
@@ -45,14 +54,20 @@ function disposeTensors(output) {
     }
 }
 
+// ============================================================
+// Tensor Output Parser
+// ============================================================
+
 function flattenModelOutputs(output) {
     if (output == null) return [];
+
     if (output instanceof tf.Tensor) {
         return [{
-            values: output.dataSync(),
+            values: output.dataSync(), // TypedArray Direct Reference
             shape: output.shape.slice()
         }];
     }
+
     if (Array.isArray(output)) {
         const result = [];
         for (const item of output) {
@@ -60,6 +75,7 @@ function flattenModelOutputs(output) {
         }
         return result;
     }
+
     if (typeof output === 'object') {
         const result = [];
         for (const key of Object.keys(output)) {
@@ -67,29 +83,41 @@ function flattenModelOutputs(output) {
         }
         return result;
     }
+
     return [];
 }
+
+// ============================================================
+// Zero-Allocation Decode YOLO Output
+// ============================================================
 
 function decodeTensorOutput(outputInfo, imageW, imageH) {
     const { values, shape } = outputInfo;
 
-    if (!values || values.length === 0 || !shape || shape.length === 0) return [];
+    if (!values || values.length === 0 || !shape || shape.length === 0) {
+        return [];
+    }
 
     let dims = shape.slice();
     if (dims.length > 1 && dims[0] === 1) {
-        dims = dims.slice(1);
+        dims = dims.slice(1); // ตัด Batch Dim [1, N, C] -> [N, C]
     }
 
     if (dims.length !== 2) return [];
 
+    // ตรวจสอบรูปทรง Tensor
     const isTransposed = (dims[0] >= 5 && dims[0] <= 85) && (dims[1] > dims[0]);
     const numDetections = isTransposed ? dims[1] : dims[0];
     const numFeatures = isTransposed ? dims[0] : dims[1];
 
+    // Direct Index Lookup เพื่อหลีกเลี่ยง GC/Array Slice
     const getValue = (r, c) => isTransposed ? values[c * numDetections + r] : values[r * numFeatures + c];
+
     const detections = [];
 
+    // --------------------------------------------------------
     // Format 1: [N, 6] (x1, y1, x2, y2, score, classId)
+    // --------------------------------------------------------
     if (numFeatures === 6) {
         for (let r = 0; r < numDetections; r++) {
             const score = Number(getValue(r, 4));
@@ -118,13 +146,17 @@ function decodeTensorOutput(outputInfo, imageW, imageH) {
                 y: minY * (imageH / INPUT_SIZE),
                 width: width * (imageW / INPUT_SIZE),
                 height: height * (imageH / INPUT_SIZE),
-                score: score
+                score: score,
+                imgW: imageW,
+                imgH: imageH
             });
         }
         return detections;
     }
 
-    // Format 2: Raw YOLO [N, 4 + classes]
+    // --------------------------------------------------------
+    // Format 2: Raw YOLO [N, 4 + classes] (cx, cy, w, h, class_scores...)
+    // --------------------------------------------------------
     if (numFeatures >= 5) {
         const numClasses = numFeatures - 4;
 
@@ -134,8 +166,11 @@ function decodeTensorOutput(outputInfo, imageW, imageH) {
             let w = Number(getValue(r, 2));
             let h = Number(getValue(r, 3));
 
-            if (!Number.isFinite(cx) || !Number.isFinite(cy) || !Number.isFinite(w) || !Number.isFinite(h)) continue;
+            if (!Number.isFinite(cx) || !Number.isFinite(cy) || !Number.isFinite(w) || !Number.isFinite(h)) {
+                continue;
+            }
 
+            // คำนวณหา Class ที่ Score สูงสุด
             let bestClass = -1;
             let bestScore = -Infinity;
 
@@ -153,8 +188,11 @@ function decodeTensorOutput(outputInfo, imageW, imageH) {
                 }
             }
 
-            if (bestClass !== PERSON_CLASS_ID || bestScore < CONFIDENCE_THRESHOLD) continue;
+            if (bestClass !== PERSON_CLASS_ID || bestScore < CONFIDENCE_THRESHOLD) {
+                continue;
+            }
 
+            // แปลง Normalized Coordinates (0..1) เป็น Pixels หากจำเป็น
             const maxBoxValue = Math.max(Math.abs(cx), Math.abs(cy), Math.abs(w), Math.abs(h));
             if (maxBoxValue <= 2) {
                 cx *= INPUT_SIZE;
@@ -183,7 +221,9 @@ function decodeTensorOutput(outputInfo, imageW, imageH) {
                 y: clippedY1 * (imageH / INPUT_SIZE),
                 width: width * (imageW / INPUT_SIZE),
                 height: height * (imageH / INPUT_SIZE),
-                score: bestScore
+                score: bestScore,
+                imgW: imageW,
+                imgH: imageH
             });
         }
     }
@@ -191,10 +231,15 @@ function decodeTensorOutput(outputInfo, imageW, imageH) {
     return detections;
 }
 
+// ============================================================
+// YOLO Inference Execution
+// ============================================================
+
 async function runInference(imageBitmap) {
     const imageW = imageBitmap.width;
     const imageH = imageBitmap.height;
 
+    // Image Pre-processing
     const input = tf.tidy(() => {
         const imgTensor = tf.browser.fromPixels(imageBitmap);
         const resized = tf.image.resizeBilinear(imgTensor, [INPUT_SIZE, INPUT_SIZE]);
@@ -205,20 +250,26 @@ async function runInference(imageBitmap) {
     let rawOutput = null;
 
     try {
+        // Run Inference
         rawOutput = yoloModel.execute(input);
+
+        // Parse Tensor Data
         const outputInfos = flattenModelOutputs(rawOutput);
 
+        // Decode Bounding Boxes
         let detections = [];
         for (const outputInfo of outputInfos) {
             const decoded = decodeTensorOutput(outputInfo, imageW, imageH);
             detections.push(...decoded);
         }
 
+        // Sort Top Confidence
         detections.sort((a, b) => b.score - a.score);
         detections = detections.slice(0, 100);
 
         if (detections.length === 0) return [];
 
+        // Apply Final Non-Maximum Suppression (NMS)
         const boxes = detections.map(d => [d.y, d.x, d.y + d.height, d.x + d.width]);
         const scores = detections.map(d => d.score);
 
@@ -244,25 +295,35 @@ async function runInference(imageBitmap) {
         }
 
     } finally {
+        // Safely Dispose Raw Output and Input Tensors
         disposeTensors(rawOutput);
         input.dispose();
     }
 }
 
+// ============================================================
+// Initialize Worker
+// ============================================================
+
 async function initWorker() {
     try {
         console.log('[YOLO26] กำลังเริ่มต้น Worker...');
+
         await tf.ready();
+        console.log(`[YOLO26] TensorFlow.js พร้อมใช้งาน (Backend: ${tf.getBackend()})`);
 
         console.log('[YOLO26] กำลังโหลดโมเดล...');
         yoloModel = await tf.loadGraphModel(YOLO_MODEL_URL);
+        console.log('[YOLO26] โหลดโมเดลสำเร็จ');
 
+        // Warmup Model
         const dummyTensor = tf.zeros([1, INPUT_SIZE, INPUT_SIZE, 3]);
         const warmupOutput = yoloModel.execute(dummyTensor);
+
         disposeTensors(warmupOutput);
         dummyTensor.dispose();
 
-        console.log('[YOLO26] พร้อมใช้งาน');
+        console.log('[YOLO26] Warmup สำเร็จ');
 
         self.postMessage({
             type: 'MODEL_READY',
@@ -271,28 +332,37 @@ async function initWorker() {
         });
 
     } catch (err) {
-        console.error('[YOLO26] Initialization error:', err);
+        console.error('[YOLO26] Worker initialization error:', err);
         postError('โหลดโมเดล YOLO26 ไม่สำเร็จ', err?.message || String(err));
     }
 }
 
 initWorker();
 
+// ============================================================
+// Main Thread Communication
+// ============================================================
+
 self.onmessage = async (event) => {
     if (event.data?.type !== 'PROCESS_FRAME') return;
 
     if (!yoloModel) {
-        self.postMessage({ type: 'DETECTION_ERROR', error: 'โมเดลยังโหลดไม่เสร็จ' });
+        self.postMessage({
+            type: 'DETECTION_ERROR',
+            error: 'YOLO26 model ยังโหลดไม่เสร็จ'
+        });
         return;
     }
 
-    if (isInferencing) return;
+    if (isInferencing) return; // ข้ามเฟรมหากประมวลผลอยู่
     isInferencing = true;
 
     const imageBitmap = event.data.imageBitmap;
 
     try {
-        if (!imageBitmap) throw new Error('ไม่พบ imageBitmap');
+        if (!imageBitmap) {
+            throw new Error('ไม่พบ imageBitmap ที่ส่งมาจาก Main Thread');
+        }
 
         const detections = await runInference(imageBitmap);
 
@@ -304,7 +374,11 @@ self.onmessage = async (event) => {
 
     } catch (err) {
         console.error('[YOLO26] Inference Error:', err);
-        self.postMessage({ type: 'DETECTION_ERROR', error: err?.message || String(err) });
+        self.postMessage({
+            type: 'DETECTION_ERROR',
+            error: err?.message || String(err)
+        });
+
     } finally {
         if (imageBitmap) {
             try { imageBitmap.close(); } catch (_) {}
