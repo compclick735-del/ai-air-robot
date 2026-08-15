@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI AIR ROBOT - โรงเรียนชุมแพศึกษา (Cyber-Glass Edition)</title>
     
-    <!-- Libraries CDN (ตัด TensorFlow.js ออกจาก HTML แล้ว) -->
+    <!-- Libraries CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
@@ -317,9 +317,7 @@
             Chart.register(window['chartjs-plugin-zoom']);
         }
 
-        // ==========================================
-        // 🌌 Starfield Background Animation
-        // ==========================================
+        // Starfield Background Animation
         const starfield = document.getElementById('starfield');
         const starCtx = starfield.getContext('2d');
         let width = starfield.width = window.innerWidth;
@@ -375,9 +373,7 @@
         }
         renderStarfield();
 
-        // ==========================================
-        // 📷 Camera Manager
-        // ==========================================
+        // Camera Manager
         let currentCamMode = 'webcam'; 
         let localMediaStream = null;
 
@@ -482,9 +478,7 @@
             btnAI.classList.remove("hidden");
         }
 
-        // ==========================================
-        // ⚡ Web Worker Integration for AI Detection
-        // ==========================================
+        // Web Worker Integration for AI Detection
         let aiWorker = null;
         let isAIDetecting = false;
         let isProcessingWorkerFrame = false;
@@ -560,15 +554,12 @@
             }
 
             isProcessingWorkerFrame = true;
-            const imgW = (currentCamMode === 'webcam') ? activeElem.videoWidth : activeElem.naturalWidth;
-            const imgH = (currentCamMode === 'webcam') ? activeElem.videoHeight : activeElem.naturalHeight;
 
             try {
-                // สร้าง ImageBitmap เพื่อส่งข้าม Worker แบบ Zero-Copy (Transferable)
                 const imageBitmap = await createImageBitmap(activeElem);
                 aiWorker.postMessage({
                     type: 'DETECT',
-                    payload: { imageBitmap, imgW, imgH }
+                    payload: { imageBitmap }
                 }, [imageBitmap]);
             } catch (err) {
                 isProcessingWorkerFrame = false;
@@ -646,9 +637,7 @@
             });
         }
 
-        // ==========================================
-        // 📊 Gauges & Chart setup
-        // ==========================================
+        // Gauges & Chart setup
         const indexToLabelMap = { 0: "Good", 1: "Moderate", 2: "Poor", 3: "Hazardous" };
         const WEATHER_API_KEY = "4642af1ae8c5becc27c24372d72c8601"; 
         let currentLat = 16.7164, currentLon = 102.1158; 
@@ -803,9 +792,7 @@
             }
         }
 
-        // ==========================================
-        // 🕹️ Controls (Arrow Keys + WASD)
-        // ==========================================
+        // Controls (Arrow Keys + WASD)
         let activeKeys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
         let lastCmd = "S";
 
@@ -867,9 +854,7 @@
             btn.addEventListener('touchcancel', stop, { passive: false });
         });
 
-        // ==========================================
-        // 📡 MQTT Connection
-        // ==========================================
+        // MQTT Connection
         const client = new Paho.MQTT.Client("broker.hivemq.com", Number(8884), "/mqtt", "web_dash_" + Math.random().toString(16).substr(2, 8));
         let isConnectingMQTT = false;
 
