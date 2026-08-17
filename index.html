@@ -505,7 +505,7 @@
                 .from('pollution_logs')
                 .select('*')
                 .order('created_at', { ascending: false })
-                .limit(10000);
+                .limit(100000);
 
             if (error || !data || data.length === 0) {
                 alert("ไม่มีข้อมูลสำหรับสร้าง PDF หรือยังไม่ได้ตั้งค่า Supabase Key เรียบร้อย");
