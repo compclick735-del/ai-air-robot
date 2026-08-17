@@ -443,11 +443,11 @@
                     historyData.forEach(item => {
                         const timeLabel = new Date(item.created_at).toLocaleTimeString();
                         chartData.labels.push(timeLabel);
-                        chartData.datasets[0].data.push(0); 
-                        chartData.datasets[1].data.push(0); 
-                        chartData.datasets[2].data.push(0); 
+                        chartData.datasets[0].data.push(item.co || 0); 
+                        chartData.datasets[1].data.push(item.no2 || 0); 
+                        chartData.datasets[2].data.push(item.so2 || 0); 
                         chartData.datasets[3].data.push(item.pm25 || 0); 
-                        chartData.datasets[4].data.push(0); 
+                        chartData.datasets[4].data.push(item.pm10 || 0); 
                     });
 
                     realtimeChart.update();
@@ -458,11 +458,19 @@
             }
         }
 
-        async function logSensorDataToSupabase(pm25Val, tempVal = 0, humVal = 0) {
+        async function logSensorDataToSupabase(sensorData) {
             if (!supabaseClient) return;
             const { error } = await supabaseClient
                 .from('pollution_logs')
-                .insert([{ pm25: pm25Val, temp: tempVal, humidity: humVal }]);
+                .insert([{ 
+                    pm25: sensorData.pm25, 
+                    pm10: sensorData.pm10, 
+                    temp: sensorData.temp, 
+                    humidity: sensorData.hum, 
+                    co: sensorData.co, 
+                    no2: sensorData.no2, 
+                    so2: sensorData.so2 
+                }]);
 
             if (error) console.error("Error logging to Supabase:", error.message);
         }
@@ -479,10 +487,10 @@
                 return;
             }
 
-            let csv = "Timestamp,PM2.5 (ug/m3),Temperature (C),Humidity (%)\n";
+            let csv = "Timestamp,PM2.5 (ug/m3),PM10 (ug/m3),Temperature (C),Humidity (%),CO (ppm),NO2 (ppm),SO2 (ppm)\n";
             data.forEach(row => {
                 const timeStr = new Date(row.created_at).toLocaleString();
-                csv += `"${timeStr}",${row.pm25},${row.temp},${row.humidity}\n`;
+                csv += `"${timeStr}",${row.pm25 || 0},${row.pm10 || 0},${row.temp || 0},${row.humidity || 0},${row.co || 0},${row.no2 || 0},${row.so2 || 0}\n`;
             });
 
             const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -513,15 +521,19 @@
             doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 27);
 
             const rows = data.map(item => [
-                new Date(item.created_at).toLocaleString(),
-                `${item.pm25} µg/m³`,
-                `${item.temp} °C`,
-                `${item.humidity} %`
+                new Date(item.created_at).toLocaleTimeString(),
+                `${item.pm25 || 0}`,
+                `${item.pm10 || 0}`,
+                `${item.temp || 0}°C`,
+                `${item.humidity || 0}%`,
+                `${item.co || 0}`,
+                `${item.no2 || 0}`,
+                `${item.so2 || 0}`
             ]);
 
             doc.autoTable({
                 startY: 33,
-                head: [['Timestamp', 'PM2.5', 'Temperature', 'Humidity']],
+                head: [['Time', 'PM2.5', 'PM10', 'Temp', 'Hum', 'CO', 'NO2', 'SO2']],
                 body: rows,
                 theme: 'grid',
                 headStyles: { fillColor: [15, 23, 42] }
@@ -1261,8 +1273,8 @@
 
                 updateAIPrediction();
 
-                // 📌 บันทึกลง Supabase Database
-                logSensorDataToSupabase(latestSensorData.pm25, latestSensorData.temp, latestSensorData.hum);
+                // 📌 บันทึกลง Supabase Database (ส่ง Object ครบทุกคอลัมน์)
+                logSensorDataToSupabase(latestSensorData);
 
                 const now = new Date();
                 const tl = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
