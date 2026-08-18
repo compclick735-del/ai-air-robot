@@ -234,16 +234,12 @@
                 
                 <!-- 🔮 Animated Cyber School Logo Container -->
                 <div class="relative w-28 h-28 flex items-center justify-center flex-shrink-0">
-                    <!-- วงแหวนดาวเทียมภายนอกหมุนตามเข็มนาฬิกา -->
                     <div class="absolute inset-0 rounded-full border-2 border-dashed border-cyan-400 opacity-80 animated-ring-cw shadow-[0_0_12px_rgba(6,182,212,0.6)]"></div>
-                    <!-- วงแหวนนีออนหมุนทวนเข็มนาฬิกา -->
                     <div class="absolute inset-1 rounded-full border border-purple-500/80 animated-ring-ccw shadow-[0_0_10px_rgba(168,85,247,0.6)]"></div>
-                    <!-- แกนกลางแสดงภาพตราโรงเรียนพร้อมเอฟเฟกต์ Pulse & Glow -->
                     <div class="animated-logo-core relative w-24 h-24 rounded-full bg-slate-950 border border-cyan-300/60 flex items-center justify-center overflow-hidden shadow-inner p-0.5">
                         <img src="comp.png" alt="ตราสัญลักษณ์โรงเรียนชุมแพศึกษา" class="w-full h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                         <span class="hidden text-xl">🤖</span>
                     </div>
-                    <!-- อนุภาคพัลส์สีเขียวนีออนเคลื่อนที่ด้านบน -->
                     <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-emerald-400 rounded-full animate-ping"></div>
                 </div>
 
@@ -415,9 +411,10 @@
         const SUPABASE_URL = "https://itzcamgqeugyjsbqflrn.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0emNhbWdxZXVneWpzYnFmbHJuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Njg5MDkyNywiZXhwIjoyMTAyNDY2OTI3fQ.jMY5h015rEM0js0MYMLcC3eP_7CJPzRL68ApInt0qx8"; 
 
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabaseClient = window.supabase ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
         async function loadHistoricalData() {
+            if (!supabaseClient) return;
             try {
                 const { data, error } = await supabaseClient
                     .from('pollution_logs')
@@ -460,22 +457,30 @@
 
         async function logSensorDataToSupabase(sensorData) {
             if (!supabaseClient) return;
-            const { error } = await supabaseClient
-                .from('pollution_logs')
-                .insert([{ 
-                    pm25: sensorData.pm25, 
-                    pm10: sensorData.pm10, 
-                    temp: sensorData.temp, 
-                    humidity: sensorData.hum, 
-                    co: sensorData.co, 
-                    no2: sensorData.no2, 
-                    so2: sensorData.so2 
-                }]);
+            try {
+                const { error } = await supabaseClient
+                    .from('pollution_logs')
+                    .insert([{ 
+                        pm25: sensorData.pm25, 
+                        pm10: sensorData.pm10, 
+                        temp: sensorData.temp, 
+                        humidity: sensorData.hum, 
+                        co: sensorData.co, 
+                        no2: sensorData.no2, 
+                        so2: sensorData.so2 
+                    }]);
 
-            if (error) console.error("Error logging to Supabase:", error.message);
+                if (error) console.error("Error logging to Supabase:", error.message);
+            } catch(e) {
+                console.error("Supabase insert exception:", e);
+            }
         }
 
         async function exportToCSV() {
+            if (!supabaseClient) {
+                alert("ระบบ Supabase ยังไม่ได้ถูกโหลด");
+                return;
+            }
             const { data, error } = await supabaseClient
                 .from('pollution_logs')
                 .select('*')
@@ -501,11 +506,15 @@
         }
 
         async function exportToPDF() {
+            if (!supabaseClient) {
+                alert("ระบบ Supabase ยังไม่ได้ถูกโหลด");
+                return;
+            }
             const { data, error } = await supabaseClient
                 .from('pollution_logs')
                 .select('*')
                 .order('created_at', { ascending: false })
-                .limit(100000);
+                .limit(1000); // ปรับจาก 100000 เพื่อความเสถียรของเบราว์เซอร์
 
             if (error || !data || data.length === 0) {
                 alert("ไม่มีข้อมูลสำหรับสร้าง PDF หรือยังไม่ได้ตั้งค่า Supabase Key เรียบร้อย");
@@ -1253,11 +1262,13 @@
         client.onMessageArrived = m => {
             try {
                 const d = JSON.parse(m.payloadString);
-                latestSensorData.temp = parseFloat(d.Temperature || 0); 
-                latestSensorData.hum = parseFloat(d.Humidity || 0); 
-                latestSensorData.pm25 = parseInt(d.PM25 || 0); 
-                latestSensorData.pm10 = parseInt(d.PM10 || 0); 
-                latestSensorData.co = parseFloat(d.CO || 0);
+                
+                // อ่านข้อมูลแบบยืดหยุ่นรองรับตัวพิมพ์ใหญ่/ตัวพิมพ์เล็ก
+                latestSensorData.temp = parseFloat(d.Temperature ?? d.temp ?? 0); 
+                latestSensorData.hum = parseFloat(d.Humidity ?? d.hum ?? 0); 
+                latestSensorData.pm25 = parseInt(d.PM25 ?? d.pm25 ?? 0); 
+                latestSensorData.pm10 = parseInt(d.PM10 ?? d.pm10 ?? 0); 
+                latestSensorData.co = parseFloat(d.CO ?? d.co ?? 0);
 
                 document.getElementById("val-co").innerText = latestSensorData.co.toFixed(2); 
                 document.getElementById("val-pm25").innerText = latestSensorData.pm25; 
@@ -1273,7 +1284,7 @@
 
                 updateAIPrediction();
 
-                // 📌 บันทึกลง Supabase Database (ส่ง Object ครบทุกคอลัมน์)
+                // บันทึกลง Supabase Database
                 logSensorDataToSupabase(latestSensorData);
 
                 const now = new Date();
