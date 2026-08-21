@@ -514,7 +514,7 @@
                 .from('pollution_logs')
                 .select('*')
                 .order('created_at', { ascending: false })
-                .limit(1000); // ปรับจาก 100000 เพื่อความเสถียรของเบราว์เซอร์
+                .limit(1000);
 
             if (error || !data || data.length === 0) {
                 alert("ไม่มีข้อมูลสำหรับสร้าง PDF หรือยังไม่ได้ตั้งค่า Supabase Key เรียบร้อย");
@@ -1263,7 +1263,6 @@
             try {
                 const d = JSON.parse(m.payloadString);
                 
-                // อ่านข้อมูลแบบยืดหยุ่นรองรับตัวพิมพ์ใหญ่/ตัวพิมพ์เล็ก
                 latestSensorData.temp = parseFloat(d.Temperature ?? d.temp ?? 0); 
                 latestSensorData.hum = parseFloat(d.Humidity ?? d.hum ?? 0); 
                 latestSensorData.pm25 = parseInt(d.PM25 ?? d.pm25 ?? 0); 
