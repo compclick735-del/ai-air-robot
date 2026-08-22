@@ -455,8 +455,15 @@
             }
         }
 
+        const SENSOR_LOG_INTERVAL_MS = 5_000;
+        let lastSensorLogAt = 0;
+
         async function logSensorDataToSupabase(sensorData) {
             if (!supabaseClient) return;
+
+            const now = Date.now();
+            if (now - lastSensorLogAt < SENSOR_LOG_INTERVAL_MS) return;
+            lastSensorLogAt = now;
             try {
                 const { error } = await supabaseClient
                     .from('pollution_logs')
@@ -557,7 +564,8 @@
         const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
                                ('ontouchstart' in window && window.innerWidth <= 1024);
 
-        const DETECT_INTERVAL = isMobileDevice ? 200 : 0; 
+        // 10 fps is responsive for a dashboard while avoiding continuous 640×640 inference on desktops.
+        const DETECT_INTERVAL = isMobileDevice ? 200 : 100; 
 
         document.addEventListener("DOMContentLoaded", () => {
             const badge = document.getElementById("device-mode-badge");
@@ -918,8 +926,12 @@
                 return;
             }
 
-            canvas.width = displayW; 
-            canvas.height = displayH;
+            const canvasWidth = Math.round(displayW);
+            const canvasHeight = Math.round(displayH);
+            if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
+                canvas.width = canvasWidth;
+                canvas.height = canvasHeight;
+            }
 
             const imgAspect = imgW / imgH;
             const displayAspect = displayW / displayH;
@@ -1074,6 +1086,15 @@
 
         function resetChartZoom() { realtimeChart.resetZoom(); }
 
+        let chartUpdateTimer = null;
+        function scheduleRealtimeChartUpdate() {
+            if (chartUpdateTimer) return;
+            chartUpdateTimer = window.setTimeout(() => {
+                chartUpdateTimer = null;
+                scheduleRealtimeChartUpdate();
+            }, 200);
+        }
+
         const airQualityConfig = {
             "Good": { emoji: "🟢 😊", label: "อากาศดีมาก", class: "status-good", advice: "คุณภาพอากาศดีมาก เหมาะแก่การทำกิจกรรมกลางแจ้งทุกประเภท" },
             "Moderate": { emoji: "🟡 😐", label: "อากาศปานกลาง", class: "status-moderate", advice: "คุณภาพอากาศปานกลาง ผู้ที่แพ้ง่ายควรลดระยะเวลาทำกิจกรรมกลางแจ้ง" },
@@ -1162,7 +1183,14 @@
             } 
         }
 
+        const POLLUTION_FETCH_INTERVAL_MS = 60_000;
+        let lastPollutionFetchAt = 0;
+
         async function fetchPollutionAPI() {
+            const now = Date.now();
+            if (now - lastPollutionFetchAt < POLLUTION_FETCH_INTERVAL_MS) return;
+            lastPollutionFetchAt = now;
+
             try {
                 const res = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${currentLat}&lon=${currentLon}&appid=${WEATHER_API_KEY}`);
                 if (!res.ok) throw new Error("API Network response error");
