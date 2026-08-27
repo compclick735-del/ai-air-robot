@@ -20,6 +20,10 @@
     <!-- Custom Air Model Script -->
     <script src="air_model.js"></script>
 
+    <!-- 1. ดึงไฟล์ CSS และ GSAP CDN มาใช้งาน -->
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Orbitron:wght@400;600;800;900&family=Sarabun:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');
         
@@ -209,6 +213,11 @@
     </style>
 </head>
 <body class="min-h-screen no-select">
+
+    <!-- 2. ตัวเมาส์ Blob 3 ลูก -->
+    <div class="blob-cursor"></div>
+    <div class="blob-cursor"></div>
+    <div class="blob-cursor"></div>
 
     <!-- Canvas ฉากหลังดาวระยิบระยับ Multi-Color Particle -->
     <canvas id="starfield" class="fixed inset-0 pointer-events-none z-0"></canvas>
@@ -1349,5 +1358,8 @@
         // ดึงตำแหน่งพิกัด GPS สภาพอากาศ
         getUserLocation();
     </script>
+
+    <!-- 3. ดึงไฟล์ JS ควบคุมเมาส์มาใช้งาน -->
+    <script src="blob.js"></script>
 </body>
 </html>
