@@ -130,6 +130,12 @@
             box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
         }
 
+        /* 🟡 Gold Accent Theme */
+        .card-gold-glow {
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.08);
+        }
+
         /* ⚔️ ปุ่มกด Cyber Gaming Button */
         .cyber-btn {
             position: relative;
@@ -184,6 +190,18 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        
+        .text-gold-gradient {
+            background: linear-gradient(135deg, #fffbeb 0%, #f59e0b 50%, #d97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .text-purple-gradient {
+            background: linear-gradient(135deg, #f3e8ff 0%, #a855f7 50%, #7e22ce 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
         /* Statuses */
         .status-good { background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.4)); border: 1px solid #10b981; color: #34d399; box-shadow: 0 0 25px rgba(16, 185, 129, 0.3); }
@@ -209,12 +227,12 @@
     <canvas id="starfield" class="fixed inset-0 pointer-events-none z-0"></canvas>
     <div class="aurora-bg"></div>
 
-    <!-- Header สไตล์ Sci-Fi พร้อม Animated Logo -->
+    <!-- 📌 Header เรียบหรูสไตล์ Sci-Fi พร้อม Animated School Logo -->
     <header class="bg-slate-950/80 border-b border-slate-800 shadow-2xl py-4 px-6 sticky top-0 z-50 backdrop-blur-xl">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
             <div class="text-center md:text-left flex items-center space-x-4">
                 
-                <!-- Animated Cyber School Logo Container -->
+                <!-- 🔮 Animated Cyber School Logo Container -->
                 <div class="relative w-28 h-28 flex items-center justify-center flex-shrink-0">
                     <div class="absolute inset-0 rounded-full border-2 border-dashed border-cyan-400 opacity-80 animated-ring-cw shadow-[0_0_12px_rgba(6,182,212,0.6)]"></div>
                     <div class="absolute inset-1 rounded-full border border-purple-500/80 animated-ring-ccw shadow-[0_0_10px_rgba(168,85,247,0.6)]"></div>
@@ -233,7 +251,7 @@
             <div class="mt-4 md:mt-0 flex items-center space-x-3">
                 <span id="device-mode-badge" class="px-3 py-1.5 rounded-full text-xs font-bold bg-slate-900 border border-purple-500/50 text-purple-300">⚙️ Detecting Mode...</span>
                 <span id="location-status" class="px-4 py-1.5 rounded-full text-xs font-bold bg-slate-900/90 border border-slate-700 text-cyan-300 shadow-inner">📍 กำลังดาวน์โหลดพิกัดดาวเทียม...</span>
-                <span id="connection-status" class="px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 animate-pulse">🟢 Connected Online</span>
+                <span id="connection-status" class="px-4 py-1.5 rounded-full text-xs font-bold bg-amber-950/60 text-amber-300 border border-amber-500/40 animate-pulse">🟡 Connecting MQTT...</span>
             </div>
         </div>
     </header>
@@ -360,7 +378,7 @@
             <div class="glass-card card-cyan-glow p-6 flex flex-col items-center"><p class="text-cyan-400 text-xs font-bold tracking-wider uppercase mb-4 cyber-font">ความชื้นอากาศจริง</p><div class="gauge-container"><canvas id="humGauge"></canvas><div class="gauge-value text-xl cyber-font text-emerald-300"><span id="txt-hum" class="text-3xl">0</span> %</div></div></div>
         </div>
 
-        <!-- แถวที่ 4: การ์ดตัวเลขมลพิษ -->
+        <!-- แถวที่ 4: การ์ดตัวเลขมลพิษ สีสันสดใสแบบแยกการ์ด -->
         <div>
             <h3 class="text-slate-200 font-bold text-lg mb-4 flex items-center tracking-wide cyber-font">📊 ตารางสรุปค่ามลพิษที่ได้รับ (หุ่นยนต์ และ API สภาพอากาศ)</h3>
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -783,7 +801,7 @@
         }
 
         // ==========================================
-        // 🎯 AI YOLO Person Detector
+        // 🎯 AI YOLO Person Detector (High Performance Engine)
         // ==========================================
         let yoloModel = null;
         let isAIDetecting = false;
@@ -975,11 +993,8 @@
                     ctx.fillStyle = "#000000";
                     ctx.fillText(label, finalX + 5, labelY + 16);
                     
-                    if (client && client.isConnected()) {
-                        let stopMsg = new Paho.MQTT.Message("S");
-                        stopMsg.destinationName = "pollution/robot/control";
-                        client.send(stopMsg);
-                    }
+                    // เมื่อเจอคน สั่งหยุดหุ่นยนต์อัตโนมัติผ่าน MQTT
+                    sendMQTTMessage(MQTT_CONFIG.topics.pubControl, "S");
                 });
             } catch (err) {
                 console.error("YOLO AI Detection Error:", err);
@@ -991,7 +1006,7 @@
         }
 
         // ==========================================
-        // 📊 MQTT, Gauges & Real-time Chart
+        // 📊 Gauges & Real-time Chart Config
         // ==========================================
         const indexToLabelMap = { 0: "Good", 1: "Moderate", 2: "Poor", 3: "Hazardous" };
         const WEATHER_API_KEY = "4642af1ae8c5becc27c24372d72c8601"; 
@@ -1136,11 +1151,7 @@
         }
 
         function sendGPSData(lat, lon) { 
-            if (client && client.isConnected()) { 
-                let gpsMsg = new Paho.MQTT.Message(JSON.stringify({ latitude: lat, longitude: lon }));
-                gpsMsg.destinationName = "pollution/robot/gps";
-                client.send(gpsMsg); 
-            } 
+            sendMQTTMessage(MQTT_CONFIG.topics.pubGPS, JSON.stringify({ latitude: lat, longitude: lon }));
         }
 
         async function fetchPollutionAPI() {
@@ -1179,11 +1190,8 @@
 
             if (cmd !== lastCmd) {
                 lastCmd = cmd;
-                if (client && client.isConnected()) { 
-                    let m = new Paho.MQTT.Message(cmd); 
-                    m.destinationName = "pollution/robot/control"; 
-                    client.send(m); 
-                }
+                sendMQTTMessage(MQTT_CONFIG.topics.pubControl, cmd);
+                
                 ['F', 'B', 'L', 'R'].forEach(k => document.getElementById('btn-' + k).classList.remove('key-active'));
                 if(activeKeys.ArrowUp) document.getElementById('btn-F').classList.add('key-active');
                 if(activeKeys.ArrowDown) document.getElementById('btn-B').classList.add('key-active');
@@ -1230,25 +1238,63 @@
             btn.addEventListener('touchcancel', stop, { passive: false });
         });
 
-        const client = new Paho.MQTT.Client("broker.hivemq.com", Number(8884), "/mqtt", "web_dash_" + Math.random().toString(16).substr(2, 8));
+        // ==========================================
+        // 2. PAHO MQTT CONFIGURATION & CONTROLLER
+        // ==========================================
+        const MQTT_CONFIG = {
+            broker: "broker.hivemq.com",
+            port: 8884,
+            path: "/mqtt",
+            clientId: "web_dash_" + Math.random().toString(16).substring(2, 10),
+            topics: {
+                subData: "pollution/env/predicted",
+                pubControl: "pollution/robot/control",
+                pubGPS: "pollution/robot/gps"
+            }
+        };
+
+        const client = new Paho.MQTT.Client(
+            MQTT_CONFIG.broker,
+            Number(MQTT_CONFIG.port),
+            MQTT_CONFIG.path,
+            MQTT_CONFIG.clientId
+        );
+
         let isConnectingMQTT = false;
 
-        client.onConnectionLost = () => { 
+        function updateMQTTStatusUI(status) {
+            const badge = document.getElementById("connection-status");
+            if (!badge) return;
+
+            if (status === "connecting") {
+                badge.className = "px-4 py-1.5 rounded-full text-xs font-bold bg-amber-950/80 text-amber-300 border border-amber-500/50 animate-pulse";
+                badge.innerText = "🟡 Connecting MQTT...";
+            } else if (status === "connected") {
+                badge.className = "px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/50";
+                badge.innerText = "🟢 Connected Online";
+            } else {
+                badge.className = "px-4 py-1.5 rounded-full text-xs font-bold bg-red-950/80 text-red-300 border border-red-500/50 animate-pulse";
+                badge.innerText = "🔴 Disconnected";
+            }
+        }
+
+        client.onConnectionLost = (responseObject) => { 
             isConnectingMQTT = false;
-            document.getElementById("connection-status").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-red-950/80 text-red-300 border border-red-500/50 animate-pulse"; 
-            document.getElementById("connection-status").innerText = "🔴 Disconnected"; 
+            console.warn("MQTT Connection Lost:", responseObject ? responseObject.errorMessage : "Unknown error");
+            updateMQTTStatusUI("disconnected"); 
             setTimeout(connectMQTT, 3000); 
         };
 
-        client.onMessageArrived = m => {
+        client.onMessageArrived = (message) => {
             try {
-                const d = JSON.parse(m.payloadString);
+                const d = JSON.parse(message.payloadString);
                 
-                latestSensorData.temp = parseFloat(d.Temperature ?? d.temp ?? 0); 
-                latestSensorData.hum = parseFloat(d.Humidity ?? d.hum ?? 0); 
-                latestSensorData.pm25 = parseInt(d.PM25 ?? d.pm25 ?? 0); 
-                latestSensorData.pm10 = parseInt(d.PM10 ?? d.pm10 ?? 0); 
-                latestSensorData.co = parseFloat(d.CO ?? d.co ?? 0);
+                // อ่านข้อมูลแบบยืดหยุ่นรองรับตัวพิมพ์ใหญ่/ตัวพิมพ์เล็ก
+                latestSensorData.temp = parseFloat(d.Temperature ?? d.temp ?? latestSensorData.temp); 
+                latestSensorData.hum = parseFloat(d.Humidity ?? d.hum ?? latestSensorData.hum); 
+                latestSensorData.pm25 = parseInt(d.PM25 ?? d.pm25 ?? latestSensorData.pm25); 
+                latestSensorData.pm10 = parseInt(d.PM10 ?? d.pm10 ?? latestSensorData.pm10); 
+                latestSensorData.co = parseFloat(d.CO ?? d.co ?? latestSensorData.co);
 
                 document.getElementById("val-co").innerText = latestSensorData.co.toFixed(2); 
                 document.getElementById("val-pm25").innerText = latestSensorData.pm25; 
@@ -1256,25 +1302,28 @@
                 document.getElementById("txt-temp").innerText = latestSensorData.temp.toFixed(1); 
                 document.getElementById("txt-hum").innerText = Math.round(latestSensorData.hum);
 
-                tempGaugeChart.data.datasets[0].data = [Math.min(Math.max(latestSensorData.temp,0),50), 50-Math.min(Math.max(latestSensorData.temp,0),50)]; 
+                tempGaugeChart.data.datasets[0].data = [Math.min(Math.max(latestSensorData.temp, 0), 50), 50 - Math.min(Math.max(latestSensorData.temp, 0), 50)]; 
                 tempGaugeChart.update();
 
-                humGaugeChart.data.datasets[0].data = [Math.min(Math.max(latestSensorData.hum,0),100), 100-Math.min(Math.max(latestSensorData.hum,0),100)]; 
+                humGaugeChart.data.datasets[0].data = [Math.min(Math.max(latestSensorData.hum, 0), 100), 100 - Math.min(Math.max(latestSensorData.hum, 0), 100)]; 
                 humGaugeChart.update();
 
                 updateAIPrediction();
 
+                // บันทึกลง Supabase Database
                 logSensorDataToSupabase(latestSensorData);
 
                 const now = new Date();
-                const tl = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
+                const timeLabel = now.getHours().toString().padStart(2, '0') + ':' + 
+                                  now.getMinutes().toString().padStart(2, '0') + ':' + 
+                                  now.getSeconds().toString().padStart(2, '0');
                 
                 if (chartData.labels.length >= maxDataPoints) { 
                     chartData.labels.shift(); 
-                    chartData.datasets.forEach(d => d.data.shift()); 
+                    chartData.datasets.forEach(dataset => dataset.data.shift()); 
                 }
 
-                chartData.labels.push(tl); 
+                chartData.labels.push(timeLabel); 
                 chartData.datasets[0].data.push(latestSensorData.co); 
                 chartData.datasets[1].data.push(latestSensorData.no2); 
                 chartData.datasets[2].data.push(latestSensorData.so2); 
@@ -1290,25 +1339,37 @@
         function connectMQTT() {
             if (client.isConnected() || isConnectingMQTT) return;
             isConnectingMQTT = true;
+            updateMQTTStatusUI("connecting");
 
             client.connect({ 
                 useSSL: true, 
                 timeout: 5,
+                keepAliveInterval: 60,
+                cleanSession: true,
                 onSuccess: () => { 
                     isConnectingMQTT = false;
-                    document.getElementById("connection-status").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/50"; 
-                    document.getElementById("connection-status").innerText = "🟢 Connected Online"; 
-                    client.subscribe("pollution/env/predicted"); 
+                    updateMQTTStatusUI("connected"); 
+                    client.subscribe(MQTT_CONFIG.topics.subData); 
+                    console.log("✅ MQTT Connected & Subscribed to:", MQTT_CONFIG.topics.subData);
                 }, 
                 onFailure: (err) => { 
                     isConnectingMQTT = false;
-                    document.getElementById("connection-status").className = "px-4 py-1.5 rounded-full text-xs font-bold bg-red-950/80 text-red-300 border border-red-500/50"; 
-                    document.getElementById("connection-status").innerText = "🔴 Disconnected"; 
+                    console.error("MQTT Connection Failed:", err);
+                    updateMQTTStatusUI("disconnected"); 
                     setTimeout(connectMQTT, 5000); 
                 } 
             });
         }
 
+        function sendMQTTMessage(topic, payload) {
+            if (client && client.isConnected()) {
+                const msg = new Paho.MQTT.Message(payload);
+                msg.destinationName = topic;
+                client.send(msg);
+            }
+        }
+
+        // เริ่มต้นการเชื่อมต่อและดึงตำแหน่ง
         connectMQTT(); 
         getUserLocation();
     </script>
