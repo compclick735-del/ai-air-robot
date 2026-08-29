@@ -283,8 +283,8 @@
                     </div>
                     
                     <div class="relative w-full h-[350px] lg:h-[400px] bg-slate-950/90 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center shadow-inner">
-                        <video id="webcam-stream" autoplay playsinline muted class="w-full h-full object-contain hidden z-0"></video>
-                        <img id="esp32-stream" src="" crossorigin="anonymous" class="w-full h-full object-contain hidden z-0" alt="ESP32 Stream">
+                        <video id="webcam-stream" autoplay playsinline muted class="w-full h-full object-contain hidden z-0" style="transform: scaleX(-1);"></video>
+                        <img id="esp32-stream" src="" crossorigin="anonymous" class="w-full h-full object-contain hidden z-0" alt="ESP32 Stream" style="transform: scaleX(-1);">
                         <canvas id="ai-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-10 hidden"></canvas>
                         
                         <div id="cam-placeholder" class="text-center p-4 z-20">
@@ -331,7 +331,9 @@
                         <button id="btn-F" class="cyber-btn cyber-btn-purple rounded-t-2xl flex items-center justify-center text-2xl">▲</button>
                         <div></div>
                         <button id="btn-L" class="cyber-btn cyber-btn-purple rounded-l-2xl flex items-center justify-center text-2xl">◀</button>
-                        <div class="flex items-center justify-center text-purple-400 font-bold text-xs cyber-font opacity-50">CORE</div> 
+                        <button id="btn-STOP" class="cyber-btn cyber-btn-secondary rounded-full flex items-center justify-center text-sm font-black px-4 py-2 min-w-[80px] min-h-[80px] ring-2 ring-red-500/50 hover:ring-red-400 hover:bg-red-500/30 transition-all duration-200" title="Emergency Stop (Spacebar)">
+                            🛑<br><span class="text-xs">STOP</span>
+                        </button>
                         <button id="btn-R" class="cyber-btn cyber-btn-purple rounded-r-2xl flex items-center justify-center text-2xl">▶</button>
                         <div></div>
                         <button id="btn-B" class="cyber-btn cyber-btn-purple rounded-b-2xl flex items-center justify-center text-2xl">▼</button>
@@ -741,7 +743,7 @@
                 console.error("Webcam Access Error:", err);
                 let errorMessage = "ไม่สามารถเข้าถึงกล้องได้!";
                 if (err.name === 'NotReadableError') {
-                    errorMessage = "ไม่สามารถเข้าถึงกล้องได้! กล้องกำลังถูกใช้งานโดยโปรแกรมอื่น กรุณาปิดโปรแกรมเหล่านั้นแล้วลองใหม่อีกครั้ง";
+                    errorMessage = "ไม่สามารถเข้าถึงกล้องได้! กล้องกำลังถูกใช้งานโดยโปรแกรมอื่น กรุณาปิดโปรแกรมเหล่านั้นแล้วลองใหมีกครั้ง";
                 } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
                     errorMessage = "ไม่สามารถเข้าถึงกล้องได้! กรุณากดอนุญาตให้สิทธิ์ใช้งานกล้องในเบราว์เซอร์";
                 } else if (err.name === 'NotFoundError') {
@@ -984,9 +986,12 @@
                     let finalW = width * scaleX;
                     let finalH = height * scaleY;
 
+                    // ⚡ วิธีที่ 2: คำนวณพิกัด X ใหม่บน Frontend สำหรับวิดีโอที่โดน Mirror (CSS scaleX(-1))
+                    let mirroredX = canvas.width - finalX - finalW;
+
                     ctx.strokeStyle = "#00f5a0";
                     ctx.lineWidth = 3;
-                    ctx.strokeRect(finalX, finalY, finalW, finalH);
+                    ctx.strokeRect(mirroredX, finalY, finalW, finalH);
 
                     const label = `🚨 PERSON ${Math.round(score * 100)}%`;
                     ctx.font = "bold 13px 'Orbitron', sans-serif";
@@ -994,9 +999,9 @@
                     const labelY = finalY - 22 > 0 ? finalY - 22 : finalY;
                     
                     ctx.fillStyle = "#00f5a0";
-                    ctx.fillRect(finalX, labelY, textWidth + 10, 22);
+                    ctx.fillRect(mirroredX, labelY, textWidth + 10, 22);
                     ctx.fillStyle = "#000000";
-                    ctx.fillText(label, finalX + 5, labelY + 16);
+                    ctx.fillText(label, mirroredX + 5, labelY + 16);
                 });
             } catch (err) {
                 console.error("YOLO AI Detection Error:", err);
@@ -1265,10 +1270,39 @@
             btn.addEventListener('pointercancel', stop);
         });
 
+        // 🛑 EMERGENCY STOP BUTTON & RESET CONTROL FUNCTION
         function releaseAllMovementControls() {
             Object.keys(activeKeys).forEach(key => { activeKeys[key] = false; });
-            processKeyCombinations();
+            processKeyCombinations(); // รีเซ็ตสถานะปุ่มฝั่ง UI และคำสั่งควบคุมกลับเป็น 'S' (จุดศูนย์กลาง)
         }
+
+        const btnStop = document.getElementById('btn-STOP');
+        if (btnStop) {
+            const triggerStop = (e) => {
+                e.preventDefault();
+                releaseAllMovementControls(); // รีเซ็ตทุกปุ่มทันที
+                sendMQTTMessage(MQTT_CONFIG.topics.pubControl, "S"); // ส่งคำสั่งหยุดชัดเจน
+                // Visual feedback
+                btnStop.classList.add('ring-red-400', 'bg-red-500/40');
+                setTimeout(() => btnStop.classList.remove('ring-red-400', 'bg-red-500/40'), 200);
+            };
+            btnStop.addEventListener('pointerdown', triggerStop);
+            btnStop.addEventListener('click', triggerStop); // fallback
+        }
+
+        // รองรับ Spacebar เป็น Emergency Stop
+        document.addEventListener('keydown', e => {
+            if (e.code === 'Space' && !e.repeat) {
+                e.preventDefault();
+                releaseAllMovementControls();
+                sendMQTTMessage(MQTT_CONFIG.topics.pubControl, "S");
+                const btnStop = document.getElementById('btn-STOP');
+                if (btnStop) {
+                    btnStop.classList.add('ring-red-400', 'bg-red-500/40');
+                    setTimeout(() => btnStop.classList.remove('ring-red-400', 'bg-red-500/40'), 200);
+                }
+            }
+        });
 
         window.addEventListener('blur', releaseAllMovementControls);
         document.addEventListener('visibilitychange', () => {
@@ -1276,7 +1310,7 @@
         });
 
         // ==========================================
-        // 2. PAHO MQTT CONFIGURATION & CONTROLLER (แก้ไขแล้ว)
+        // ⚡ PAHO MQTT CONFIGURATION & EXPONENTIAL BACKOFF RECONNECTION
         // ==========================================
         const MQTT_CONFIG = {
             broker: "10.243.178.6", // IP เครื่องที่รัน Mosquitto Broker
@@ -1298,35 +1332,63 @@
         );
 
         let isConnectingMQTT = false;
+        
+        // Variables สำหรับจัดการ Exponential Backoff
+        let reconnectAttempts = 0;
+        const BASE_RECONNECT_DELAY_MS = 1000; // เริ่มต้นที่ 1 วินาที
+        const MAX_RECONNECT_DELAY_MS = 30000;  // หน่วงเวลารอสูงสุดไม่เกิน 30 วินาที
+        let reconnectTimerId = null;
 
-        function updateMQTTStatusUI(status) {
+        function updateMQTTStatusUI(status, details = "") {
             const badge = document.getElementById("connection-status");
             if (!badge) return;
 
             if (status === "connecting") {
                 badge.className = "px-4 py-1.5 rounded-full text-xs font-bold bg-amber-950/80 text-amber-300 border border-amber-500/50 animate-pulse";
-                badge.innerText = "🟡 Connecting MQTT...";
+                badge.innerText = details ? `🟡 Connecting... (${details})` : "🟡 Connecting MQTT...";
             } else if (status === "connected") {
                 badge.className = "px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/50";
                 badge.innerText = "🟢 Connected Online";
             } else {
                 badge.className = "px-4 py-1.5 rounded-full text-xs font-bold bg-red-950/80 text-red-300 border border-red-500/50 animate-pulse";
-                badge.innerText = "🔴 Disconnected";
+                badge.innerText = details ? `🔴 Disconnected (${details})` : "🔴 Disconnected";
             }
+        }
+
+        // ระบบ Auto-reconnect เบื้องหลังแบบ Exponential Backoff (Non-blocking)
+        function scheduleReconnectWithBackoff() {
+            if (reconnectTimerId !== null) {
+                clearTimeout(reconnectTimerId);
+            }
+
+            const expDelay = Math.min(BASE_RECONNECT_DELAY_MS * Math.pow(2, reconnectAttempts), MAX_RECONNECT_DELAY_MS);
+            const jitter = Math.floor(Math.random() * 1000); 
+            const totalDelay = expDelay + jitter;
+
+            reconnectAttempts++;
+            const retrySeconds = (totalDelay / 1000).toFixed(1);
+            console.log(`[MQTT Reconnection] Attempt #${reconnectAttempts} scheduled in ${retrySeconds}s`);
+            
+            updateMQTTStatusUI("disconnected", `Retry in ${Math.round(retrySeconds)}s`);
+
+            reconnectTimerId = setTimeout(() => {
+                reconnectTimerId = null;
+                connectMQTT();
+            }, totalDelay);
         }
 
         client.onConnectionLost = (responseObject) => { 
             isConnectingMQTT = false;
             console.warn("MQTT Connection Lost:", responseObject ? responseObject.errorMessage : "Unknown error");
-            updateMQTTStatusUI("disconnected"); 
-            setTimeout(connectMQTT, 3000); 
+            
+            releaseAllMovementControls();
+            scheduleReconnectWithBackoff(); 
         };
 
         client.onMessageArrived = (message) => {
             try {
                 const d = JSON.parse(message.payloadString);
                 
-                // อ่านข้อมูลแบบยืดหยุ่นรองรับตัวพิมพ์ใหญ่/ตัวพิมพ์เล็ก
                 latestSensorData.temp = parseFloat(d.Temperature ?? d.temp ?? latestSensorData.temp); 
                 latestSensorData.hum = parseFloat(d.Humidity ?? d.hum ?? latestSensorData.hum); 
                 latestSensorData.pm25 = parseInt(d.PM25 ?? d.pm25 ?? latestSensorData.pm25); 
@@ -1347,7 +1409,6 @@
 
                 updateAIPrediction();
 
-                // บันทึกลง Supabase Database
                 logSensorDataToSupabase(latestSensorData);
 
                 const now = new Date();
@@ -1376,15 +1437,20 @@
         function connectMQTT() {
             if (client.isConnected() || isConnectingMQTT) return;
             isConnectingMQTT = true;
-            updateMQTTStatusUI("connecting");
+            updateMQTTStatusUI("connecting", reconnectAttempts > 0 ? `#${reconnectAttempts}` : "");
 
             client.connect({ 
-                useSSL: false, // ปิด SSL เพื่อเชื่อมต่อ Local Mosquitto WebSockets
+                useSSL: false, 
                 timeout: 5,
                 keepAliveInterval: 60,
                 cleanSession: true,
                 onSuccess: () => { 
                     isConnectingMQTT = false;
+                    reconnectAttempts = 0; 
+                    if (reconnectTimerId !== null) {
+                        clearTimeout(reconnectTimerId);
+                        reconnectTimerId = null;
+                    }
                     updateMQTTStatusUI("connected"); 
                     client.subscribe(MQTT_CONFIG.topics.subData); 
                     console.log("✅ MQTT Connected & Subscribed to:", MQTT_CONFIG.topics.subData);
@@ -1392,8 +1458,9 @@
                 onFailure: (err) => { 
                     isConnectingMQTT = false;
                     console.error("MQTT Connection Failed:", err);
-                    updateMQTTStatusUI("disconnected"); 
-                    setTimeout(connectMQTT, 5000); 
+                    
+                    releaseAllMovementControls();
+                    scheduleReconnectWithBackoff(); 
                 } 
             });
         }
@@ -1406,7 +1473,6 @@
             }
         }
 
-        // เริ่มต้นการเชื่อมต่อและดึงตำแหน่ง
         connectMQTT(); 
         getUserLocation();
     </script>
