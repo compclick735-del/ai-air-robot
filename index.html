@@ -112,6 +112,14 @@
             box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.7);
         }
 
+        .pollutant-card {
+            cursor: pointer;
+        }
+        .pollutant-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.3);
+        }
+
         /* 🟢 Cyber Cyan & Emerald Theme */
         .card-cyan-glow {
             border: 1px solid rgba(6, 182, 212, 0.3);
@@ -385,15 +393,43 @@
             <div class="glass-card card-cyan-glow p-6 flex flex-col items-center"><p class="text-cyan-400 text-xs font-bold tracking-wider uppercase mb-4 cyber-font">ความชื้นอากาศจริง</p><div class="gauge-container"><canvas id="humGauge"></canvas><div class="gauge-value text-xl cyber-font text-emerald-300"><span id="txt-hum" class="text-3xl">0</span> %</div></div></div>
         </div>
 
-        <!-- แถวที่ 4: การ์ดตัวเลขมลพิษ สีสันสดใสแบบแยกการ์ด -->
+        <!-- แถวที่ 4: การ์ดตัวเลขมลพิษ สีสันสดใสแบบแยกการ์ด (สามารถคลิกเพื่อเปิด Pop-up ได้) -->
         <div>
-            <h3 class="text-slate-200 font-bold text-lg mb-4 flex items-center tracking-wide cyber-font">📊 ตารางสรุปค่ามลพิษที่ได้รับ (หุ่นยนต์ และ API สภาพอากาศ)</h3>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-slate-200 font-bold text-lg flex items-center tracking-wide cyber-font">📊 ตารางสรุปค่ามลพิษที่ได้รับ (หุ่นยนต์ และ API สภาพอากาศ)</h3>
+                <span class="text-xs text-cyan-400/80 animate-pulse">💡 คลิกที่การ์ดเพื่อดูผลกระทบสุขภาพและวิธีคำแนะนำ</span>
+            </div>
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div class="glass-card p-5 border-l-4 border-l-cyan-400"><p class="text-cyan-400 text-xs font-bold uppercase tracking-wider cyber-font">ก๊าซ CO</p><p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-co">0.00</span> <span class="text-xs font-normal text-cyan-400">ppm</span></p></div>
-                <div class="glass-card p-5 border-l-4 border-l-emerald-400"><p class="text-emerald-400 text-xs font-bold uppercase tracking-wider cyber-font">PM2.5</p><p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-pm25">0</span> <span class="text-xs font-normal text-emerald-400">µg/m³</span></p></div>
-                <div class="glass-card p-5 border-l-4 border-l-purple-400"><p class="text-purple-400 text-xs font-bold uppercase tracking-wider cyber-font">PM10</p><p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-pm10">0</span> <span class="text-xs font-normal text-purple-400">µg/m³</span></p></div>
-                <div class="glass-card p-5 border-l-4 border-l-amber-400"><p class="text-amber-400 text-xs font-bold uppercase tracking-wider cyber-font">ก๊าซ NO2</p><p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-no2">0.00</span> <span class="text-xs font-normal text-amber-400">ppm</span></p></div>
-                <div class="glass-card p-5 border-l-4 border-l-rose-400 col-span-2 md:col-span-1"><p class="text-rose-400 text-xs font-bold uppercase tracking-wider cyber-font">ก๊าซ SO2</p><p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-so2">0.00</span> <span class="text-xs font-normal text-rose-400">ppm</span></p></div>
+                <div onclick="openPollutantModal('co')" class="glass-card pollutant-card p-5 border-l-4 border-l-cyan-400">
+                    <p class="text-cyan-400 text-xs font-bold uppercase tracking-wider cyber-font flex justify-between items-center">
+                        <span>ก๊าซ CO</span> <span class="text-[10px] text-cyan-300/60">🔍 ดูข้อมูล</span>
+                    </p>
+                    <p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-co">0.00</span> <span class="text-xs font-normal text-cyan-400">ppm</span></p>
+                </div>
+                <div onclick="openPollutantModal('pm25')" class="glass-card pollutant-card p-5 border-l-4 border-l-emerald-400">
+                    <p class="text-emerald-400 text-xs font-bold uppercase tracking-wider cyber-font flex justify-between items-center">
+                        <span>PM2.5</span> <span class="text-[10px] text-emerald-300/60">🔍 ดูข้อมูล</span>
+                    </p>
+                    <p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-pm25">0</span> <span class="text-xs font-normal text-emerald-400">µg/m³</span></p>
+                </div>
+                <div onclick="openPollutantModal('pm10')" class="glass-card pollutant-card p-5 border-l-4 border-l-purple-400">
+                    <p class="text-purple-400 text-xs font-bold uppercase tracking-wider cyber-font flex justify-between items-center">
+                        <span>PM10</span> <span class="text-[10px] text-purple-300/60">🔍 ดูข้อมูล</span>
+                    </p>
+                    <p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-pm10">0</span> <span class="text-xs font-normal text-purple-400">µg/m³</span></p>
+                </div>
+                <div onclick="openPollutantModal('no2')" class="glass-card pollutant-card p-5 border-l-4 border-l-amber-400">
+                    <p class="text-amber-400 text-xs font-bold uppercase tracking-wider cyber-font flex justify-between items-center">
+                        <span>ก๊าซ NO2</span> <span class="text-[10px] text-amber-300/60">🔍 ดูข้อมูล</span>
+                    </p>
+                    <p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-no2">0.00</span> <span class="text-xs font-normal text-amber-400">ppm</span></p>
+                </div>
+                <div onclick="openPollutantModal('so2')" class="glass-card pollutant-card p-5 border-l-4 border-l-rose-400 col-span-2 md:col-span-1">
+                    <p class="text-rose-400 text-xs font-bold uppercase tracking-wider cyber-font flex justify-between items-center">
+                        <span>ก๊าซ SO2</span> <span class="text-[10px] text-rose-300/60">🔍 ดูข้อมูล</span>
+                    </p>
+                    <p class="text-3xl font-black text-white mt-2 cyber-font"><span id="val-so2">0.00</span> <span class="text-xs font-normal text-rose-400">ppm</span></p>
+                </div>
             </div>
         </div>
 
@@ -411,7 +447,136 @@
         </div>
     </main>
 
+    <!-- 🔮 POPUP MODAL ข้อมูลอันตรายและคำแนะนำสุขภาพ -->
+    <div id="pollutant-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md hidden opacity-0 transition-all duration-300">
+        <div id="pollutant-modal-card" class="glass-card max-w-lg w-full p-6 relative shadow-2xl border border-cyan-500/40 transform scale-95 transition-all duration-300">
+            <!-- ปุ่มปิด Pop-up -->
+            <button onclick="closePollutantModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-800/60 transition-colors">&times;</button>
+            
+            <!-- ส่วนหัว Modal -->
+            <div class="flex items-center space-x-3 mb-5 border-b border-slate-800 pb-4">
+                <span id="modal-icon" class="text-4xl">⚠️</span>
+                <div>
+                    <h3 id="modal-title" class="text-xl font-black cyber-font text-cyan-300">ข้อมูลมลพิษ</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">ค่าปัจจุบันที่ตรวจวัดได้: <span id="modal-current-val" class="font-bold text-cyan-400 cyber-font">0.00</span></p>
+                </div>
+            </div>
+
+            <!-- เนื้อหาอันตรายและคำแนะนำ -->
+            <div class="space-y-4 text-sm">
+                <div class="bg-slate-900/90 p-4 rounded-xl border border-rose-500/30">
+                    <h4 class="font-bold text-rose-400 mb-1.5 flex items-center text-xs tracking-wider uppercase cyber-font">
+                        <span class="mr-2 text-base">☠️</span> อันตรายและผลกระทบต่อสุขภาพ
+                    </h4>
+                    <p id="modal-danger" class="text-xs leading-relaxed text-slate-300 font-medium"></p>
+                </div>
+
+                <div class="bg-slate-900/90 p-4 rounded-xl border border-emerald-500/30">
+                    <h4 class="font-bold text-emerald-400 mb-1.5 flex items-center text-xs tracking-wider uppercase cyber-font">
+                        <span class="mr-2 text-base">💡</span> คำแนะนำและการปฏิบัติตน
+                    </h4>
+                    <p id="modal-advice" class="text-xs leading-relaxed text-slate-300 font-medium whitespace-pre-line"></p>
+                </div>
+            </div>
+
+            <!-- ปุ่มปิดด้านล่าง -->
+            <div class="mt-6 text-right">
+                <button onclick="closePollutantModal()" class="cyber-btn px-6 py-2 rounded-xl text-xs">
+                    เข้าในแล้ว / ปิดหน้าต่าง
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // ==========================================
+        // 🔮 DATA & MODAL HANDLER FOR POLLUTANTS
+        // ==========================================
+        const pollutantDetails = {
+            co: {
+                name: "ก๊าซคาร์บอนมอนอกไซด์ (CO)",
+                unit: "ppm",
+                valId: "val-co",
+                icon: "🚗",
+                danger: "เป็นก๊าซไร้สีไร้กลิ่น เกิดจากการเผาไหม้ไม่สมบูรณ์ เมื่อสูดดมเข้าไปจะเข้าจับกับฮีโมโกลบินในเม็ดเลือดแดงได้ดีกว่าออกซิเจนถึง 200 เท่า ทำให้ร่างกายและสมองเกิดภาวะขาดออกซิเจน เกิดอาการปวดศีรษะ เวียนศีรษะ คลื่นไส้ สับสน และอาจหมดสติหรือเสียชีวิตได้หากได้รับความเข้มข้นสูง",
+                advice: "1. หลีกเลี่ยงบริเวณที่มีควันพิษสะสม เช่น บริเวณจราจรติดขัดหรือลานจอดรถอับอากาศ\n2. ห้ามสตาร์ตรถทิ้งไว้ในอาคารหรือจอดนอนเปิดแอร์ในรถยนต์\n3. หากรู้สึกเวียนศีรษะ คลื่นไส้ ให้รีบย้ายไปยังพื้นที่ที่มีอากาศถ่ายเทสะดวกทันที"
+            },
+            pm25: {
+                name: "ฝุ่นละอองขนาดเล็ก (PM2.5)",
+                unit: "µg/m³",
+                valId: "val-pm25",
+                icon: "🌫️",
+                danger: "ฝุ่นขนาดเล็กไม่เกิน 2.5 ไมครอน สามารถแทรกซึมผ่านระบบกรองของร่างกายเข้าสู่ถุงลมปอดและกระแสเลือดได้โดยตรง ก่อให้เกิดการอักเสบเรื้อรัง เสี่ยงต่อการเกิดโรคหัวใจ อัมพฤกษ์ อัมพาต โรคระบบทางเดินหายใจ และเพิ่มความเสี่ยงโรคมะเร็งปอด",
+                advice: "1. สวมหน้ากากอนามัยชนิด N95 เมื่อต้องออกนอกอาคารในวันที่ฝุ่นสูง\n2. หลีกเลี่ยงการออกกำลังกายหรือทำกิจกรรมหนักกลางแจ้ง\n3. เปิดเครื่องฟอกอากาศที่มีแผ่นกรอง HEPA และปิดประตูหน้าต่างให้มิดชิด"
+            },
+            pm10: {
+                name: "ฝุ่นละอองขนาดใหญ่ (PM10)",
+                unit: "µg/m³",
+                valId: "val-pm10",
+                icon: "🏭",
+                danger: "ฝุ่นขนาดไม่เกิน 10 ไมครอน ส่วนใหญ่เกิดจากกิจกรรมก่อสร้าง ควันโรงงาน และฝุ่นละอองบนถนน ตกค้างในระบบทางเดินหายใจส่วนบน ทำให้ระคายเคืองตา คอ จมูก มีอาการไอ คัดจมูก และกระตุ้นอาการภูมิแพ้หรือโรคหอบหืดให้รุนแรงขึ้น",
+                advice: "1. สวมหน้ากากอนามัยป้องกันเมื่อต้องเดินทางผ่านพื้นที่ก่อสร้างหรือริมถนนใหญ่\n2. สระผม ล้างหน้า และชำระร่างกายทันทีเมื่อกลับเข้าสู่ภายในอาคาร\n3. ใช้ผ้าชุบน้ำเช็ดทำความสะอาดฝุ่นภายในบ้านเป็นประจำเพื่อลดการสะสม"
+            },
+            no2: {
+                name: "ก๊าซไนโตรเจนไดออกไซด์ (NO2)",
+                unit: "ppm",
+                valId: "val-no2",
+                icon: "⚡",
+                danger: "เกิดจากการเผาไหม้ของเชื้อเพลิงในรถยนต์และโรงงานไฟฟ้า มีฤทธิ์ระคายเคืองเนื้อเยื่อปอดและระบบทางเดินหายใจสูง ทำให้เกิดอาการไอ หายใจติดขัด หลอดลมหดเกร็ง และทำให้เด็กหรือผู้ป่วยโรคหอบหืดมีความเสี่ยงต่อการติดเชื้อในปอดสูงขึ้น",
+                advice: "1. หลีกเลี่ยงการอยู่ใกล้ริมถนนที่มีการจราจรหนาแน่นเป็นเวลานาน\n2. ผู้ป่วยโรคหอบหืดและโรคปอดควรรักษาสุขภาพและพกยาประจำตัวติดตัวเสมอ\n3. ปลูกต้นไม้บริเวณรอบบ้านเพื่อช่วยดูดซับก๊าซพิษ"
+            },
+            so2: {
+                name: "ก๊าซซัลเฟอร์ไดออกไซด์ (SO2)",
+                unit: "ppm",
+                valId: "val-so2",
+                icon: "🌋",
+                danger: "เกิดจากการเผาไหม้เชื้อเพลิงที่มีซัลเฟอร์/กำมะถัน เช่น ถ่านหินและน้ำมันเตา ก๊าซนี้มีฤทธิ์กัดกร่อน ทำให้แสบตา แสบจมูก ระคายเคืองหลอดลม ทำให้เกิดอาการแสบคอ หายใจลำบาก อีกทั้งยังเป็นสาเหตุหลักของการเกิดฝนกรด",
+                advice: "1. สวมหน้ากากป้องกันเมื่ออยู่ในเขตอุตสาหกรรมหรือพื้นที่สุ่มเสี่ยง\n2. หากได้กลิ่นก๊าซฉุนหรือแสบตา ให้รีบเข้าไปในห้องปรับอากาศปิดมิดชิด\n3. หากมีอาการแสบคอและหายใจขัดรุนแรง ให้รีบพบแพทย์ทันที"
+            }
+        };
+
+        function openPollutantModal(type) {
+            const info = pollutantDetails[type];
+            if (!info) return;
+
+            const currentValText = document.getElementById(info.valId)?.innerText || "0";
+
+            document.getElementById("modal-title").innerText = info.name;
+            document.getElementById("modal-icon").innerText = info.icon;
+            document.getElementById("modal-current-val").innerText = `${currentValText} ${info.unit}`;
+            document.getElementById("modal-danger").innerText = info.danger;
+            document.getElementById("modal-advice").innerText = info.advice;
+
+            const modal = document.getElementById("pollutant-modal");
+            const modalCard = document.getElementById("pollutant-modal-card");
+            
+            modal.classList.remove("hidden");
+            setTimeout(() => {
+                modal.classList.remove("opacity-0");
+                modalCard.classList.remove("scale-95");
+                modalCard.classList.add("scale-100");
+            }, 10);
+        }
+
+        function closePollutantModal() {
+            const modal = document.getElementById("pollutant-modal");
+            const modalCard = document.getElementById("pollutant-modal-card");
+            
+            modal.classList.add("opacity-0");
+            modalCard.classList.remove("scale-100");
+            modalCard.classList.add("scale-95");
+            setTimeout(() => {
+                modal.classList.add("hidden");
+            }, 300);
+        }
+
+        // ปิด Modal เมื่อคลิกพื้นที่ว่างรอบๆ
+        document.getElementById("pollutant-modal").addEventListener("click", (e) => {
+            if (e.target.id === "pollutant-modal") {
+                closePollutantModal();
+            }
+        });
+
         // ==========================================
         // ⚡ Supabase & Data Export Integration
         // ==========================================
@@ -1273,24 +1438,22 @@
         // 🛑 EMERGENCY STOP BUTTON & RESET CONTROL FUNCTION
         function releaseAllMovementControls() {
             Object.keys(activeKeys).forEach(key => { activeKeys[key] = false; });
-            processKeyCombinations(); // รีเซ็ตสถานะปุ่มฝั่ง UI และคำสั่งควบคุมกลับเป็น 'S' (จุดศูนย์กลาง)
+            processKeyCombinations(); 
         }
 
         const btnStop = document.getElementById('btn-STOP');
         if (btnStop) {
             const triggerStop = (e) => {
                 e.preventDefault();
-                releaseAllMovementControls(); // รีเซ็ตทุกปุ่มทันที
-                sendMQTTMessage(MQTT_CONFIG.topics.pubControl, "S"); // ส่งคำสั่งหยุดชัดเจน
-                // Visual feedback
+                releaseAllMovementControls(); 
+                sendMQTTMessage(MQTT_CONFIG.topics.pubControl, "S"); 
                 btnStop.classList.add('ring-red-400', 'bg-red-500/40');
                 setTimeout(() => btnStop.classList.remove('ring-red-400', 'bg-red-500/40'), 200);
             };
             btnStop.addEventListener('pointerdown', triggerStop);
-            btnStop.addEventListener('click', triggerStop); // fallback
+            btnStop.addEventListener('click', triggerStop); 
         }
 
-        // รองรับ Spacebar เป็น Emergency Stop
         document.addEventListener('keydown', e => {
             if (e.code === 'Space' && !e.repeat) {
                 e.preventDefault();
@@ -1313,8 +1476,8 @@
         // ⚡ PAHO MQTT CONFIGURATION & EXPONENTIAL BACKOFF RECONNECTION
         // ==========================================
         const MQTT_CONFIG = {
-            broker: "10.243.178.87", // IP เครื่องที่รัน Mosquitto Broker
-            port: 9001,               // พอร์ต WebSockets ของ Mosquitto
+            broker: "10.243.178.87", 
+            port: 9001,               
             path: "",
             clientId: "web_dash_" + Math.random().toString(16).substring(2, 10),
             topics: {
@@ -1332,11 +1495,9 @@
         );
 
         let isConnectingMQTT = false;
-        
-        // Variables สำหรับจัดการ Exponential Backoff
         let reconnectAttempts = 0;
-        const BASE_RECONNECT_DELAY_MS = 1000; // เริ่มต้นที่ 1 วินาที
-        const MAX_RECONNECT_DELAY_MS = 30000;  // หน่วงเวลารอสูงสุดไม่เกิน 30 วินาที
+        const BASE_RECONNECT_DELAY_MS = 1000; 
+        const MAX_RECONNECT_DELAY_MS = 30000;  
         let reconnectTimerId = null;
 
         function updateMQTTStatusUI(status, details = "") {
@@ -1355,7 +1516,6 @@
             }
         }
 
-        // ระบบ Auto-reconnect เบื้องหลังแบบ Exponential Backoff (Non-blocking)
         function scheduleReconnectWithBackoff() {
             if (reconnectTimerId !== null) {
                 clearTimeout(reconnectTimerId);
