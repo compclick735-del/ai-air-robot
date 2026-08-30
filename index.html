@@ -220,7 +220,67 @@
         .status-hazardous { background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(190, 24, 93, 0.5)); border: 2px solid #ec4899; color: #f472b6; box-shadow: 0 0 30px rgba(236, 72, 153, 0.5); }
         
         .gauge-container { position: relative; width: 100%; height: 140px; }
-        .gauge-value { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-weight: 800; text-shadow: 0 0 10px rgba(6,182,212,0.5); }
+        .gauge-value { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-weight: 800; text-shadow: 0 0 10px rgba(6,182,212,0.5); z-index: 5; }
+
+        /* 🌈 Rainbow Water Wave Tube Gauge */
+        .tube-gauge {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.06), rgba(7,9,14,0.9) 70%);
+            border: 3px solid rgba(255,255,255,0.15);
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.7), 0 0 25px rgba(6,182,212,0.15);
+        }
+
+        .tube-liquid {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            top: 100%;
+            transition: top 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .wave {
+            position: absolute;
+            width: 250%;
+            height: 250%;
+            left: -75%;
+            top: -180%;
+            border-radius: 42%;
+            background: linear-gradient(90deg,
+                #ff2d55, #ff8a00, #ffe600, #35e000, #00e0c6, #0091ff, #7b2dff, #ff2dcf, #ff2d55);
+            background-size: 300% 100%;
+        }
+
+        .wave1 {
+            opacity: 0.85;
+            animation: tubeRotate 7s linear infinite, tubeRainbow 5s linear infinite;
+        }
+
+        .wave2 {
+            opacity: 0.55;
+            animation: tubeRotateRev 10s linear infinite, tubeRainbowRev 8s linear infinite;
+        }
+
+        @keyframes tubeRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes tubeRotateRev { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+        @keyframes tubeRainbow { 0% { background-position: 0% 50%; } 100% { background-position: -300% 50%; } }
+        @keyframes tubeRainbowRev { 0% { background-position: -300% 50%; } 100% { background-position: 0% 50%; } }
+
+        .tube-shine {
+            position: absolute;
+            top: 8%; left: 14%;
+            width: 30%; height: 22%;
+            background: radial-gradient(ellipse at center, rgba(255,255,255,0.5), rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            transform: rotate(-25deg);
+            pointer-events: none;
+            z-index: 4;
+        }
         .key-active { background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%) !important; color: #ffffff !important; transform: scale(0.92); box-shadow: 0 0 25px rgba(168, 85, 247, 0.8) !important; border-color: #f472b6 !important; }
         .no-select { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
         
@@ -424,8 +484,8 @@
 
         <!-- แถวที่ 3: เกจวัดอุณหภูมิและความชื้น -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="glass-card card-cyan-glow p-6 flex flex-col items-center"><p class="text-cyan-400 text-xs font-bold tracking-wider uppercase mb-4 cyber-font">อุณหภูมิห้องจริง</p><div class="gauge-container"><canvas id="tempGauge"></canvas><div class="gauge-value text-xl cyber-font text-cyan-300"><span id="txt-temp" class="text-3xl">0.0</span> °C</div></div></div>
-            <div class="glass-card card-cyan-glow p-6 flex flex-col items-center"><p class="text-cyan-400 text-xs font-bold tracking-wider uppercase mb-4 cyber-font">ความชื้นอากาศจริง</p><div class="gauge-container"><canvas id="humGauge"></canvas><div class="gauge-value text-xl cyber-font text-emerald-300"><span id="txt-hum" class="text-3xl">0</span> %</div></div></div>
+            <div class="glass-card card-cyan-glow p-6 flex flex-col items-center"><p class="text-cyan-400 text-xs font-bold tracking-wider uppercase mb-4 cyber-font">อุณหภูมิห้องจริง</p><div class="tube-gauge" id="tempTube"><div class="tube-liquid" id="tempTubeLiquid"><div class="wave wave1"></div><div class="wave wave2"></div></div><div class="tube-shine"></div><div class="gauge-value text-xl cyber-font text-white"><span id="txt-temp" class="text-3xl">0.0</span> °C</div></div></div>
+            <div class="glass-card card-cyan-glow p-6 flex flex-col items-center"><p class="text-cyan-400 text-xs font-bold tracking-wider uppercase mb-4 cyber-font">ความชื้นอากาศจริง</p><div class="tube-gauge" id="humTube"><div class="tube-liquid" id="humTubeLiquid"><div class="wave wave1"></div><div class="wave wave2"></div></div><div class="tube-shine"></div><div class="gauge-value text-xl cyber-font text-white"><span id="txt-hum" class="text-3xl">0</span> %</div></div></div>
         </div>
 
         <!-- แถวที่ 3.5: ศูนย์ประสานงานอพยพกลุ่มเสี่ยง (Evacuation Coordination Center) -->
@@ -1285,29 +1345,15 @@
         let currentLon = 102.1158; 
         let latestSensorData = { temp: 25.0, hum: 70.0, co: 1.5, no2: 25.0, so2: 8.5, pm25: 20.0, pm10: 25.0 };
 
-        function createGaugeConfig(initialValue, maxRange, colorGradient) {
-            return { 
-                type: 'doughnut', 
-                data: { 
-                    datasets: [{ 
-                        data: [initialValue, maxRange - initialValue], 
-                        backgroundColor: [colorGradient, '#1e293b'], 
-                        borderWidth: 0 
-                    }] 
-                }, 
-                options: { 
-                    rotation: 270, 
-                    circumference: 180, 
-                    cutout: '80%', 
-                    plugins: { tooltip: { enabled: false } }, 
-                    maintainAspectRatio: false, 
-                    responsive: true 
-                } 
-            };
+        function setTubeLevel(liquidElId, value, maxRange) {
+            const el = document.getElementById(liquidElId);
+            if (!el) return;
+            const percent = Math.min(Math.max((value / maxRange) * 100, 0), 100);
+            el.style.top = (100 - percent) + '%';
         }
 
-        const tempGaugeChart = new Chart(document.getElementById('tempGauge').getContext('2d'), createGaugeConfig(0, 50, '#06b6d4'));
-        const humGaugeChart = new Chart(document.getElementById('humGauge').getContext('2d'), createGaugeConfig(0, 100, '#10b981'));
+        setTubeLevel('tempTubeLiquid', latestSensorData.temp, 50);
+        setTubeLevel('humTubeLiquid', latestSensorData.hum, 100);
 
         const chartCtx = document.getElementById('realtimeChart').getContext('2d');
         const maxDataPoints = 30; 
@@ -1924,11 +1970,8 @@
                 document.getElementById("txt-temp").innerText = latestSensorData.temp.toFixed(1); 
                 document.getElementById("txt-hum").innerText = Math.round(latestSensorData.hum);
 
-                tempGaugeChart.data.datasets[0].data = [Math.min(Math.max(latestSensorData.temp, 0), 50), 50 - Math.min(Math.max(latestSensorData.temp, 0), 50)]; 
-                tempGaugeChart.update();
-
-                humGaugeChart.data.datasets[0].data = [Math.min(Math.max(latestSensorData.hum, 0), 100), 100 - Math.min(Math.max(latestSensorData.hum, 0), 100)]; 
-                humGaugeChart.update();
+                setTubeLevel('tempTubeLiquid', latestSensorData.temp, 50);
+                setTubeLevel('humTubeLiquid', latestSensorData.hum, 100);
 
                 updateAIPrediction();
 
