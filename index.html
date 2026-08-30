@@ -229,6 +229,19 @@
         
         .cam-tab-btn { transition: all 0.2s ease; }
         .cam-tab-btn.active { background: rgba(6, 182, 212, 0.2); color: #38bdf8; border-color: #06b6d4; box-shadow: 0 0 15px rgba(6, 182, 212, 0.3); }
+
+        /* 🚨 Evacuation Alert Banner Animation */
+        @keyframes evacPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.35); }
+            50% { box-shadow: 0 0 45px rgba(239, 68, 68, 0.8); }
+        }
+        .evac-banner { animation: evacPulse 1.6s ease-in-out infinite; }
+
+        @keyframes badgePulseRed {
+            0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+            50% { box-shadow: 0 0 18px rgba(239, 68, 68, 0.9); }
+        }
+        .person-badge-danger { animation: badgePulseRed 1.2s ease-in-out infinite; }
     </style>
 </head>
 <body class="min-h-screen no-select">
@@ -269,6 +282,27 @@
         </div>
     </header>
 
+    <!-- 🚨 EVACUATION ALERT BANNER (YOLO Person Detection + AI Air Quality Fusion) -->
+    <div id="evacuation-alert-banner" class="hidden relative z-40 mx-auto max-w-7xl px-4">
+        <div class="evac-banner glass-card border-2 border-red-500/70 bg-gradient-to-r from-red-950/90 via-slate-950/90 to-pink-950/90 rounded-2xl p-4 md:p-5 mt-4 shadow-2xl">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-start space-x-3">
+                    <span class="text-4xl animate-bounce">🚨</span>
+                    <div>
+                        <h3 id="evac-banner-title" class="text-red-300 font-black cyber-font text-base md:text-lg tracking-wide">แจ้งเตือนอพยพ</h3>
+                        <p id="evac-banner-desc" class="text-slate-300 text-xs md:text-sm mt-1"></p>
+                        <span id="evac-acked-tag" class="hidden inline-block mt-2 text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-950/70 border border-emerald-500/50 text-emerald-300">✅ รับทราบแล้ว - กำลังเฝ้าระวังต่อเนื่อง</span>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2 flex-shrink-0">
+                    <a href="tel:1669" id="btn-call-emergency" class="cyber-btn cyber-btn-purple px-4 py-2 rounded-xl text-xs whitespace-nowrap inline-flex items-center justify-center">📞 โทรแจ้งเจ้าหน้าที่</a>
+                    <button id="btn-toggle-siren" onclick="toggleSirenMute()" class="cyber-btn cyber-btn-secondary px-4 py-2 rounded-xl text-xs whitespace-nowrap">🔔 ปิดเสียงไซเรน</button>
+                    <button id="btn-ack-evac" onclick="acknowledgeEvacuation()" class="cyber-btn px-4 py-2 rounded-xl text-xs whitespace-nowrap">✅ ยืนยันเคลื่อนย้ายกลุ่มเสี่ยงแล้ว</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <main class="max-w-7xl mx-auto px-4 py-8 space-y-8 relative z-10">
         
         <!-- แถวที่ 1: กล้อง AI และ แผงควบคุมหุ่นยนต์ -->
@@ -294,7 +328,8 @@
                         <video id="webcam-stream" autoplay playsinline muted class="w-full h-full object-contain hidden z-0" style="transform: scaleX(-1);"></video>
                         <img id="esp32-stream" src="" crossorigin="anonymous" class="w-full h-full object-contain hidden z-0" alt="ESP32 Stream" style="transform: scaleX(-1);">
                         <canvas id="ai-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-10 hidden"></canvas>
-                        
+                        <div id="person-count-badge" class="hidden absolute top-3 left-3 z-20 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-950/80 border border-emerald-400/60 text-emerald-300">👥 ตรวจพบ: 0 คน</div>
+
                         <div id="cam-placeholder" class="text-center p-4 z-20">
                             <span class="text-6xl block mb-4 opacity-80 animate-bounce">📷</span>
                             <p class="text-sm text-cyan-200/70 font-medium">เลือกโหมดกล้องแล้วกดเปิดใช้งานได้เลยครับ</p>
@@ -391,6 +426,47 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="glass-card card-cyan-glow p-6 flex flex-col items-center"><p class="text-cyan-400 text-xs font-bold tracking-wider uppercase mb-4 cyber-font">อุณหภูมิห้องจริง</p><div class="gauge-container"><canvas id="tempGauge"></canvas><div class="gauge-value text-xl cyber-font text-cyan-300"><span id="txt-temp" class="text-3xl">0.0</span> °C</div></div></div>
             <div class="glass-card card-cyan-glow p-6 flex flex-col items-center"><p class="text-cyan-400 text-xs font-bold tracking-wider uppercase mb-4 cyber-font">ความชื้นอากาศจริง</p><div class="gauge-container"><canvas id="humGauge"></canvas><div class="gauge-value text-xl cyber-font text-emerald-300"><span id="txt-hum" class="text-3xl">0</span> %</div></div></div>
+        </div>
+
+        <!-- แถวที่ 3.5: ศูนย์ประสานงานอพยพกลุ่มเสี่ยง (Evacuation Coordination Center) -->
+        <div class="glass-card p-6" style="border:1px solid rgba(239,68,68,0.3); box-shadow:0 0 20px rgba(239,68,68,0.08);">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-5">
+                <h3 class="text-red-300 font-bold text-lg tracking-wide cyber-font flex items-center">
+                    <span class="mr-2.5 text-xl">🚑</span> ศูนย์ประสานงานอพยพกลุ่มเสี่ยง
+                </h3>
+                <span id="evac-current-status" class="text-xs px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-slate-400 font-bold">🟢 ยังไม่มีเหตุการณ์ผิดปกติ</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                <div class="bg-slate-900/70 rounded-xl p-4 border border-slate-800">
+                    <p class="text-xs text-slate-400 mb-2 font-bold">👶 👵 กลุ่มเสี่ยงที่ควรเคลื่อนย้ายก่อน</p>
+                    <ul class="text-xs text-slate-300 space-y-1 leading-relaxed">
+                        <li>• เด็กเล็กและทารก</li>
+                        <li>• ผู้สูงอายุ</li>
+                        <li>• หญิงตั้งครรภ์</li>
+                        <li>• ผู้ป่วยโรคทางเดินหายใจ/หัวใจ</li>
+                    </ul>
+                </div>
+                <div class="bg-slate-900/70 rounded-xl p-4 border border-slate-800">
+                    <p class="text-xs text-slate-400 mb-2 font-bold">⚙️ กลไกการทำงานของระบบ</p>
+                    <p class="text-xs text-slate-300 leading-relaxed">กล้อง AI (YOLO) ตรวจจับบุคคล ทำงานร่วมกับโมเดล AI วิเคราะห์คุณภาพอากาศ หากพบระดับ <b class="text-amber-300">Moderate</b>, <b class="text-red-300">Poor</b> หรือ <b class="text-pink-300">Hazardous</b> พร้อมมีบุคคลอยู่ในพื้นที่ ระบบจะแจ้งเตือนบนหน้าเว็บทันที พร้อมส่งสัญญาณไปยังหุ่นยนต์ผ่าน MQTT</p>
+                </div>
+                <div class="bg-slate-900/70 rounded-xl p-4 border border-slate-800 flex flex-col justify-between">
+                    <p class="text-xs text-slate-400 mb-2 font-bold">📡 สถานะปัจจุบัน</p>
+                    <div class="text-xs text-slate-300 space-y-1">
+                        <p>ระดับคุณภาพอากาศ: <span id="evac-txt-level" class="font-bold text-cyan-300">Good</span></p>
+                        <p>บุคคลที่ตรวจพบ: <span id="evac-txt-persons" class="font-bold text-cyan-300">0</span> คน</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mb-3">
+                <p class="text-xs font-bold text-slate-400 tracking-wide">📋 ประวัติการแจ้งเตือน/ประสานงาน</p>
+                <button onclick="clearEvacuationLog()" class="text-[10px] text-slate-500 hover:text-red-400 font-bold">🗑️ ล้างประวัติ</button>
+            </div>
+            <div id="evac-log-list" class="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                <p class="text-xs text-slate-500 text-center py-4">ยังไม่มีประวัติการแจ้งเตือน</p>
+            </div>
         </div>
 
         <!-- แถวที่ 4: การ์ดตัวเลขมลพิษ สีสันสดใสแบบแยกการ์ด (สามารถคลิกเพื่อเปิด Pop-up ได้) -->
@@ -742,6 +818,12 @@
             }
 
             loadHistoricalData();
+
+            // 🚨 ตั้งค่าเริ่มต้นของระบบประสานงานอพยพกลุ่มเสี่ยง
+            const callBtn = document.getElementById("btn-call-emergency");
+            if (callBtn) callBtn.href = `tel:${EMERGENCY_CONTACT_NUMBER}`;
+            renderEvacuationLog();
+            updateEvacStatusPanel();
         });
 
         // ==========================================
@@ -1014,6 +1096,13 @@
                 btn.classList.add("cyber-btn-secondary");
                 btn.classList.remove("opacity-75", "cursor-wait");
                 canvas.classList.remove("hidden");
+
+                // 🚨 เตรียมระบบเสียงไซเรนและการแจ้งเตือน (ต้องเริ่มจาก User Gesture)
+                ensureAudioContext();
+                requestNotificationPermission();
+                const badge = document.getElementById("person-count-badge");
+                if (badge) badge.classList.remove("hidden");
+
                 detectCameraObjects();
             } else {
                 isAIDetecting = false;
@@ -1023,6 +1112,11 @@
                 if (aiRequestFrameId) cancelAnimationFrame(aiRequestFrameId);
                 const ctx = canvas.getContext("2d");
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 🚨 ปิด AI แล้ว = ไม่มีข้อมูลบุคคลที่น่าเชื่อถือ ให้ล้างสถานะและปิดเตือนที่เกิดจากการตรวจจับ
+                currentPersonCount = 0;
+                updatePersonCountBadge(0);
+                evaluateEvacuationCondition();
             }
         }
 
@@ -1135,6 +1229,11 @@
                     selectedIndices = await nms.array();
                     tf.dispose([tensorBoxes, tensorScores, nms]);
                 }
+
+                // 🚨 อัปเดตจำนวนบุคคลที่ตรวจพบ + ประเมินเงื่อนไขการแจ้งเตือนอพยพ
+                currentPersonCount = selectedIndices.length;
+                updatePersonCountBadge(currentPersonCount);
+                evaluateEvacuationCondition();
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1249,6 +1348,265 @@
             "Hazardous": { emoji: "🟣 🚨", label: "อันตรายร้ายแรง", class: "status-hazardous", advice: "ระดับมลพิษโดยรวมเข้าขั้นวิกฤตอันตราย! กรุณางดกิจกรรมนอกอาคาร" }
         };
 
+        // ==========================================
+        // 🚨 EVACUATION COORDINATION SYSTEM
+        // (ผสานผล YOLO Person Detection + AI Air Quality เพื่อแจ้งเตือน/ประสานงานเคลื่อนย้ายกลุ่มเสี่ยง)
+        // ==========================================
+        const EVAC_DANGER_LEVELS = ["Moderate", "Poor", "Hazardous"];
+        const EVAC_LEVEL_META = {
+            Good:       { text: "ดี",              color: "#34d399" },
+            Moderate:   { text: "ปานกลาง",          color: "#fbbf24" },
+            Poor:       { text: "เริ่มมีผลกระทบ",     color: "#f87171" },
+            Hazardous:  { text: "อันตรายร้ายแรง",     color: "#f472b6" }
+        };
+
+        // เปลี่ยนเบอร์นี้เป็นเบอร์เจ้าหน้าที่/ครูผู้ประสานงานจริงของโรงเรียนได้ตามต้องการ
+        const EMERGENCY_CONTACT_NUMBER = "1669";
+
+        let currentPersonCount = 0;
+        let currentAQIStatus = "Good";
+        let evacuationActive = false;
+        let evacuationAcknowledged = false;
+        let sirenMuted = false;
+        let evacuationLog = []; // { time, level, persons, status }
+        let lastEvacLogTimestamp = 0;
+        const EVAC_LOG_THROTTLE_MS = 20000; // กันสแปมบันทึกซ้ำขณะยังอยู่ในสถานะอันตรายต่อเนื่อง
+
+        let audioCtx = null;
+        let sirenIntervalId = null;
+
+        // --- 🔊 ระบบเสียงไซเรนแจ้งเตือน (สร้างด้วย Web Audio API ไม่ต้องพึ่งไฟล์เสียงภายนอก) ---
+        function ensureAudioContext() {
+            if (!audioCtx) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.warn("เบราว์เซอร์นี้ไม่รองรับ Web Audio API:", e);
+                }
+            }
+            if (audioCtx && audioCtx.state === "suspended") {
+                audioCtx.resume().catch(() => {});
+            }
+        }
+
+        function startSiren() {
+            if (sirenMuted || !audioCtx || sirenIntervalId) return;
+            let high = true;
+            const playBeep = () => {
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = "sawtooth";
+                    osc.frequency.value = high ? 880 : 660;
+                    gain.gain.value = 0.08;
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.35);
+                    high = !high;
+                } catch (e) { /* เงียบไว้ ไม่ให้กระทบการทำงานหลัก */ }
+            };
+            playBeep();
+            sirenIntervalId = setInterval(playBeep, 400);
+        }
+
+        function stopSiren() {
+            if (sirenIntervalId) {
+                clearInterval(sirenIntervalId);
+                sirenIntervalId = null;
+            }
+        }
+
+        function toggleSirenMute() {
+            sirenMuted = !sirenMuted;
+            const btn = document.getElementById("btn-toggle-siren");
+            if (btn) btn.innerText = sirenMuted ? "🔕 เปิดเสียงไซเรน" : "🔔 ปิดเสียงไซเรน";
+            if (sirenMuted) {
+                stopSiren();
+            } else if (evacuationActive && !evacuationAcknowledged) {
+                startSiren();
+            }
+        }
+
+        // --- 🔔 Browser Notification (แจ้งเตือนแม้สลับแท็บ/หน้าจอ) ---
+        function requestNotificationPermission() {
+            if ("Notification" in window && Notification.permission === "default") {
+                Notification.requestPermission().catch(() => {});
+            }
+        }
+
+        function fireBrowserNotification(level, persons) {
+            if (!("Notification" in window) || Notification.permission !== "granted") return;
+            try {
+                const meta = EVAC_LEVEL_META[level] || { text: level };
+                new Notification("🚨 แจ้งเตือนอพยพกลุ่มเสี่ยง!", {
+                    body: `ตรวจพบบุคคล ${persons} คน ในพื้นที่คุณภาพอากาศระดับ "${meta.text}" กรุณาประสานงานเคลื่อนย้ายกลุ่มเสี่ยงโดยด่วนที่สุด`,
+                    tag: "evac-alert",
+                    renotify: true
+                });
+            } catch (e) { console.warn("Notification error:", e); }
+        }
+
+        // --- 📡 ส่งคำสั่งประสานงาน/แจ้งเตือนไปยังหุ่นยนต์ผ่าน MQTT ---
+        function publishEvacuationMQTT(level, persons, statusEvent) {
+            const payload = JSON.stringify({
+                command: "EVACUATE_ALERT",
+                level: level,
+                persons: persons,
+                event: statusEvent,
+                timestamp: new Date().toISOString()
+            });
+            sendMQTTMessage(MQTT_CONFIG.topics.pubEvac, payload);
+        }
+
+        // --- 🗄️ (ตัวเลือก) บันทึกประวัติเหตุการณ์ลง Supabase หากมีตาราง evacuation_logs ---
+        async function logEvacuationEventToSupabase(entry) {
+            if (!supabaseClient) return;
+            try {
+                const { error } = await supabaseClient
+                    .from('evacuation_logs')
+                    .insert([{ level: entry.level, persons: entry.persons, status: entry.status }]);
+                if (error) console.warn("ข้ามการบันทึก Supabase (อาจยังไม่มีตาราง evacuation_logs):", error.message);
+            } catch (e) { /* ไม่มีตารางก็ไม่เป็นไร ระบบยังทำงานได้ปกติ */ }
+        }
+
+        function addEvacuationLogEntry(level, persons, status) {
+            const now = new Date();
+            const entry = { time: now.toLocaleTimeString('th-TH'), level, persons, status };
+            evacuationLog.unshift(entry);
+            if (evacuationLog.length > 50) evacuationLog.pop();
+            renderEvacuationLog();
+            logEvacuationEventToSupabase(entry);
+        }
+
+        function clearEvacuationLog() {
+            evacuationLog = [];
+            renderEvacuationLog();
+        }
+
+        function renderEvacuationLog() {
+            const container = document.getElementById("evac-log-list");
+            if (!container) return;
+            if (evacuationLog.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">ยังไม่มีประวัติการแจ้งเตือน</p>`;
+                return;
+            }
+            container.innerHTML = evacuationLog.map(e => {
+                const meta = EVAC_LEVEL_META[e.level] || { text: e.level, color: "#94a3b8" };
+                let statusColor = "text-red-400 animate-pulse";
+                let statusText = "🚨 กำลังแจ้งเตือน";
+                if (e.status === "ACKNOWLEDGED") { statusColor = "text-emerald-400"; statusText = "✅ รับทราบแล้ว"; }
+                else if (e.status === "RESOLVED") { statusColor = "text-slate-400"; statusText = "🟢 คลี่คลายแล้ว"; }
+                return `<div class="flex flex-wrap items-center justify-between gap-2 bg-slate-900/70 rounded-lg px-3 py-2 border border-slate-800 text-xs">
+                    <span class="text-slate-400 font-mono">${e.time}</span>
+                    <span class="font-bold" style="color:${meta.color}">${meta.text}</span>
+                    <span class="text-slate-300">👥 ${e.persons} คน</span>
+                    <span class="font-bold ${statusColor}">${statusText}</span>
+                </div>`;
+            }).join("");
+        }
+
+        // --- 🖼️ อัปเดต UI Badge จำนวนบุคคลบนภาพกล้อง ---
+        function updatePersonCountBadge(count) {
+            const badge = document.getElementById("person-count-badge");
+            if (!badge) return;
+            if (!isAIDetecting) { badge.classList.add("hidden"); return; }
+            badge.classList.remove("hidden");
+            badge.innerText = `👥 ตรวจพบ: ${count} คน`;
+            const isDangerNow = EVAC_DANGER_LEVELS.includes(currentAQIStatus);
+            if (count > 0 && isDangerNow) {
+                badge.className = "absolute top-3 left-3 z-20 px-3 py-1.5 rounded-full text-xs font-bold bg-red-950/85 border border-red-400/70 text-red-300 person-badge-danger";
+            } else {
+                badge.className = "absolute top-3 left-3 z-20 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-950/80 border border-emerald-400/60 text-emerald-300";
+            }
+        }
+
+        // --- 📋 อัปเดตแผงสถานะในการ์ดศูนย์ประสานงาน ---
+        function updateEvacStatusPanel() {
+            const levelEl = document.getElementById("evac-txt-level");
+            const personsEl = document.getElementById("evac-txt-persons");
+            const statusBadge = document.getElementById("evac-current-status");
+            if (levelEl) levelEl.innerText = currentAQIStatus;
+            if (personsEl) personsEl.innerText = currentPersonCount;
+            if (!statusBadge) return;
+            if (evacuationActive && !evacuationAcknowledged) {
+                statusBadge.innerText = "🚨 กำลังแจ้งเตือน - โปรดเคลื่อนย้ายกลุ่มเสี่ยง";
+                statusBadge.className = "text-xs px-3 py-1.5 rounded-full bg-red-950/80 border border-red-500/60 text-red-300 font-bold animate-pulse";
+            } else if (evacuationActive && evacuationAcknowledged) {
+                statusBadge.innerText = "✅ รับทราบแล้ว - เฝ้าระวังต่อเนื่อง";
+                statusBadge.className = "text-xs px-3 py-1.5 rounded-full bg-amber-950/80 border border-amber-500/60 text-amber-300 font-bold";
+            } else {
+                statusBadge.innerText = "🟢 ยังไม่มีเหตุการณ์ผิดปกติ";
+                statusBadge.className = "text-xs px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-slate-400 font-bold";
+            }
+        }
+
+        // --- 🚩 แสดง/ซ่อน Banner แจ้งเตือนใหญ่ด้านบนหน้าเว็บ ---
+        function showEvacuationBanner(level, persons) {
+            const banner = document.getElementById("evacuation-alert-banner");
+            if (!banner) return;
+            const meta = EVAC_LEVEL_META[level] || { text: level };
+            banner.classList.remove("hidden");
+            document.getElementById("evac-banner-title").innerText = `🚨 แจ้งเตือน: ตรวจพบบุคคล ${persons} คน ในพื้นที่อากาศระดับ "${meta.text}"`;
+            document.getElementById("evac-banner-desc").innerText = "กรุณาประสานงานเคลื่อนย้ายกลุ่มเสี่ยง (เด็กเล็ก ผู้สูงอายุ หญิงตั้งครรภ์ ผู้ป่วย) ออกจากพื้นที่โดยด่วนที่สุด";
+            const ackBtn = document.getElementById("btn-ack-evac");
+            if (ackBtn) ackBtn.classList.toggle("hidden", evacuationAcknowledged);
+            const ackedTag = document.getElementById("evac-acked-tag");
+            if (ackedTag) ackedTag.classList.toggle("hidden", !evacuationAcknowledged);
+        }
+
+        function hideEvacuationBanner() {
+            const banner = document.getElementById("evacuation-alert-banner");
+            if (banner) banner.classList.add("hidden");
+        }
+
+        function acknowledgeEvacuation() {
+            if (!evacuationActive) return;
+            evacuationAcknowledged = true;
+            stopSiren();
+            showEvacuationBanner(currentAQIStatus, currentPersonCount);
+            updateEvacStatusPanel();
+            addEvacuationLogEntry(currentAQIStatus, currentPersonCount, "ACKNOWLEDGED");
+            publishEvacuationMQTT(currentAQIStatus, currentPersonCount, "ACKNOWLEDGED");
+        }
+
+        // --- 🧠 หัวใจของระบบ: ประเมินว่าควรแจ้งเตือนอพยพหรือไม่ ---
+        // เงื่อนไข: AI ตรวจจับบุคคล (ผ่านกล้อง YOLO) ในขณะที่คุณภาพอากาศอยู่ระดับ Moderate/Poor/Hazardous
+        function evaluateEvacuationCondition() {
+            const isDanger = EVAC_DANGER_LEVELS.includes(currentAQIStatus);
+            const shouldAlert = isDanger && isAIDetecting && currentPersonCount > 0;
+            const now = Date.now();
+
+            if (shouldAlert) {
+                const isNewEvent = !evacuationActive;
+                evacuationActive = true;
+                showEvacuationBanner(currentAQIStatus, currentPersonCount);
+
+                if (isNewEvent) {
+                    evacuationAcknowledged = false;
+                    lastEvacLogTimestamp = now;
+                    addEvacuationLogEntry(currentAQIStatus, currentPersonCount, "TRIGGERED");
+                    publishEvacuationMQTT(currentAQIStatus, currentPersonCount, "TRIGGERED");
+                    fireBrowserNotification(currentAQIStatus, currentPersonCount);
+                    ensureAudioContext();
+                    if (!sirenMuted) startSiren();
+                } else if (!evacuationAcknowledged && (now - lastEvacLogTimestamp > EVAC_LOG_THROTTLE_MS)) {
+                    lastEvacLogTimestamp = now;
+                    addEvacuationLogEntry(currentAQIStatus, currentPersonCount, "TRIGGERED");
+                    publishEvacuationMQTT(currentAQIStatus, currentPersonCount, "TRIGGERED");
+                }
+            } else if (evacuationActive) {
+                evacuationActive = false;
+                evacuationAcknowledged = false;
+                stopSiren();
+                hideEvacuationBanner();
+                addEvacuationLogEntry(currentAQIStatus, currentPersonCount, "RESOLVED");
+                publishEvacuationMQTT(currentAQIStatus, currentPersonCount, "RESOLVED");
+            }
+
+            updateEvacStatusPanel();
+        }
+
         function updateAIPrediction() {
             const proximity = parseFloat(document.getElementById("num-prox").value) || 7.4;
             const popDensity = parseFloat(document.getElementById("num-pop").value) || 545;
@@ -1286,6 +1644,10 @@
                 document.getElementById("status-emoji").innerText = ui.emoji;
                 document.getElementById("status-label").innerText = ui.label;
             }
+
+            // 🚨 ส่งผลคุณภาพอากาศล่าสุดเข้าระบบประสานงานอพยพกลุ่มเสี่ยง
+            currentAQIStatus = prediction;
+            evaluateEvacuationCondition();
         }
 
         ["slide-prox", "slide-pop"].forEach((id, idx) => {
@@ -1476,14 +1838,15 @@
         // ⚡ PAHO MQTT CONFIGURATION & EXPONENTIAL BACKOFF RECONNECTION
         // ==========================================
         const MQTT_CONFIG = {
-            broker: "10.243.178.87", 
+            broker: "10.243.178.6", 
             port: 9001,               
             path: "",
             clientId: "web_dash_" + Math.random().toString(16).substring(2, 10),
             topics: {
                 subData: "pollution/env/predicted",
                 pubControl: "pollution/robot/control",
-                pubGPS: "pollution/robot/gps"
+                pubGPS: "pollution/robot/gps",
+                pubEvac: "pollution/robot/evacuate"
             }
         };
 
