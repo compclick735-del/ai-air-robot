@@ -1,12 +1,21 @@
-const blobs = document.querySelectorAll('.blob-cursor');
+document.addEventListener('DOMContentLoaded', () => {
+  const blob = document.querySelector('.blob-cursor');
+  if (!blob) return;
 
-window.addEventListener('pointermove', (e) => {
-  blobs.forEach((blob, index) => {
-    gsap.to(blob, {
-      x: e.clientX - 20,
-      y: e.clientY - 20,
-      duration: 0.2 + index * 0.1,
-      ease: "power2.out"
-    });
+  let mouseX = 0, mouseY = 0;
+  let blobX = 0, blobY = 0;
+
+  document.addEventListener('pointermove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
   });
+
+  function animate() {
+    blobX += (mouseX - blobX) * 0.15;
+    blobY += (mouseY - blobY) * 0.15;
+    blob.style.transform = `translate(${blobX - 20}px, ${blobY - 20}px)`;
+    requestAnimationFrame(animate);
+  }
+
+  animate();
 });
