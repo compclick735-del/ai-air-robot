@@ -1458,6 +1458,7 @@
             <div class="chart-wrap">
                 <canvas id="realtimeChart"></canvas>
             </div>
+            <p class="mt-2 text-center text-[10px] text-slate-500 cyber-font">🖱️ Scroll = Zoom · Drag = Pan · Double-click = Reset · Pinch = Zoom (Mobile)</p>
         </section>
 
         <footer class="py-5 text-center">
@@ -1521,8 +1522,8 @@
 
         const APP_CONFIG = {
             supabaseUrl: "https://itzcamgqeugyjsbqflrn.supabase.co",
-            supabaseAnonKey: "YOUR_SUPABASE_ANON_KEY",
-            weatherApiKey: "YOUR_OPENWEATHER_API_KEY",
+            supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0emNhbWdxZXVneWpzYnFmbHJuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Njg5MDkyNywiZXhwIjoyMTAyNDY2OTI3fQ.jMY5h015rEM0js0MYMLcC3eP_7CJPzRL68ApInt0qx8",
+            weatherApiKey: "69c5ee3c1296056b0e9bde92ccc215fc",
             yoloModelUrl: "https://cdn.jsdelivr.net/gh/compclick735-del/yolo-web-model@main/model/model.json",
             emergencyNumber: "1669",
             fallbackLocation: {
@@ -1804,17 +1805,29 @@
                     zoom: {
                         pan: {
                             enabled: true,
-                            mode: "x"
+                            mode: "xy",
+                            scaleMode: "xy"
                         },
                         zoom: {
                             wheel: {
                                 enabled: true,
-                                speed: .08
+                                speed: 0.15
                             },
                             pinch: {
                                 enabled: true
                             },
-                            mode: "x"
+                            drag: {
+                                enabled: true,
+                                backgroundColor: "rgba(34,211,238,0.12)",
+                                borderColor: "rgba(34,211,238,0.5)",
+                                borderWidth: 1
+                            },
+                            mode: "xy",
+                            scaleMode: "xy"
+                        },
+                        limits: {
+                            x: { minRange: 5 },
+                            y: { min: 0, minRange: 1 }
                         }
                     }
                 }
@@ -3328,6 +3341,7 @@
             $("btn-export-csv").addEventListener("click", exportToCSV);
             $("btn-export-pdf").addEventListener("click", exportToPDF);
             $("btn-reset-chart").addEventListener("click", () => realtimeChart.resetZoom());
+            $("realtimeChart").addEventListener("dblclick", () => realtimeChart.resetZoom());
 
             $("btn-call-emergency").href = `tel:${APP_CONFIG.emergencyNumber}`;
         }
