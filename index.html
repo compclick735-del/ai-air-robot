@@ -1380,64 +1380,6 @@
             </div>
         </section>
 
-        <section class="panel panel-red p-5 sm:p-6">
-            <div class="panel-header flex-wrap">
-                <div class="flex items-center gap-3">
-                    <div class="icon-box border-red-400/20 bg-red-400/10">🚑</div>
-                    <div>
-                        <p class="eyebrow !text-red-300">Emergency Coordination</p>
-                        <h2 class="panel-title">ศูนย์ประสานงานอพยพกลุ่มเสี่ยง</h2>
-                    </div>
-                </div>
-                <span id="evac-current-status" class="status-pill text-emerald-300">
-                    <span class="status-dot"></span> สถานการณ์ปกติ
-                </span>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div class="rounded-2xl border border-slate-800 bg-slate-950/35 p-4">
-                    <p class="text-xs font-bold text-red-200">กลุ่มที่ควรเคลื่อนย้ายก่อน</p>
-                    <ul class="mt-3 space-y-2 text-xs text-slate-400">
-                        <li>• เด็กเล็กและทารก</li>
-                        <li>• ผู้สูงอายุและหญิงตั้งครรภ์</li>
-                        <li>• ผู้ป่วยโรคหัวใจหรือระบบทางเดินหายใจ</li>
-                    </ul>
-                </div>
-
-                <div class="rounded-2xl border border-slate-800 bg-slate-950/35 p-4">
-                    <p class="text-xs font-bold text-cyan-200">ระบบประเมินเหตุการณ์</p>
-                    <p class="mt-3 text-xs leading-relaxed text-slate-400">
-                        ระบบผสานผลตรวจจับบุคคลจาก AI Vision เข้ากับระดับคุณภาพอากาศ
-                        พร้อมแจ้งเตือนบนหน้าเว็บ ส่งคำสั่ง MQTT และเปิดเสียงไซเรน
-                    </p>
-                </div>
-
-                <div class="rounded-2xl border border-slate-800 bg-slate-950/35 p-4">
-                    <p class="text-xs font-bold text-purple-200">สถานะปัจจุบัน</p>
-                    <div class="mt-3 grid grid-cols-2 gap-3">
-                        <div>
-                            <p class="text-[10px] text-slate-500">AIR LEVEL</p>
-                            <p id="evac-txt-level" class="mt-1 text-sm font-black text-cyan-300 cyber-font">GOOD</p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-slate-500">PERSONS</p>
-                            <p class="mt-1 text-sm font-black text-purple-300 cyber-font"><span id="evac-txt-persons">0</span> คน</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-5 pt-5 border-t border-slate-800/70">
-                <div class="flex items-center justify-between gap-3 mb-3">
-                    <p class="text-xs font-bold text-slate-300">ประวัติการแจ้งเตือน</p>
-                    <button id="btn-clear-evac-log" class="text-[10px] font-bold text-slate-500 hover:text-red-300" type="button">ล้างประวัติ</button>
-                </div>
-                <div id="evac-log-list" class="max-h-60 overflow-y-auto space-y-2">
-                    <p class="py-5 text-center text-xs text-slate-600">ยังไม่มีประวัติการแจ้งเตือน</p>
-                </div>
-            </div>
-        </section>
-
         <section class="panel p-5 sm:p-6">
             <div class="panel-header flex-wrap">
                 <div class="flex items-center gap-3">
@@ -2476,37 +2418,7 @@
         }
 
         function renderEvacuationLog() {
-            const container = $("evac-log-list");
-
-            if (!evacuationLog.length) {
-                container.innerHTML = '<p class="py-5 text-center text-xs text-slate-600">ยังไม่มีประวัติการแจ้งเตือน</p>';
-                return;
-            }
-
-            container.innerHTML = evacuationLog.map(entry => {
-                const meta = evacuationLevelMeta[entry.level] || {
-                    text: entry.level,
-                    color: "#94a3b8"
-                };
-
-                const statusMap = {
-                    TRIGGERED: ["🚨 กำลังแจ้งเตือน", "text-red-300"],
-                    ACKNOWLEDGED: ["✅ รับทราบแล้ว", "text-emerald-300"],
-                    RESOLVED: ["● เหตุการณ์คลี่คลาย", "text-slate-400"]
-                };
-
-                const [statusText, statusClass] =
-                    statusMap[entry.status] || [entry.status, "text-slate-400"];
-
-                return `
-                    <div class="evac-log-row">
-                        <span class="text-slate-500 cyber-font">${entry.time}</span>
-                        <span class="font-bold" style="color:${meta.color}">${meta.text}</span>
-                        <span class="text-slate-300">👥 ${entry.persons}</span>
-                        <span class="font-bold ${statusClass}">${statusText}</span>
-                    </div>
-                `;
-            }).join("");
+            // Panel removed from UI; log is still kept in memory/Supabase only.
         }
 
         async function saveEvacuationLog(entry) {
@@ -2538,21 +2450,7 @@
         }
 
         function updateEvacuationPanel() {
-            $("evac-txt-level").textContent = currentAQIStatus.toUpperCase();
-            $("evac-txt-persons").textContent = currentPersonCount;
-
-            const badge = $("evac-current-status");
-
-            if (evacuationActive && !evacuationAcknowledged) {
-                badge.className = "status-pill text-red-300 animate-pulse";
-                badge.innerHTML = '<span class="status-dot"></span>กำลังแจ้งเตือนอพยพ';
-            } else if (evacuationActive && evacuationAcknowledged) {
-                badge.className = "status-pill text-amber-300";
-                badge.innerHTML = '<span class="status-dot"></span>รับทราบแล้ว · เฝ้าระวัง';
-            } else {
-                badge.className = "status-pill text-emerald-300";
-                badge.innerHTML = '<span class="status-dot"></span>สถานการณ์ปกติ';
-            }
+            // Panel removed from UI; state (evacuationActive/Acknowledged) still tracked internally.
         }
 
         function acknowledgeEvacuation() {
@@ -3332,11 +3230,6 @@
 
             $("btn-toggle-siren").addEventListener("click", toggleSirenMute);
             $("btn-ack-evac").addEventListener("click", acknowledgeEvacuation);
-
-            $("btn-clear-evac-log").addEventListener("click", () => {
-                evacuationLog = [];
-                renderEvacuationLog();
-            });
 
             $("btn-export-csv").addEventListener("click", exportToCSV);
             $("btn-export-pdf").addEventListener("click", exportToPDF);
