@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Orbitron:wght@400;600;700;800;900&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="config.js"></script>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
@@ -178,6 +179,7 @@
             padding: 2px;
             background: conic-gradient(from var(--ring-angle), transparent, var(--cyan), var(--purple), var(--pink), var(--cyan), transparent 76%);
             animation: ringRotate 4s linear infinite;
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
             -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
@@ -1097,58 +1099,28 @@
   /* ---------------------------------------------------------
      [A] พจนานุกรม TH → EN   (เพิ่ม/แก้ได้อิสระ)
      --------------------------------------------------------- */
-  const DICT = {
-    /* ---------- Header / Topbar ---------- */
-    "โรงเรียนชุมแพศึกษา": "Chumphae Suksa School",
-    "ตราสัญลักษณ์โรงเรียนชุมแพศึกษา": "Chumphae Suksa School Emblem",
-    "โรงเรียนชุมแพศึกษา · Intelligent Environmental & Robotic Control":
-      "Chumphae Suksa School · Intelligent Environmental & Robotic Control",
-    "ระบบควบคุมสิ่งแวดล้อมและหุ่นยนต์อัจฉริยะ":
-      "Intelligent Environmental & Robotic Control System",
-
-    /* ---------- Status pills ---------- */
-    "กำลังค้นหาพิกัด": "Locating position…",
-    "กำลังค้นหาพิกัด...": "Locating position…",
-    "พิกัดพร้อมใช้งาน": "Location ready",
-    "ไม่พบพิกัด": "Location unavailable",
-    "ไม่สามารถระบุพิกัดได้": "Unable to determine location",
-    "เชื่อมต่อแล้ว": "Connected",
-    "กำลังเชื่อมต่อ": "Connecting…",
-    "กำลังเชื่อมต่อ...": "Connecting…",
-    "ไม่ได้เชื่อมต่อ": "Disconnected",
-    "ตัดการเชื่อมต่อ": "Disconnected",
-    "เชื่อมต่อล้มเหลว": "Connection failed",
-    "กำลังเชื่อมต่อใหม่": "Reconnecting…",
-    "ออนไลน์": "Online",
-    "ออฟไลน์": "Offline",
-    "โหมดมือถือ": "Mobile Mode",
-    "โหมดคอมพิวเตอร์": "Desktop Mode",
-    "โหมดแท็บเล็ต": "Tablet Mode",
-
-    /* ---------- Emergency / Evacuation ---------- */
-    "โปรโตคอลฉุกเฉิน": "Emergency Protocol",
-    "รับทราบแล้ว · กำลังเฝ้าระวัง": "Acknowledged · Monitoring",
-    "รับทราบแล้ว": "Acknowledged",
-    "กำลังเฝ้าระวัง": "Monitoring",
-    "โทรฉุกเฉิน": "Emergency Call",
-    "ปิดเสียง": "Mute Siren",
-    "เปิดเสียง": "Unmute Siren",
-    "ยืนยันเคลื่อนย้ายแล้ว": "Evacuation Confirmed",
-    "ยืนยันเคลื่อนย้าย": "Confirm Evacuation",
-    "แจ้งเตือนอพยพ": "Evacuation Alert",
-    "ประกาศอพยพฉุกเฉิน": "Emergency Evacuation Notice",
-    "โปรดเคลื่อนย้ายออกจากพื้นที่ทันที": "Evacuate the area immediately",
-    "ระดับอันตรายสูง": "High Danger Level",
-    "สถานะปกติ": "Normal Status",
-
-    /* ---------- Neural Vision System ---------- */
-    "ระบบวิชั่นอัจฉริยะ": "Neural Vision System",
-    "เลือกแหล่งสัญญาณกล้องเพื่อเริ่มต้นระบบตรวจจับ":
-      "Select a camera source to start the detection system",
-    "เปิดกล้อง": "Start Camera",
-    "ปิดกล้อง": "Stop Camera",
-    "เปิด AI Detection": "Enable AI Detection",
-    "ปิด AI Detection": "Disable AI Detection",
+    const DICT = {
+        "โรงเรียนชุมแพศึกษา": "Chumphae Suksa School",
+        "ตราสัญลักษณ์โรงเรียนชุมแพศึกษา": "Chumphae Suksa School Emblem",
+        "โรงเรียนชุมแพศึกษา · Intelligent Environmental & Robotic Control": "Chumphae Suksa School · Intelligent Environmental & Robotic Control",
+        "ระบบควบคุมสิ่งแวดล้อมและหุ่นยนต์อัจฉริยะ": "Intelligent Environmental & Robotic Control System",
+        "กำลังค้นหาพิกัด": "Locating position…",
+        "กำลังค้นหาพิกัด...": "Locating position…",
+        "พิกัดพร้อมใช้งาน": "Location ready",
+        "ไม่พบพิกัด": "Location unavailable",
+        "เชื่อมต่อแล้ว": "Connected",
+        "กำลังเชื่อมต่อ": "Connecting…",
+        "ไม่ได้เชื่อมต่อ": "Disconnected",
+        "เชื่อมต่อล้มเหลว": "Connection failed",
+        "กำลังเชื่อมต่อใหม่": "Reconnecting…",
+        "ออนไลน์": "Online",
+        "ออฟไลน์": "Offline",
+        "โปรโตคอลฉุกเฉิน": "Emergency Protocol",
+        "รับทราบแล้ว": "Acknowledged",
+        "กำลังเฝ้าระวัง": "Monitoring",
+        "โทรฉุกเฉิน": "Emergency Call",
+        "ปิดเสียง": "Mute Siren",
+        "เชื่อมต่อ": "Connect",
     "เชื่อมต่อ": "Connect",
     "ยกเลิกการเชื่อมต่อ": "Disconnect",
     "กำลังโหลดโมเดล": "Loading model…",
@@ -1267,42 +1239,37 @@
   /* ---------------------------------------------------------
      [B] กฎ Regex สำหรับข้อความที่มีตัวเลขผสม
      --------------------------------------------------------- */
-  const RULES = [
-        [/^ตรวจพบบุคคล\s*(\d+)\s*คน\s*ในพื้นที่คุณภาพอากาศระดับ\s*[“\"](.+?)[”\"]$/,
+    const RULES = [
+        [/^ตรวจพบบุคคล\s*(\d+)\s*คน\s*ในพื้นที่คุณภาพอากาศระดับ\s*[“"](.+?)[”"]$/,
             (m, n, level) => `${n} person${n === '1' ? '' : 's'} detected in an area with ${level} air quality`],
-        [/^ตรวจพบบุคคล\s*(\d+)\s*คน\s*·\s*คุณภาพอากาศระดับ\s*[“\"](.+?)[”\"]$/,
+        [/^ตรวจพบบุคคล\s*(\d+)\s*คน\s*·\s*คุณภาพอากาศระดับ\s*[“"](.+?)[”"]$/,
             (m, n, level) => `${n} person${n === '1' ? '' : 's'} detected · air quality: ${level}`],
         [/^กรุณาประสานงานเคลื่อนย้ายเด็ก ผู้สูงอายุ หญิงตั้งครรภ์ และผู้ป่วยออกจากพื้นที่$/,
             () => "Coordinate the relocation of children, older adults, pregnant people, and patients from the area"],
-    [/^ตรวจพบ\s*(\d+)\s*คน$/,
-      (m, n) => `${n} ${n === '1' ? 'person' : 'people'} detected`],
-    [/^พบ\s*(\d+)\s*คน$/,
-      (m, n) => `${n} ${n === '1' ? 'person' : 'people'} found`],
-    [/^อัปเดตล่าสุด\s*(.*)$/i, (m, t) => `Last updated ${t}`.trim()],
-    [/^อัพเดทล่าสุด\s*(.*)$/i, (m, t) => `Last updated ${t}`.trim()],
-    [/^ปรับปรุงเมื่อ\s*(.*)$/, (m, t) => `Updated ${t}`.trim()],
-    [/^ระยะทาง\s*(.+?)\s*กม\.?$/, (m, v) => `${v} km`],
-    [/^ระยะ\s*(.+?)\s*กม\.?$/, (m, v) => `${v} km`],
-    [/(\d[\d,.]*)\s*คน\s*\/\s*ตร\.?\s*กม\.?/g, '$1 people/km²'],
-    [/(\d[\d,.]*)\s*คน\/ตร\.กม\./g, '$1 people/km²'],
-    [/(\d[\d,.]*)\s*กม\.?/g, '$1 km'],
-    [/(\d[\d,.]*)\s*ม\.(?!\S)/g, '$1 m'],
-    [/(\d[\d,.]*)\s*คน/g, '$1 people'],
-    [/(\d[\d,.]*)\s*องศา/g, '$1°'],
-    [/(\d[\d,.]*)\s*นาที/g, '$1 min'],
-    [/(\d[\d,.]*)\s*วินาที/g, '$1 sec'],
-    [/(\d[\d,.]*)\s*ชั่วโมง/g, '$1 hr']
-  ];
+        [/^ตรวจพบ\s*(\d+)\s*คน$/, (m, n) => `${n} ${n === '1' ? 'person' : 'people'} detected`],
+        [/^พบ\s*(\d+)\s*คน$/, (m, n) => `${n} ${n === '1' ? 'person' : 'people'} found`],
+        [/^อัปเดตล่าสุด\s*(.*)$/i, (m, t) => `Last updated ${t}`.trim()],
+        [/^อัพเดทล่าสุด\s*(.*)$/i, (m, t) => `Last updated ${t}`.trim()],
+        [/^ปรับปรุงเมื่อ\s*(.*)$/, (m, t) => `Updated ${t}`.trim()],
+        [/^ระยะทาง\s*(.+?)\s*กม\.?$/, (m, v) => `${v} km`],
+        [/^ระยะ\s*(.+?)\s*กม\.?$/, (m, v) => `${v} km`],
+        [/(\d[\d,.]*)\s*คน\s*\/\s*ตร\.?\s*กม\.?/g, '$1 people/km²'],
+        [/(\d[\d,.]*)\s*คน\/ตร\.กม\./g, '$1 people/km²'],
+        [/(\d[\d,.]*)\s*กม\.?/g, '$1 km'],
+        [/(\d[\d,.]*)\s*ม\.(?!\S)/g, '$1 m'],
+        [/(\d[\d,.]*)\s*คน/g, '$1 people'],
+        [/(\d[\d,.]*)\s*องศา/g, '$1°'],
+        [/(\d[\d,.]*)\s*นาที/g, '$1 min'],
+        [/(\d[\d,.]*)\s*วินาที/g, '$1 sec'],
+        [/(\d[\d,.]*)\s*ชั่วโมง/g, '$1 hr']
+    ];
 
-  /* ---------------------------------------------------------
-     [C] Engine
-     --------------------------------------------------------- */
-  const THAI_RE  = /[\u0E00-\u0E7F]/;
-  const SKIP_TAG = new Set(['SCRIPT','STYLE','NOSCRIPT','CANVAS','SVG','CODE','PRE','TEXTAREA']);
-  const ATTRS    = ['placeholder','title','aria-label','alt','data-tooltip','data-label','value'];
-  const SORTED   = Object.keys(DICT).sort((a, b) => b.length - a.length);
+    const THAI_RE  = /[\u0E00-\u0E7F]/;
+    const SKIP_TAG = new Set(['SCRIPT','STYLE','NOSCRIPT','CANVAS','SVG','CODE','PRE','TEXTAREA']);
+    const ATTRS    = ['placeholder','title','aria-label','alt','data-tooltip','data-label','value'];
+    const SORTED   = Object.keys(DICT).sort((a, b) => b.length - a.length);
 
-  const ORIG_TEXT = new WeakMap();   // textNode -> original Thai
+    const ORIG_TEXT = new WeakMap();   // textNode -> original Thai
   const ORIG_ATTR = new WeakMap();   // element  -> {attr: originalValue}
 
   let lang     = localStorage.getItem('aiair-lang') || 'th';
@@ -1573,6 +1540,7 @@
                     <span id="connection-status" class="status-pill text-amber-300">
                         <span class="status-dot animate-pulse"></span> Connecting MQTT
                     </span>
+                    <button id="btn-demo-mode" class="cyber-btn cyber-btn-muted" type="button" aria-pressed="false">Demo Mode</button>
                     <button id="btn-lang-toggle" class="cyber-btn cyber-btn-purple" type="button" aria-label="Toggle language">EN</button>
                 </div>
             </div>
@@ -1926,27 +1894,64 @@
     <script>
         "use strict";
 
-        const APP_CONFIG = {
+        /* const APP_CONFIG = {
             supabaseUrl: "https://itzcamgqeugyjsbqflrn.supabase.co",
             supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0emNhbWdxZXVneWpzYnFmbHJuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Njg5MDkyNywiZXhwIjoyMTAyNDY2OTI3fQ.jMY5h015rEM0js0MYMLcC3eP_7CJPzRL68ApInt0qx8",
-            weatherApiKey: "69c5ee3c1296056b0e9bde92ccc215fc",
+            weatherApiKey: "YOUR_OPENWEATHERMAP_API_KEY_HERE",
             yoloModelUrl: "https://cdn.jsdelivr.net/gh/compclick735-del/yolo-web-model@main/model/model.json",
             iconStorageBucket: "icon-images",
             emergencyNumber: "1669",
             fallbackLocation: {
-                latitude: 16.7164,
-                longitude: 102.1158
+                const sourceConfig = window.CONFIG || {};
+                const APP_CONFIG = {
+                    supabaseUrl: sourceConfig.SUPABASE_URL || "",
+                    supabaseAnonKey: sourceConfig.SUPABASE_ANON_KEY || "",
+                    weatherApiKey: sourceConfig.WEATHER_API_KEY || "",
+                    yoloModelUrl: sourceConfig.YOLO_MODEL_URL || "",
+                    iconStorageBucket: sourceConfig.ICON_STORAGE_BUCKET || "icon-images",
+                    emergencyNumber: sourceConfig.EMERGENCY_CONTACT_NUMBER || "1669",
+                    useDemoMode: Boolean(sourceConfig.USE_DEMO_MODE),
+                    fallbackLocation: {
+                        latitude: Number(sourceConfig.DEFAULT_LAT) || 16.7164,
+                        longitude: Number(sourceConfig.DEFAULT_LON) || 102.1158
+                    },
+                    mqtt: {
+                        broker: sourceConfig.MQTT?.broker || "",
+                        port: Number(sourceConfig.MQTT?.port) || 9001,
+                        path: sourceConfig.MQTT?.path || "",
+                        useSSL: Boolean(sourceConfig.MQTT?.useSSL),
+                        topics: {
+                            sensor: sourceConfig.MQTT?.topics?.sensor || "pollution/env/predicted",
+                            control: sourceConfig.MQTT?.topics?.control || "pollution/robot/control",
+                            gps: sourceConfig.MQTT?.topics?.gps || "pollution/robot/gps",
+                            evacuation: sourceConfig.MQTT?.topics?.evacuation || "pollution/robot/evacuate"
+                        }
+                    }
+                };
+                }; */
+        const sourceConfig = window.CONFIG || {};
+        const APP_CONFIG = {
+            supabaseUrl: sourceConfig.SUPABASE_URL || "",
+            supabaseAnonKey: sourceConfig.SUPABASE_ANON_KEY || "",
+            weatherApiKey: sourceConfig.WEATHER_API_KEY || "",
+            yoloModelUrl: sourceConfig.YOLO_MODEL_URL || "",
+            iconStorageBucket: sourceConfig.ICON_STORAGE_BUCKET || "icon-images",
+            emergencyNumber: sourceConfig.EMERGENCY_CONTACT_NUMBER || "1669",
+            useDemoMode: Boolean(sourceConfig.USE_DEMO_MODE),
+            fallbackLocation: {
+                latitude: Number(sourceConfig.DEFAULT_LAT) || 16.7164,
+                longitude: Number(sourceConfig.DEFAULT_LON) || 102.1158
             },
             mqtt: {
-                broker: "10.243.178.157",
-                port: 9001,
-                path: "",
-                useSSL: false,
+                broker: sourceConfig.MQTT?.broker || "",
+                port: Number(sourceConfig.MQTT?.port) || 9001,
+                path: sourceConfig.MQTT?.path || "",
+                useSSL: Boolean(sourceConfig.MQTT?.useSSL),
                 topics: {
-                    sensor: "pollution/env/predicted",
-                    control: "pollution/robot/control",
-                    gps: "pollution/robot/gps",
-                    evacuation: "pollution/robot/evacuate"
+                    sensor: sourceConfig.MQTT?.topics?.sensor || "pollution/env/predicted",
+                    control: sourceConfig.MQTT?.topics?.control || "pollution/robot/control",
+                    gps: sourceConfig.MQTT?.topics?.gps || "pollution/robot/gps",
+                    evacuation: sourceConfig.MQTT?.topics?.evacuation || "pollution/robot/evacuate"
                 }
             }
         };
@@ -1992,6 +1997,7 @@
         let controlHeartbeat = null;
         let lastCommand = "S";
         let lastSupabaseLogAt = 0;
+        let demoTimer = null;
         const savedIconImages = {};
         const iconDatabase = new Promise((resolve, reject) => {
             const request = indexedDB.open("aiair-assets", 1);
@@ -3396,7 +3402,46 @@
             }
         }
 
+        function updateDemoSensorData() {
+            const phase = Date.now() / 18000;
+            latestSensorData.temp = 28 + Math.sin(phase) * 3;
+            latestSensorData.hum = 62 + Math.sin(phase + 1) * 8;
+            latestSensorData.pm25 = 18 + Math.max(0, Math.sin(phase * .7)) * 28;
+            latestSensorData.pm10 = 34 + Math.max(0, Math.sin(phase * .7)) * 42;
+            latestSensorData.co = .7 + Math.max(0, Math.sin(phase * .8)) * 1.8;
+            latestSensorData.no2 = 12 + Math.max(0, Math.sin(phase * .6)) * 22;
+            latestSensorData.so2 = 4 + Math.max(0, Math.sin(phase * .5)) * 10;
+
+            updateSensorUI();
+            updateAIPrediction();
+            addChartPoint();
+        }
+
+        function setDemoMode(enabled) {
+            if (enabled) {
+                if (mqttClient?.isConnected()) mqttClient.disconnect();
+                if (reconnectTimer) clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+                updateMQTTStatus("connected", "Demo data");
+                $("btn-demo-mode").textContent = "Exit Demo";
+                $("btn-demo-mode").setAttribute("aria-pressed", "true");
+                if (!demoTimer) {
+                    updateDemoSensorData();
+                    demoTimer = setInterval(updateDemoSensorData, 3000);
+                }
+                return;
+            }
+
+            if (demoTimer) clearInterval(demoTimer);
+            demoTimer = null;
+            $("btn-demo-mode").textContent = "Demo Mode";
+            $("btn-demo-mode").setAttribute("aria-pressed", "false");
+            connectMQTT();
+        }
+
         async function fetchPollutionAPI() {
+            if (demoTimer) return;
+
             if (!APP_CONFIG.weatherApiKey || APP_CONFIG.weatherApiKey.includes("YOUR_")) {
                 updateAIPrediction();
                 return;
@@ -3847,6 +3892,9 @@
 
             $("btn-toggle-siren").addEventListener("click", toggleSirenMute);
             $("btn-ack-evac").addEventListener("click", acknowledgeEvacuation);
+            $("btn-demo-mode").addEventListener("click", () => {
+                setDemoMode(!demoTimer);
+            });
 
             $("btn-export-csv").addEventListener("click", exportToCSV);
             $("btn-export-pdf").addEventListener("click", exportToPDF);
@@ -3879,7 +3927,11 @@
             renderEvacuationLog();
             updateEvacuationPanel();
             loadHistoricalData();
-            connectMQTT();
+            if (APP_CONFIG.useDemoMode) {
+                setDemoMode(true);
+            } else {
+                connectMQTT();
+            }
             getUserLocation();
 
             setInterval(fetchPollutionAPI, 10 * 60 * 1000);

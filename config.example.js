@@ -17,7 +17,7 @@ const CONFIG = {
     // Get yours at: https://supabase.com
     // ============================
     SUPABASE_URL: "https://YOUR_PROJECT_ID.supabase.co",
-    SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0emNhbWdxZXVneWpzYnFmbHJuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Njg5MDkyNywiZXhwIjoyMTAyNDY2OTI3fQ.jMY5h015rEM0js0MYMLcC3eP_7CJPzRL68ApInt0qx8",
+    SUPABASE_ANON_KEY: "YOUR_SUPABASE_ANON_KEY_HERE",
 
     // ============================
     // 📡 MQTT Broker Configuration
@@ -27,10 +27,10 @@ const CONFIG = {
         port: 9001,
         path: "",
         topics: {
-            subData: "pollution/env/predicted",
-            pubControl: "pollution/robot/control",
-            pubGPS: "pollution/robot/gps",
-            pubEvac: "pollution/robot/evacuate"
+            sensor: "pollution/env/predicted",
+            control: "pollution/robot/control",
+            gps: "pollution/robot/gps",
+            evacuation: "pollution/robot/evacuate"
         }
     },
 
@@ -38,6 +38,9 @@ const CONFIG = {
     // 🤖 YOLO AI Model
     // ============================
     YOLO_MODEL_URL: "https://cdn.jsdelivr.net/gh/compclick735-del/yolo-web-model@main/model/model.json",
+
+    ICON_STORAGE_BUCKET: "icon-images",
+    USE_DEMO_MODE: false,
 
     // ============================
     // 🚨 Emergency Settings
