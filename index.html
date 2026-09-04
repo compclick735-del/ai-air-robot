@@ -1799,13 +1799,13 @@
                 <button class="metric-card text-left" style="--accent:#f59e0b" data-pollutant="no2" type="button">
                     <div class="metric-label">NITROGEN DIOXIDE</div>
                     <div class="metric-value"><span id="val-no2">0.00</span> <span class="metric-unit">µg/m³</span></div>
-                    <div class="metric-trend">◉ WEATHER API · DETAILS ↗</div>
+                    <div class="metric-trend">◉ OPENWEATHER API · DETAILS ↗</div>
                 </button>
 
                 <button class="metric-card text-left col-span-2 lg:col-span-1" style="--accent:#f43f5e" data-pollutant="so2" type="button">
                     <div class="metric-label">SULFUR DIOXIDE</div>
                     <div class="metric-value"><span id="val-so2">0.00</span> <span class="metric-unit">µg/m³</span></div>
-                    <div class="metric-trend">◉ WEATHER API · DETAILS ↗</div>
+                    <div class="metric-trend">◉ OPENWEATHER API · DETAILS ↗</div>
                 </button>
             </div>
         </section>
@@ -1823,6 +1823,7 @@
                 <div class="flex flex-wrap gap-2">
                     <button id="btn-export-csv" class="cyber-btn" type="button">Export CSV</button>
                     <button id="btn-export-pdf" class="cyber-btn cyber-btn-purple" type="button">Export PDF</button>
+                    <button id="btn-compare-weather" class="cyber-btn cyber-btn-muted" type="button">เปรียบเทียบ OpenWeather</button>
                     <button id="btn-reset-chart" class="cyber-btn cyber-btn-muted" type="button">Reset Zoom</button>
                 </div>
             </div>
@@ -1868,6 +1869,39 @@
             </div>
 
             <button id="btn-close-modal-bottom" class="cyber-btn w-full mt-6" type="button">รับทราบและปิดหน้าต่าง</button>
+        </article>
+    </div>
+
+    <div id="weather-compare-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="weather-compare-title">
+        <article class="modal-card p-5 sm:p-7 max-w-4xl">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <p class="eyebrow">Source Comparison</p>
+                    <h2 id="weather-compare-title" class="mt-1 text-lg sm:text-xl font-bold tech-font">หุ่นยนต์ vs OpenWeather</h2>
+                    <p class="mt-2 text-xs text-slate-400">เปรียบเทียบด้วยหน่วยมาตรฐานเดียวกัน · ค่าความต่างเป็นค่าร้อยละแบบสมมาตร</p>
+                </div>
+                <button id="btn-close-weather-compare" class="w-9 h-9 rounded-xl border border-slate-700 bg-slate-900/70 text-slate-400 hover:text-white" type="button" aria-label="Close">X</button>
+            </div>
+            <div class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-400/15 bg-cyan-400/5 px-4 py-3 text-xs">
+                <div>
+                    <span id="weather-compare-status" class="text-slate-300">กำลังรอข้อมูล OpenWeather</span>
+                    <span id="weather-compare-location" class="mt-1 block text-[10px] text-slate-500">พิกัด API: -</span>
+                </div>
+                <button id="btn-refresh-weather-compare" class="cyber-btn cyber-btn-muted" type="button">รีเฟรชข้อมูล API</button>
+            </div>
+            <div class="mt-5 overflow-x-auto">
+                <table class="comparison-table w-full text-left text-xs sm:text-sm">
+                    <thead><tr class="text-slate-400"><th>มลพิษ</th><th>หน่วย</th><th>หุ่นยนต์</th><th>OpenWeather</th><th>ต่างกัน</th></tr></thead>
+                    <tbody>
+                        <tr data-comparison-row="co"><td>CO</td><td>ppm</td><td id="compare-robot-co">-</td><td id="compare-weather-co">-</td><td id="compare-diff-co">-</td></tr>
+                        <tr data-comparison-row="pm25"><td>PM2.5</td><td>µg/m³</td><td id="compare-robot-pm25">-</td><td id="compare-weather-pm25">-</td><td id="compare-diff-pm25">-</td></tr>
+                        <tr data-comparison-row="pm10"><td>PM10</td><td>µg/m³</td><td id="compare-robot-pm10">-</td><td id="compare-weather-pm10">-</td><td id="compare-diff-pm10">-</td></tr>
+                        <tr data-comparison-row="no2"><td>NO2</td><td>µg/m³</td><td id="compare-robot-no2">-</td><td id="compare-weather-no2">-</td><td id="compare-diff-no2">-</td></tr>
+                        <tr data-comparison-row="so2"><td>SO2</td><td>µg/m³</td><td id="compare-robot-so2">-</td><td id="compare-weather-so2">-</td><td id="compare-diff-so2">-</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="mt-4 text-[11px] leading-relaxed text-slate-500">หมายเหตุ: OpenWeather Air Pollution API ใช้ µg/m³ สำหรับ PM, NO2 และ SO2 ส่วน CO ในตารางนี้แปลงจาก µg/m³ เป็น ppm โดยประมาณที่ 25°C และ 1 atm เพื่อให้เทียบกับเซนเซอร์ CO ของหุ่นยนต์ได้</p>
         </article>
     </div>
 
@@ -2092,6 +2126,15 @@
             so2: 0,
             pm25: 0,
             pm10: 0
+        };
+
+        const latestWeatherData = {
+            co: null,
+            pm25: null,
+            pm10: null,
+            no2: null,
+            so2: null,
+            fetchedAt: null
         };
 
         const activeKeys = {
@@ -2356,16 +2399,66 @@
         }
 
         function updateSensorUI() {
+            const displayedNo2 = Number.isFinite(latestWeatherData.no2)
+                ? latestWeatherData.no2
+                : latestSensorData.no2;
+            const displayedSo2 = Number.isFinite(latestWeatherData.so2)
+                ? latestWeatherData.so2
+                : latestSensorData.so2;
             $("val-co").textContent = latestSensorData.co.toFixed(2);
             $("val-pm25").textContent = Math.round(latestSensorData.pm25);
             $("val-pm10").textContent = Math.round(latestSensorData.pm10);
-            $("val-no2").textContent = latestSensorData.no2.toFixed(2);
-            $("val-so2").textContent = latestSensorData.so2.toFixed(2);
+            $("val-no2").textContent = displayedNo2.toFixed(2);
+            $("val-so2").textContent = displayedSo2.toFixed(2);
             $("txt-temp").textContent = latestSensorData.temp.toFixed(1);
             $("txt-hum").textContent = Math.round(latestSensorData.hum);
 
             setTubeLevel("tempTubeLiquid", latestSensorData.temp, 50);
             setTubeLevel("humTubeLiquid", latestSensorData.hum, 100);
+            if ($("weather-compare-modal")?.classList.contains("open")) renderWeatherComparison();
+        }
+
+        function formatComparisonValue(value) {
+            return Number.isFinite(value) ? value.toFixed(2) : "-";
+        }
+
+        function renderWeatherComparison() {
+            ["co", "pm25", "pm10", "no2", "so2"].forEach(type => {
+                const robotValue = safeNumber(latestSensorData[type], NaN);
+                const weatherValue = latestWeatherData[type];
+                const robotCell = $(`compare-robot-${type}`);
+                const weatherCell = $(`compare-weather-${type}`);
+                const diffCell = $(`compare-diff-${type}`);
+                if (!robotCell || !weatherCell || !diffCell) return;
+
+                robotCell.textContent = formatComparisonValue(robotValue);
+                weatherCell.textContent = formatComparisonValue(weatherValue);
+                if (!Number.isFinite(robotValue) || !Number.isFinite(weatherValue)) {
+                    diffCell.textContent = "รอข้อมูล";
+                    return;
+                }
+
+                const absoluteDifference = Math.abs(robotValue - weatherValue);
+                const averageMagnitude = (Math.abs(robotValue) + Math.abs(weatherValue)) / 2;
+                const percentDifference = averageMagnitude === 0 ? 0 : (absoluteDifference / averageMagnitude) * 100;
+                diffCell.textContent = `${absoluteDifference.toFixed(2)} · ${percentDifference.toFixed(1)}%`;
+            });
+            if (latestWeatherData.fetchedAt) {
+                $("weather-compare-status").textContent = `อัปเดต ${new Date(latestWeatherData.fetchedAt).toLocaleTimeString("th-TH")}`;
+            }
+            $("weather-compare-location").textContent = `พิกัด API: ${currentLat.toFixed(4)}, ${currentLon.toFixed(4)}`;
+        }
+
+        function openWeatherComparison() {
+            $("weather-compare-modal").classList.add("open");
+            document.body.style.overflow = "hidden";
+            renderWeatherComparison();
+            fetchPollutionAPI();
+        }
+
+        function closeWeatherComparison() {
+            $("weather-compare-modal").classList.remove("open");
+            if (!$ ("pollutant-modal").classList.contains("open")) document.body.style.overflow = "";
         }
 
         function addChartPoint() {
@@ -3443,6 +3536,8 @@
             if (demoTimer) return;
 
             if (!APP_CONFIG.weatherApiKey || APP_CONFIG.weatherApiKey.includes("YOUR_")) {
+                $("weather-compare-status").textContent = "ยังไม่ได้ตั้งค่า OpenWeather API key";
+                $("weather-compare-location").textContent = `พิกัด API: ${currentLat.toFixed(4)}, ${currentLon.toFixed(4)}`;
                 updateAIPrediction();
                 return;
             }
@@ -3461,13 +3556,23 @@
                 const components = json?.list?.[0]?.components;
 
                 if (components) {
-                    latestSensorData.no2 = safeNumber(components.no2, latestSensorData.no2);
-                    latestSensorData.so2 = safeNumber(components.so2, latestSensorData.so2);
+                    latestWeatherData.co = Number.isFinite(Number(components.co))
+                        ? Number(components.co) / 1145
+                        : null;
+                    latestWeatherData.pm25 = safeNumber(components.pm2_5, NaN);
+                    latestWeatherData.pm10 = safeNumber(components.pm10, NaN);
+                    latestWeatherData.no2 = safeNumber(components.no2, NaN);
+                    latestWeatherData.so2 = safeNumber(components.so2, NaN);
+                    latestWeatherData.fetchedAt = new Date().toISOString();
+                    $("weather-compare-status").textContent = "รับข้อมูล OpenWeather สำเร็จ";
+                    $("weather-compare-location").textContent = `พิกัด API: ${currentLat.toFixed(4)}, ${currentLon.toFixed(4)}`;
                     updateSensorUI();
-                    updateAIPrediction();
+                    renderWeatherComparison();
                 }
             } catch (error) {
                 console.warn("Weather API failed:", error);
+                $("weather-compare-status").textContent = "เชื่อมต่อ OpenWeather ไม่สำเร็จ";
+                $("weather-compare-location").textContent = `พิกัด API: ${currentLat.toFixed(4)}, ${currentLon.toFixed(4)}`;
             }
         }
 
@@ -3886,8 +3991,13 @@
                 if (event.target === $("pollutant-modal")) closePollutantModal();
             });
 
+            $("weather-compare-modal").addEventListener("click", event => {
+                if (event.target === $("weather-compare-modal")) closeWeatherComparison();
+            });
+
             document.addEventListener("keydown", event => {
                 if (event.key === "Escape") closePollutantModal();
+                if (event.key === "Escape") closeWeatherComparison();
             });
 
             $("btn-toggle-siren").addEventListener("click", toggleSirenMute);
@@ -3898,6 +4008,9 @@
 
             $("btn-export-csv").addEventListener("click", exportToCSV);
             $("btn-export-pdf").addEventListener("click", exportToPDF);
+            $("btn-compare-weather").addEventListener("click", openWeatherComparison);
+            $("btn-close-weather-compare").addEventListener("click", closeWeatherComparison);
+            $("btn-refresh-weather-compare").addEventListener("click", fetchPollutionAPI);
             $("btn-reset-chart").addEventListener("click", () => realtimeChart.resetZoom());
             $("realtimeChart").addEventListener("dblclick", () => realtimeChart.resetZoom());
 

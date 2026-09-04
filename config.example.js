@@ -5,7 +5,7 @@
  *
  * ⚠️ DO NOT commit config.js to Git!
  */
-const CONFIG = {
+window.CONFIG = {
     // ============================
     // 🌤️ OpenWeatherMap Air Pollution API
     // Get yours at: https://openweathermap.org/api

@@ -44,3 +44,9 @@ html[lang="en"] .th-only{display:none!important}
 html[lang="th"] .en-only{display:none!important}
 @media print{.lang-switch{display:none!important}}
 @media (max-width:600px){.lang-switch button{padding:4px 10px;font-size:11px}}
+
+.comparison-table { border-collapse: collapse; min-width: 620px; }
+.comparison-table th, .comparison-table td { border-bottom: 1px solid rgba(51,65,85,.55); padding: .75rem .65rem; }
+.comparison-table th { font-family: 'Share Tech Mono', monospace; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; }
+.comparison-table td:not(:first-child) { color: #cbd5e1; font-family: 'Share Tech Mono', monospace; }
+.comparison-table td:last-child { color: #67e8f9; font-weight: 700; }
