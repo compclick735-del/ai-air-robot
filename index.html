@@ -344,6 +344,18 @@
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
         }
 
+        .replaceable-icon {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .replaceable-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: inherit;
+        }
+
         .metric-card {
             position: relative;
             min-height: 150px;
@@ -1075,6 +1087,455 @@
     </style>
 </head>
 
+<script>
+/* =========================================================
+   AI-AIR i18n Engine  ·  TH ⇄ EN Live Switcher
+   ========================================================= */
+(function () {
+  'use strict';
+
+  /* ---------------------------------------------------------
+     [A] พจนานุกรม TH → EN   (เพิ่ม/แก้ได้อิสระ)
+     --------------------------------------------------------- */
+  const DICT = {
+    /* ---------- Header / Topbar ---------- */
+    "โรงเรียนชุมแพศึกษา": "Chumphae Suksa School",
+    "ตราสัญลักษณ์โรงเรียนชุมแพศึกษา": "Chumphae Suksa School Emblem",
+    "โรงเรียนชุมแพศึกษา · Intelligent Environmental & Robotic Control":
+      "Chumphae Suksa School · Intelligent Environmental & Robotic Control",
+    "ระบบควบคุมสิ่งแวดล้อมและหุ่นยนต์อัจฉริยะ":
+      "Intelligent Environmental & Robotic Control System",
+
+    /* ---------- Status pills ---------- */
+    "กำลังค้นหาพิกัด": "Locating position…",
+    "กำลังค้นหาพิกัด...": "Locating position…",
+    "พิกัดพร้อมใช้งาน": "Location ready",
+    "ไม่พบพิกัด": "Location unavailable",
+    "ไม่สามารถระบุพิกัดได้": "Unable to determine location",
+    "เชื่อมต่อแล้ว": "Connected",
+    "กำลังเชื่อมต่อ": "Connecting…",
+    "กำลังเชื่อมต่อ...": "Connecting…",
+    "ไม่ได้เชื่อมต่อ": "Disconnected",
+    "ตัดการเชื่อมต่อ": "Disconnected",
+    "เชื่อมต่อล้มเหลว": "Connection failed",
+    "กำลังเชื่อมต่อใหม่": "Reconnecting…",
+    "ออนไลน์": "Online",
+    "ออฟไลน์": "Offline",
+    "โหมดมือถือ": "Mobile Mode",
+    "โหมดคอมพิวเตอร์": "Desktop Mode",
+    "โหมดแท็บเล็ต": "Tablet Mode",
+
+    /* ---------- Emergency / Evacuation ---------- */
+    "โปรโตคอลฉุกเฉิน": "Emergency Protocol",
+    "รับทราบแล้ว · กำลังเฝ้าระวัง": "Acknowledged · Monitoring",
+    "รับทราบแล้ว": "Acknowledged",
+    "กำลังเฝ้าระวัง": "Monitoring",
+    "โทรฉุกเฉิน": "Emergency Call",
+    "ปิดเสียง": "Mute Siren",
+    "เปิดเสียง": "Unmute Siren",
+    "ยืนยันเคลื่อนย้ายแล้ว": "Evacuation Confirmed",
+    "ยืนยันเคลื่อนย้าย": "Confirm Evacuation",
+    "แจ้งเตือนอพยพ": "Evacuation Alert",
+    "ประกาศอพยพฉุกเฉิน": "Emergency Evacuation Notice",
+    "โปรดเคลื่อนย้ายออกจากพื้นที่ทันที": "Evacuate the area immediately",
+    "ระดับอันตรายสูง": "High Danger Level",
+    "สถานะปกติ": "Normal Status",
+
+    /* ---------- Neural Vision System ---------- */
+    "ระบบวิชั่นอัจฉริยะ": "Neural Vision System",
+    "เลือกแหล่งสัญญาณกล้องเพื่อเริ่มต้นระบบตรวจจับ":
+      "Select a camera source to start the detection system",
+    "เปิดกล้อง": "Start Camera",
+    "ปิดกล้อง": "Stop Camera",
+    "เปิด AI Detection": "Enable AI Detection",
+    "ปิด AI Detection": "Disable AI Detection",
+    "เชื่อมต่อ": "Connect",
+    "ยกเลิกการเชื่อมต่อ": "Disconnect",
+    "กำลังโหลดโมเดล": "Loading model…",
+    "กำลังโหลดโมเดล...": "Loading model…",
+    "โมเดลพร้อมใช้งาน": "Model ready",
+    "ไม่สามารถเข้าถึงกล้องได้": "Camera access denied",
+    "กล้องเว็บแคม": "Webcam",
+    "กล้องมือถือ": "Mobile Camera",
+    "ESP32 stream URL หรือ IP address": "ESP32 stream URL or IP address",
+    "กรอก URL หรือ IP ของ ESP32": "Enter ESP32 URL or IP address",
+
+    /* ---------- Robot Controller ---------- */
+    "ระบบควบคุมหุ่นยนต์": "Robot Controller",
+    "เดินหน้า": "Forward",
+    "ถอยหลัง": "Reverse",
+    "เลี้ยวซ้าย": "Turn Left",
+    "เลี้ยวขวา": "Turn Right",
+    "หยุดฉุกเฉิน": "Emergency Stop",
+    "หยุด": "Stop",
+    "ปุ่มลูกศรเพื่อควบคุม · Spacebar เพื่อหยุดฉุกเฉิน":
+      "Arrow keys to drive · Spacebar for emergency stop",
+    "ความเร็ว": "Speed",
+
+    /* ---------- Context Variables ---------- */
+    "ปัจจัยแวดล้อมพื้นที่": "Area Context Factors",
+    "ตัวแปรสภาพแวดล้อม": "Context Variables",
+    "ระยะห่างนิคมฯ": "Distance to Industrial Estate",
+    "ระยะห่างนิคมอุตสาหกรรม": "Distance to Industrial Estate",
+    "ความหนาแน่นประชากร": "Population Density",
+    "ทิศทางลม": "Wind Direction",
+    "ความเร็วลม": "Wind Speed",
+
+    /* ---------- AI Prediction ---------- */
+    "การพยากรณ์คุณภาพอากาศด้วย AI": "AI Air Quality Prediction",
+    "ระบบกำลังรอข้อมูลจากเซนเซอร์และเครือข่าย MQTT":
+      "Waiting for sensor data from the MQTT network",
+        "มลพิษเริ่มส่งผลกระทบต่อสุขภาพ ควรสวมหน้ากากและลดกิจกรรมกลางแจ้ง":
+            "Pollution is beginning to affect health. Wear a mask and reduce outdoor activities.",
+        "คุณภาพอากาศอยู่ในระดับดี เหมาะสำหรับกิจกรรมทั่วไปและกิจกรรมกลางแจ้ง":
+            "Air quality is good and suitable for normal and outdoor activities.",
+        "คุณภาพอากาศอยู่ในระดับปานกลาง กลุ่มเสี่ยงควรลดระยะเวลาทำกิจกรรมกลางแจ้ง":
+            "Air quality is moderate. Sensitive groups should reduce time spent outdoors.",
+        "ระดับมลพิษอันตราย ควรงดกิจกรรมนอกอาคารและเคลื่อนย้ายกลุ่มเสี่ยง":
+            "Pollution levels are hazardous. Avoid outdoor activities and relocate sensitive groups.",
+    "คุณภาพอากาศ": "Air Quality",
+    "ดีมาก": "Very Good",
+    "ดี": "Good",
+    "ปานกลาง": "Moderate",
+    "เริ่มมีผลกระทบต่อสุขภาพ": "Unhealthy for Sensitive Groups",
+    "แย่": "Poor",
+    "มีผลกระทบต่อสุขภาพ": "Unhealthy",
+    "อันตราย": "Hazardous",
+    "ระดับความเชื่อมั่น": "Confidence Level",
+
+    /* ---------- Environmental Telemetry ---------- */
+    "ข้อมูลเซนเซอร์สิ่งแวดล้อม": "Environmental Telemetry",
+    "อุณหภูมิอากาศ": "Air Temperature",
+    "ความชื้นสัมพัทธ์": "Relative Humidity",
+    "ข้อมูลอุณหภูมิแบบเรียลไทม์จากหุ่นยนต์": "Real-time temperature data from the robot",
+    "ข้อมูลความชื้นแบบเรียลไทม์จากหุ่นยนต์": "Real-time humidity data from the robot",
+    "ค่ามลพิษล่าสุด": "Latest Pollutant Readings",
+    "เลือกการ์ดเพื่อดูผลกระทบและคำแนะนำด้านสุขภาพ":
+      "Tap a card to view health impacts and recommendations",
+
+    /* ---------- Pollutants ---------- */
+    "ก๊าซคาร์บอนมอนอกไซด์ (CO)": "Carbon Monoxide (CO)",
+    "ก๊าซคาร์บอนมอนอกไซด์": "Carbon Monoxide",
+    "ฝุ่นละอองขนาดเล็ก PM2.5": "Fine Particulate Matter (PM2.5)",
+    "ฝุ่นละอองขนาด PM10": "Particulate Matter (PM10)",
+    "ก๊าซไนโตรเจนไดออกไซด์ (NO₂)": "Nitrogen Dioxide (NO₂)",
+    "ก๊าซไนโตรเจนไดออกไซด์": "Nitrogen Dioxide",
+    "ก๊าซซัลเฟอร์ไดออกไซด์ (SO₂)": "Sulfur Dioxide (SO₂)",
+    "ก๊าซซัลเฟอร์ไดออกไซด์": "Sulfur Dioxide",
+    "ก๊าซโอโซน (O₃)": "Ozone (O₃)",
+    "สารอินทรีย์ระเหยง่าย (VOC)": "Volatile Organic Compounds (VOC)",
+
+    /* ---------- Analytics ---------- */
+    "การวิเคราะห์แบบเรียลไทม์": "Realtime Analytics",
+    "แนวโน้มมลพิษทางอากาศ": "Air Pollution Trends",
+    "ส่งออก CSV": "Export CSV",
+    "ส่งออก PDF": "Export PDF",
+    "ล้างกราฟ": "Reset Chart",
+    "รีเซ็ตกราฟ": "Reset Chart",
+    "เวลา": "Time",
+    "ค่าที่วัดได้": "Measured Value",
+    "ไม่มีข้อมูล": "No data",
+
+    /* ---------- Modal ---------- */
+    "ข้อมูลมลพิษ": "Pollutant Information",
+    "ค่าปัจจุบัน": "Current Value",
+    "รับทราบและปิดหน้าต่าง": "Acknowledge & Close",
+    "ผลกระทบต่อสุขภาพ": "Health Impact",
+    "คำแนะนำ": "Recommendation",
+    "คำแนะนำด้านสุขภาพ": "Health Recommendation",
+    "แหล่งกำเนิด": "Emission Source",
+    "ค่ามาตรฐาน": "Standard Limit",
+    "ปิด": "Close",
+    "ปิดหน้าต่าง": "Close window",
+
+    /* ---------- Generic ---------- */
+    "ตกลง": "OK",
+    "ยกเลิก": "Cancel",
+    "บันทึก": "Save",
+    "รีเฟรช": "Refresh",
+    "กำลังโหลด": "Loading…",
+    "กำลังโหลด...": "Loading…",
+    "คน": "people",
+    "องศาเซลเซียส": "°C",
+    "เปอร์เซ็นต์": "%",
+    "กิโลเมตร": "km",
+    "นาที": "min",
+    "วินาที": "sec",
+    "ชั่วโมง": "hr"
+  };
+
+  /* ---------------------------------------------------------
+     [B] กฎ Regex สำหรับข้อความที่มีตัวเลขผสม
+     --------------------------------------------------------- */
+  const RULES = [
+        [/^ตรวจพบบุคคล\s*(\d+)\s*คน\s*ในพื้นที่คุณภาพอากาศระดับ\s*[“\"](.+?)[”\"]$/,
+            (m, n, level) => `${n} person${n === '1' ? '' : 's'} detected in an area with ${level} air quality`],
+        [/^ตรวจพบบุคคล\s*(\d+)\s*คน\s*·\s*คุณภาพอากาศระดับ\s*[“\"](.+?)[”\"]$/,
+            (m, n, level) => `${n} person${n === '1' ? '' : 's'} detected · air quality: ${level}`],
+        [/^กรุณาประสานงานเคลื่อนย้ายเด็ก ผู้สูงอายุ หญิงตั้งครรภ์ และผู้ป่วยออกจากพื้นที่$/,
+            () => "Coordinate the relocation of children, older adults, pregnant people, and patients from the area"],
+    [/^ตรวจพบ\s*(\d+)\s*คน$/,
+      (m, n) => `${n} ${n === '1' ? 'person' : 'people'} detected`],
+    [/^พบ\s*(\d+)\s*คน$/,
+      (m, n) => `${n} ${n === '1' ? 'person' : 'people'} found`],
+    [/^อัปเดตล่าสุด\s*(.*)$/i, (m, t) => `Last updated ${t}`.trim()],
+    [/^อัพเดทล่าสุด\s*(.*)$/i, (m, t) => `Last updated ${t}`.trim()],
+    [/^ปรับปรุงเมื่อ\s*(.*)$/, (m, t) => `Updated ${t}`.trim()],
+    [/^ระยะทาง\s*(.+?)\s*กม\.?$/, (m, v) => `${v} km`],
+    [/^ระยะ\s*(.+?)\s*กม\.?$/, (m, v) => `${v} km`],
+    [/(\d[\d,.]*)\s*คน\s*\/\s*ตร\.?\s*กม\.?/g, '$1 people/km²'],
+    [/(\d[\d,.]*)\s*คน\/ตร\.กม\./g, '$1 people/km²'],
+    [/(\d[\d,.]*)\s*กม\.?/g, '$1 km'],
+    [/(\d[\d,.]*)\s*ม\.(?!\S)/g, '$1 m'],
+    [/(\d[\d,.]*)\s*คน/g, '$1 people'],
+    [/(\d[\d,.]*)\s*องศา/g, '$1°'],
+    [/(\d[\d,.]*)\s*นาที/g, '$1 min'],
+    [/(\d[\d,.]*)\s*วินาที/g, '$1 sec'],
+    [/(\d[\d,.]*)\s*ชั่วโมง/g, '$1 hr']
+  ];
+
+  /* ---------------------------------------------------------
+     [C] Engine
+     --------------------------------------------------------- */
+  const THAI_RE  = /[\u0E00-\u0E7F]/;
+  const SKIP_TAG = new Set(['SCRIPT','STYLE','NOSCRIPT','CANVAS','SVG','CODE','PRE','TEXTAREA']);
+  const ATTRS    = ['placeholder','title','aria-label','alt','data-tooltip','data-label','value'];
+  const SORTED   = Object.keys(DICT).sort((a, b) => b.length - a.length);
+
+  const ORIG_TEXT = new WeakMap();   // textNode -> original Thai
+  const ORIG_ATTR = new WeakMap();   // element  -> {attr: originalValue}
+
+  let lang     = localStorage.getItem('aiair-lang') || 'th';
+  let busy     = false;
+  let observer = null;
+  const ORIG_TITLE = document.title;
+
+  /* ---- แปลข้อความหนึ่งชิ้น ---- */
+  function translate(raw) {
+    const src = String(raw);
+    const key = src.trim();
+    if (!key || !THAI_RE.test(key)) return null;
+
+    // 1. ตรงเป๊ะ
+    if (DICT[key]) return src.replace(key, DICT[key]);
+
+    // 2. กฎ regex
+    for (const [re, rep] of RULES) {
+      const r = new RegExp(re.source, re.flags);
+      if (r.test(key)) {
+        const out = key.replace(new RegExp(re.source, re.flags), rep);
+        if (out !== key) return src.replace(key, out);
+      }
+    }
+
+    // 3. แทนคำย่อย (ยาว → สั้น) แล้วตามด้วยกฎหน่วย
+    let out = key, changed = false;
+    for (const k of SORTED) {
+      if (out.includes(k)) { out = out.split(k).join(DICT[k]); changed = true; }
+    }
+    for (const [re, rep] of RULES) {
+      if (!re.flags.includes('g')) continue;
+      const before = out;
+      out = out.replace(new RegExp(re.source, re.flags), rep);
+      if (out !== before) changed = true;
+    }
+    return changed ? src.replace(key, out) : null;
+  }
+
+  /* ---- แปล text node ---- */
+  function doTextNode(node) {
+    const parent = node.parentNode;
+    if (!parent || SKIP_TAG.has(parent.nodeName)) return;
+    if (parent.closest && parent.closest('.lang-switch')) return;
+
+    if (lang === 'en') {
+      const base = ORIG_TEXT.has(node) ? ORIG_TEXT.get(node) : node.nodeValue;
+      const en = translate(base);
+      if (en !== null && en !== node.nodeValue) {
+        if (!ORIG_TEXT.has(node)) ORIG_TEXT.set(node, base);
+        node.nodeValue = en;
+      }
+    } else if (ORIG_TEXT.has(node)) {
+      node.nodeValue = ORIG_TEXT.get(node);
+      ORIG_TEXT.delete(node);
+    }
+  }
+
+  /* ---- แปล attribute ---- */
+  function doAttrs(el) {
+    if (!el.getAttribute || el.closest?.('.lang-switch')) return;
+    let store = ORIG_ATTR.get(el);
+
+    for (const a of ATTRS) {
+      if (!el.hasAttribute(a)) continue;
+      if (a === 'value' && el.tagName === 'INPUT' &&
+          !['button','submit','reset'].includes(el.type)) continue;
+
+      if (lang === 'en') {
+        const base = store?.[a] ?? el.getAttribute(a);
+        const en = translate(base);
+        if (en !== null && en !== el.getAttribute(a)) {
+          if (!store) { store = {}; ORIG_ATTR.set(el, store); }
+          if (store[a] === undefined) store[a] = base;
+          el.setAttribute(a, en);
+        }
+      } else if (store && store[a] !== undefined) {
+        el.setAttribute(a, store[a]);
+        delete store[a];
+      }
+    }
+  }
+
+  /* ---- เดินทั้งต้นไม้ DOM ---- */
+  function walk(root) {
+    if (!root) return;
+
+    if (root.nodeType === Node.TEXT_NODE) { doTextNode(root); return; }
+    if (root.nodeType !== Node.ELEMENT_NODE && root.nodeType !== Node.DOCUMENT_NODE) return;
+    if (root.nodeType === Node.ELEMENT_NODE && SKIP_TAG.has(root.nodeName)) return;
+
+    if (root.nodeType === Node.ELEMENT_NODE) doAttrs(root);
+    root.querySelectorAll?.('*').forEach(doAttrs);
+
+    const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(n) {
+        const p = n.parentNode;
+        if (!p || SKIP_TAG.has(p.nodeName)) return NodeFilter.FILTER_REJECT;
+        if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const list = [];
+    while (tw.nextNode()) list.push(tw.currentNode);
+    list.forEach(doTextNode);
+  }
+
+  /* ---- apply ทั้งหน้า ---- */
+  function apply() {
+    busy = true;
+    observer?.disconnect();
+
+    walk(document.body);
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.dataset.i18n;
+            el.textContent = lang === 'en' ? (DICT[key] ?? key) : key;
+        });
+    document.documentElement.setAttribute('lang', lang);
+    document.title = lang === 'en'
+      ? (translate(ORIG_TITLE) ?? ORIG_TITLE)
+      : ORIG_TITLE;
+
+    document.querySelectorAll('.lang-switch button').forEach(b =>
+      b.classList.toggle('active', b.dataset.lang === lang));
+
+        const toggle = document.getElementById('btn-lang-toggle');
+        if (toggle) {
+            toggle.textContent = lang === 'en' ? 'ไทย' : 'EN';
+            toggle.setAttribute('aria-label', lang === 'en' ? 'เปลี่ยนเป็นภาษาไทย' : 'Switch to English');
+            toggle.setAttribute('aria-pressed', String(lang === 'en'));
+        }
+
+    // แจ้ง Chart.js / โค้ดอื่นให้ redraw label ได้
+    window.dispatchEvent(new CustomEvent('languagechange', { detail: { lang } }));
+
+    observer?.observe(document.body, {
+      childList: true, subtree: true, characterData: true,
+      attributes: true, attributeFilter: ATTRS
+    });
+    busy = false;
+  }
+
+  /* ---- MutationObserver: จับข้อความที่ JS สร้างใหม่ ---- */
+  observer = new MutationObserver(muts => {
+    if (busy || lang !== 'en') return;
+    busy = true;
+    observer.disconnect();
+    for (const m of muts) {
+      if (m.type === 'characterData')      doTextNode(m.target);
+      else if (m.type === 'attributes')    doAttrs(m.target);
+      else m.addedNodes.forEach(walk);
+    }
+    observer.observe(document.body, {
+      childList: true, subtree: true, characterData: true,
+      attributes: true, attributeFilter: ATTRS
+    });
+    busy = false;
+  });
+
+  /* ---- สร้างปุ่มสลับภาษา ---- */
+  function buildSwitch() {
+        const inlineToggle = document.getElementById('btn-lang-toggle');
+        if (inlineToggle) {
+            inlineToggle.addEventListener('click', () => setLang(lang === 'th' ? 'en' : 'th'));
+            return;
+        }
+
+    if (document.querySelector('.lang-switch')) return;
+
+    const box = document.createElement('div');
+    box.className = 'lang-switch';
+    box.innerHTML =
+      '<button type="button" data-lang="th">ไทย</button>' +
+      '<button type="button" data-lang="en">EN</button>';
+
+    box.addEventListener('click', e => {
+      const b = e.target.closest('button[data-lang]');
+      if (!b) return;
+      setLang(b.dataset.lang);
+    });
+
+    const host = document.querySelector('.topbar') ||
+                 document.querySelector('header')  ||
+                 document.querySelector('.app-shell');
+    if (host) host.appendChild(box);
+    else { box.classList.add('lang-switch-float'); document.body.appendChild(box); }
+  }
+
+  /* ---- API ---- */
+  function setLang(next) {
+    if (next !== 'th' && next !== 'en') return;
+    if (next === lang) return;
+    if (lang === 'en' && next === 'th') { lang = 'th'; apply(); }
+    else { lang = next; apply(); }
+    localStorage.setItem('aiair-lang', lang);
+  }
+
+  window.I18N = {
+    get lang() { return lang; },
+    set: setLang,
+    toggle: () => setLang(lang === 'th' ? 'en' : 'th'),
+    refresh: apply,
+    add(map) {
+      Object.assign(DICT, map);
+      SORTED.length = 0;
+      SORTED.push(...Object.keys(DICT).sort((a, b) => b.length - a.length));
+      if (lang === 'en') apply();
+    },
+    t: k => (lang === 'en' ? (DICT[k] ?? k) : k)
+  };
+
+  /* ---- Boot ---- */
+  function boot() {
+    buildSwitch();
+    apply();                       // ตั้ง observer + คืนค่าภาษาที่เคยเลือกไว้
+    setTimeout(apply, 600);        // เผื่อ widget ที่โหลดช้า
+    setTimeout(apply, 2000);
+  }
+
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+
+  /* ---- ทางลัด: Alt + L ---- */
+  document.addEventListener('keydown', e => {
+    if (e.altKey && (e.key === 'l' || e.key === 'L')) {
+      e.preventDefault();
+      window.I18N.toggle();
+    }
+  });
+})();
+</script>
+
 <body>
     <div class="blob-cursor"></div>
     <canvas id="starfield" aria-hidden="true"></canvas>
@@ -1088,7 +1549,7 @@
                     <div class="brand-logo">
                         <div class="brand-logo-core">
                             <img src="comp.png" alt="ตราสัญลักษณ์โรงเรียนชุมแพศึกษา" onerror="this.hidden=true;this.nextElementSibling.hidden=false">
-                            <span hidden class="text-2xl">🤖</span>
+                            <span hidden class="text-2xl">AI</span>
                         </div>
                     </div>
                     <div class="min-w-0">
@@ -1112,6 +1573,7 @@
                     <span id="connection-status" class="status-pill text-amber-300">
                         <span class="status-dot animate-pulse"></span> Connecting MQTT
                     </span>
+                    <button id="btn-lang-toggle" class="cyber-btn cyber-btn-purple" type="button" aria-label="Toggle language">EN</button>
                 </div>
             </div>
         </div>
@@ -1121,20 +1583,20 @@
         <div class="evac-banner p-4">
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div class="flex items-start gap-3 min-w-0">
-                    <div class="text-3xl animate-bounce">🚨</div>
+                    <div class="text-3xl animate-bounce">!</div>
                     <div>
                         <p class="text-[10px] text-red-300 cyber-font tracking-[.18em] font-bold">EMERGENCY PROTOCOL</p>
                         <h2 id="evac-banner-title" class="mt-1 text-sm sm:text-base font-bold text-white"></h2>
                         <p id="evac-banner-desc" class="mt-1 text-xs text-slate-300"></p>
                         <span id="evac-acked-tag" class="hidden mt-2 inline-flex px-3 py-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 text-[10px] font-bold text-emerald-300">
-                            ✅ รับทราบแล้ว · กำลังเฝ้าระวัง
+                            รับทราบแล้ว · กำลังเฝ้าระวัง
                         </span>
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <a id="btn-call-emergency" href="tel:1669" class="cyber-btn cyber-btn-danger">📞 โทรฉุกเฉิน</a>
-                    <button id="btn-toggle-siren" class="cyber-btn cyber-btn-muted" type="button">🔔 ปิดเสียง</button>
-                    <button id="btn-ack-evac" class="cyber-btn" type="button">✅ ยืนยันเคลื่อนย้ายแล้ว</button>
+                    <a id="btn-call-emergency" href="tel:1669" class="cyber-btn cyber-btn-danger">โทรฉุกเฉิน</a>
+                    <button id="btn-toggle-siren" class="cyber-btn cyber-btn-muted" type="button">ปิดเสียง</button>
+                    <button id="btn-ack-evac" class="cyber-btn" type="button">ยืนยันเคลื่อนย้ายแล้ว</button>
                 </div>
             </div>
         </div>
@@ -1145,7 +1607,7 @@
             <article class="panel xl:col-span-8 p-4 sm:p-6">
                 <div class="panel-header flex-wrap">
                     <div class="flex items-center gap-3">
-                        <div class="icon-box">📹</div>
+                        <div class="icon-box replaceable-icon" data-image-slot="vision" title="Replace image">CAM</div>
                         <div>
                             <p class="eyebrow">Neural Vision System</p>
                             <h2 class="panel-title">AI Vision · Person Detection</h2>
@@ -1157,8 +1619,8 @@
                 </div>
 
                 <div class="flex flex-wrap gap-2 mb-3">
-                    <button id="tab-webcam" class="cam-tab active" type="button">📷 WebCam / Mobile</button>
-                    <button id="tab-esp32" class="cam-tab" type="button">🌐 ESP32-CAM</button>
+                    <button id="tab-webcam" class="cam-tab active" type="button">WebCam / Mobile</button>
+                    <button id="tab-esp32" class="cam-tab" type="button">ESP32-CAM</button>
                 </div>
 
                 <div class="camera-stage">
@@ -1191,15 +1653,15 @@
 
                 <div class="mt-4 pt-4 border-t border-slate-800/70">
                     <div id="controls-webcam" class="flex flex-wrap items-center gap-2">
-                        <button id="btn-start-webcam" class="cyber-btn" type="button">📹 เปิดกล้อง</button>
-                        <button id="btn-stop-webcam" class="cyber-btn cyber-btn-muted" type="button">⏹ ปิดกล้อง</button>
-                        <button id="btn-toggle-ai" class="cyber-btn cyber-btn-purple hidden" type="button">🤖 เปิด AI Detection</button>
+                        <button id="btn-start-webcam" class="cyber-btn" type="button">เปิดกล้อง</button>
+                        <button id="btn-stop-webcam" class="cyber-btn cyber-btn-muted" type="button">ปิดกล้อง</button>
+                        <button id="btn-toggle-ai" class="cyber-btn cyber-btn-purple hidden" type="button">เปิด AI Detection</button>
                     </div>
 
                     <div id="controls-esp32" class="hidden flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                         <input id="cam-ip-input" class="input-cyber flex-1 cyber-font text-xs" type="text" value="10.151.196.140" placeholder="ESP32 stream URL หรือ IP address">
-                        <button id="btn-connect-esp32" class="cyber-btn" type="button">🔌 เชื่อมต่อ</button>
-                        <button id="btn-toggle-ai-esp" class="cyber-btn cyber-btn-purple hidden" type="button">🤖 เปิด AI Detection</button>
+                        <button id="btn-connect-esp32" class="cyber-btn" type="button">เชื่อมต่อ</button>
+                        <button id="btn-toggle-ai-esp" class="cyber-btn cyber-btn-purple hidden" type="button">เปิด AI Detection</button>
                     </div>
                 </div>
             </article>
@@ -1207,7 +1669,7 @@
             <aside class="panel panel-purple xl:col-span-4 p-5 sm:p-6">
                 <div class="panel-header">
                     <div class="flex items-center gap-3">
-                        <div class="icon-box border-purple-400/20 bg-purple-400/10">🕹️</div>
+                        <div class="icon-box replaceable-icon border-purple-400/20 bg-purple-400/10" data-image-slot="controller" title="Replace image">CTRL</div>
                         <div>
                             <p class="eyebrow !text-purple-300">Motion Command</p>
                             <h2 class="panel-title">Robot Controller</h2>
@@ -1220,7 +1682,7 @@
                     <div class="dpad">
                         <button id="btn-F" class="dpad-btn" type="button" aria-label="เดินหน้า">▲</button>
                         <button id="btn-L" class="dpad-btn" type="button" aria-label="เลี้ยวซ้าย">◀</button>
-                        <button id="btn-STOP" class="dpad-btn" type="button" aria-label="หยุดฉุกเฉิน">🛑<br>STOP</button>
+                        <button id="btn-STOP" class="dpad-btn" type="button" aria-label="หยุดฉุกเฉิน">STOP</button>
                         <button id="btn-R" class="dpad-btn" type="button" aria-label="เลี้ยวขวา">▶</button>
                         <button id="btn-B" class="dpad-btn" type="button" aria-label="ถอยหลัง">▼</button>
                     </div>
@@ -1250,7 +1712,7 @@
                         <p class="eyebrow !text-purple-300">Context Variables</p>
                         <h2 class="panel-title text-base">ปัจจัยแวดล้อมพื้นที่</h2>
                     </div>
-                    <div class="icon-box border-purple-400/20 bg-purple-400/10">📡</div>
+                    <div class="icon-box replaceable-icon border-purple-400/20 bg-purple-400/10" data-image-slot="context" title="Replace image">DATA</div>
                 </div>
 
                 <div class="space-y-7">
@@ -1281,7 +1743,7 @@
                     </div>
                     <div id="ai-prediction-text" class="prediction-value mt-4">WAITING...</div>
                     <div class="mt-5 pt-4 border-t border-slate-800/70 flex items-start gap-3">
-                        <span class="text-xl">✦</span>
+                        <span class="text-xl">AI</span>
                         <p id="ai-advice" class="text-xs sm:text-sm text-slate-300 leading-relaxed">
                             ระบบกำลังรอข้อมูลจากเซนเซอร์และเครือข่าย MQTT
                         </p>
@@ -1342,9 +1804,9 @@
             <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-4">
                 <div>
                     <p class="eyebrow">Environmental Telemetry</p>
-                    <h2 class="mt-1 text-xl sm:text-2xl font-bold tech-font">ค่ามลพิษล่าสุด</h2>
+                    <h2 class="mt-1 text-xl sm:text-2xl font-bold tech-font" data-i18n="ค่ามลพิษล่าสุด">ค่ามลพิษล่าสุด</h2>
                 </div>
-                <p class="text-[11px] text-slate-500">เลือกการ์ดเพื่อดูผลกระทบและคำแนะนำด้านสุขภาพ</p>
+                <p class="text-[11px] text-slate-500" data-i18n="เลือกการ์ดเพื่อดูผลกระทบและคำแนะนำด้านสุขภาพ">เลือกการ์ดเพื่อดูผลกระทบและคำแนะนำด้านสุขภาพ</p>
             </div>
 
             <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
@@ -1383,7 +1845,7 @@
         <section class="panel p-5 sm:p-6">
             <div class="panel-header flex-wrap">
                 <div class="flex items-center gap-3">
-                    <div class="icon-box">📊</div>
+                    <div class="icon-box replaceable-icon" data-image-slot="analytics" title="Replace image">CHART</div>
                     <div>
                         <p class="eyebrow">Realtime Analytics</p>
                         <h2 class="panel-title">แนวโน้มมลพิษทางอากาศ</h2>
@@ -1391,16 +1853,16 @@
                 </div>
 
                 <div class="flex flex-wrap gap-2">
-                    <button id="btn-export-csv" class="cyber-btn" type="button">📄 Export CSV</button>
-                    <button id="btn-export-pdf" class="cyber-btn cyber-btn-purple" type="button">📑 Export PDF</button>
-                    <button id="btn-reset-chart" class="cyber-btn cyber-btn-muted" type="button">↻ Reset Zoom</button>
+                    <button id="btn-export-csv" class="cyber-btn" type="button">Export CSV</button>
+                    <button id="btn-export-pdf" class="cyber-btn cyber-btn-purple" type="button">Export PDF</button>
+                    <button id="btn-reset-chart" class="cyber-btn cyber-btn-muted" type="button">Reset Zoom</button>
                 </div>
             </div>
 
             <div class="chart-wrap">
                 <canvas id="realtimeChart"></canvas>
             </div>
-            <p class="mt-2 text-center text-[10px] text-slate-500 cyber-font">🖱️ Scroll = Zoom · Drag = Pan · Double-click = Reset · Pinch = Zoom (Mobile)</p>
+            <p class="mt-2 text-center text-[10px] text-slate-500 cyber-font">Scroll = Zoom · Drag = Pan · Double-click = Reset · Pinch = Zoom (Mobile)</p>
         </section>
 
         <footer class="py-5 text-center">
@@ -1414,7 +1876,7 @@
         <article class="modal-card p-5 sm:p-7">
             <div class="flex items-start justify-between gap-4">
                 <div class="flex items-center gap-3">
-                    <div id="modal-icon" class="w-14 h-14 grid place-items-center rounded-2xl border border-cyan-400/20 bg-cyan-400/5 text-3xl">⚠️</div>
+                    <div id="modal-icon" class="replaceable-icon w-14 h-14 grid place-items-center rounded-2xl border border-cyan-400/20 bg-cyan-400/5 text-3xl" data-image-slot="modal" title="Replace image">!</div>
                     <div>
                         <p class="eyebrow">Health Intelligence</p>
                         <h2 id="modal-title" class="mt-1 text-lg sm:text-xl font-bold tech-font">ข้อมูลมลพิษ</h2>
@@ -1423,16 +1885,16 @@
                         </p>
                     </div>
                 </div>
-                <button id="btn-close-modal" class="w-9 h-9 rounded-xl border border-slate-700 bg-slate-900/70 text-slate-400 hover:text-white" type="button">✕</button>
+                <button id="btn-close-modal" class="w-9 h-9 rounded-xl border border-slate-700 bg-slate-900/70 text-slate-400 hover:text-white" type="button" aria-label="Close">X</button>
             </div>
 
             <div class="mt-6 space-y-4">
                 <div class="rounded-2xl border border-red-400/20 bg-red-500/5 p-4">
-                    <p class="text-xs font-bold text-red-300 cyber-font">☠ HEALTH IMPACT</p>
+                    <p class="text-xs font-bold text-red-300 cyber-font">HEALTH IMPACT</p>
                     <p id="modal-danger" class="mt-2 text-xs sm:text-sm leading-relaxed text-slate-300"></p>
                 </div>
                 <div class="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
-                    <p class="text-xs font-bold text-emerald-300 cyber-font">✦ SAFETY ADVICE</p>
+                    <p class="text-xs font-bold text-emerald-300 cyber-font">SAFETY ADVICE</p>
                     <p id="modal-advice" class="mt-2 whitespace-pre-line text-xs sm:text-sm leading-relaxed text-slate-300"></p>
                 </div>
             </div>
@@ -1440,6 +1902,8 @@
             <button id="btn-close-modal-bottom" class="cyber-btn w-full mt-6" type="button">รับทราบและปิดหน้าต่าง</button>
         </article>
     </div>
+
+    <input id="icon-image-picker" class="hidden" type="file" accept="image/*">
 
     <script>
         // Auto-hide topbar on scroll
@@ -1467,6 +1931,7 @@
             supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0emNhbWdxZXVneWpzYnFmbHJuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Njg5MDkyNywiZXhwIjoyMTAyNDY2OTI3fQ.jMY5h015rEM0js0MYMLcC3eP_7CJPzRL68ApInt0qx8",
             weatherApiKey: "69c5ee3c1296056b0e9bde92ccc215fc",
             yoloModelUrl: "https://cdn.jsdelivr.net/gh/compclick735-del/yolo-web-model@main/model/model.json",
+            iconStorageBucket: "icon-images",
             emergencyNumber: "1669",
             fallbackLocation: {
                 latitude: 16.7164,
@@ -1512,6 +1977,7 @@
         let lastDetectionAt = 0;
         let currentPersonCount = 0;
         let currentAQIStatus = "Good";
+        let activePollutantType = null;
         let evacuationActive = false;
         let evacuationAcknowledged = false;
         let evacuationLog = [];
@@ -1526,15 +1992,100 @@
         let controlHeartbeat = null;
         let lastCommand = "S";
         let lastSupabaseLogAt = 0;
+        const savedIconImages = {};
+        const iconDatabase = new Promise((resolve, reject) => {
+            const request = indexedDB.open("aiair-assets", 1);
+            request.onupgradeneeded = () => request.result.createObjectStore("icons");
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+
+        async function loadSavedIconImages() {
+            try {
+                const database = await iconDatabase;
+                const transaction = database.transaction("icons", "readonly");
+                const request = transaction.objectStore("icons").getAll();
+                const keysRequest = transaction.objectStore("icons").getAllKeys();
+                const [images, keys] = await Promise.all([
+                    new Promise((resolve, reject) => {
+                        request.onsuccess = () => resolve(request.result);
+                        request.onerror = () => reject(request.error);
+                    }),
+                    new Promise((resolve, reject) => {
+                        keysRequest.onsuccess = () => resolve(keysRequest.result);
+                        keysRequest.onerror = () => reject(keysRequest.error);
+                    })
+                ]);
+                keys.forEach((key, index) => { savedIconImages[key] = images[index]; });
+
+                const legacyImages = JSON.parse(localStorage.getItem("aiair-icon-images") || "{}");
+                Object.entries(legacyImages).forEach(([key, image]) => {
+                    if (savedIconImages[key]) return;
+                    savedIconImages[key] = image;
+                    saveIconImage(key, image);
+                });
+
+                await loadCloudIconImages();
+            } catch (error) {
+                console.warn("Could not load saved icon images", error);
+            }
+        }
+
+        async function loadCloudIconImages() {
+            if (!supabaseClient) return;
+            const slots = ["vision", "controller", "context", "analytics", "modal"];
+            for (const slotName of slots) {
+                const { data } = supabaseClient.storage
+                    .from(APP_CONFIG.iconStorageBucket)
+                    .getPublicUrl(`icons/${slotName}.png`);
+                try {
+                    const response = await fetch(`${data.publicUrl}?v=${Date.now()}`);
+                    if (!response.ok) continue;
+                    const blob = await response.blob();
+                    savedIconImages[slotName] = await new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.readAsDataURL(blob);
+                    });
+                } catch (error) {
+                    console.warn(`Could not load cloud icon: ${slotName}`, error);
+                }
+            }
+        }
+
+        async function saveIconImage(slotName, imageData) {
+            try {
+                const database = await iconDatabase;
+                const transaction = database.transaction("icons", "readwrite");
+                transaction.objectStore("icons").put(imageData, slotName);
+            } catch (error) {
+                console.warn("Could not save icon image", error);
+            }
+
+            if (!supabaseClient) return;
+            try {
+                const response = await fetch(imageData);
+                const imageBlob = await response.blob();
+                const { error } = await supabaseClient.storage
+                    .from(APP_CONFIG.iconStorageBucket)
+                    .upload(`icons/${slotName}.png`, imageBlob, {
+                        contentType: "image/png",
+                        upsert: true
+                    });
+                if (error) throw error;
+            } catch (error) {
+                console.warn("Could not sync icon image to cloud", error);
+            }
+        }
 
         const latestSensorData = {
-            temp: 25,
-            hum: 70,
-            co: 1.5,
-            no2: 25,
-            so2: 8.5,
-            pm25: 20,
-            pm10: 25
+            temp: 0,
+            hum: 0,
+            co: 0,
+            no2: 0,
+            so2: 0,
+            pm25: 0,
+            pm10: 0
         };
 
         const activeKeys = {
@@ -1547,67 +2098,82 @@
         const pollutantDetails = {
             co: {
                 name: "ก๊าซคาร์บอนมอนอกไซด์ (CO)",
+                nameEn: "Carbon Monoxide (CO)",
                 unit: "ppm",
                 valId: "val-co",
-                icon: "🚗",
+                icon: "CO",
                 danger: "ก๊าซไร้สีและไร้กลิ่นจากการเผาไหม้ไม่สมบูรณ์ สามารถจับกับฮีโมโกลบินและลดการส่งออกซิเจนไปยังสมองและอวัยวะสำคัญ ทำให้ปวดศีรษะ เวียนศีรษะ คลื่นไส้ สับสน หมดสติ และอาจเป็นอันตรายถึงชีวิตเมื่อมีความเข้มข้นสูง",
+                dangerEn: "A colorless, odorless gas from incomplete combustion. It binds to hemoglobin and reduces oxygen delivery to the brain and vital organs, causing headaches, dizziness, nausea, confusion, loss of consciousness, and potentially death at high concentrations.",
                 advice: "1. ออกจากบริเวณอับอากาศหรือพื้นที่ที่มีควันสะสมทันที\n2. ห้ามติดเครื่องยนต์ในอาคารปิดหรือนอนในรถขณะติดเครื่อง\n3. หากมีอาการผิดปกติให้ไปยังที่อากาศถ่ายเทและติดต่อหน่วยแพทย์ฉุกเฉิน"
+                ,adviceEn: "1. Leave enclosed or smoke-filled areas immediately.\n2. Never run an engine indoors or sleep in a running vehicle.\n3. Move to fresh air and contact emergency medical services if symptoms occur."
             },
             pm25: {
                 name: "ฝุ่นละอองขนาดเล็ก PM2.5",
+                nameEn: "Fine Particulate Matter (PM2.5)",
                 unit: "µg/m³",
                 valId: "val-pm25",
-                icon: "🌫️",
+                icon: "PM2.5",
                 danger: "ฝุ่นขนาดเล็กสามารถเข้าสู่ถุงลมปอดและกระแสเลือด เพิ่มความเสี่ยงต่อโรคระบบทางเดินหายใจ โรคหัวใจ หลอดเลือดสมอง และมะเร็งปอด โดยเฉพาะเด็ก ผู้สูงอายุ และผู้มีโรคประจำตัว",
+                dangerEn: "Fine particles can enter the lung air sacs and bloodstream, increasing the risk of respiratory disease, heart disease, stroke, and lung cancer, especially for children, older adults, and people with underlying conditions.",
                 advice: "1. สวมหน้ากาก N95 เมื่อต้องออกนอกอาคาร\n2. ลดกิจกรรมหนักกลางแจ้งและปิดประตูหน้าต่าง\n3. ใช้เครื่องฟอกอากาศที่มีแผ่นกรอง HEPA"
+                ,adviceEn: "1. Wear an N95 mask when going outdoors.\n2. Reduce strenuous outdoor activities and close doors and windows.\n3. Use an air purifier with a HEPA filter."
             },
             pm10: {
                 name: "ฝุ่นละอองขนาด PM10",
+                nameEn: "Particulate Matter (PM10)",
                 unit: "µg/m³",
                 valId: "val-pm10",
-                icon: "🏭",
+                icon: "PM10",
                 danger: "ฝุ่นขนาดไม่เกิน 10 ไมครอนอาจสะสมในระบบทางเดินหายใจส่วนบน ทำให้ระคายเคืองตา จมูก และคอ กระตุ้นอาการภูมิแพ้ ไอ หรือโรคหอบหืด",
+                dangerEn: "Particles up to 10 microns can accumulate in the upper respiratory system, irritating the eyes, nose, and throat and triggering allergies, coughing, or asthma.",
                 advice: "1. หลีกเลี่ยงพื้นที่ก่อสร้างและถนนที่มีฝุ่นมาก\n2. สวมหน้ากากที่กรองฝุ่นได้เหมาะสม\n3. ทำความสะอาดพื้นผิวด้วยผ้าชุบน้ำเพื่อลดการฟุ้งกระจาย"
+                ,adviceEn: "1. Avoid construction areas and dusty roads.\n2. Wear a mask suitable for filtering particles.\n3. Clean surfaces with a damp cloth to reduce airborne dust."
             },
             no2: {
                 name: "ก๊าซไนโตรเจนไดออกไซด์ (NO₂)",
+                nameEn: "Nitrogen Dioxide (NO₂)",
                 unit: "µg/m³",
                 valId: "val-no2",
-                icon: "⚡",
+                icon: "NO2",
                 danger: "เกิดจากการเผาไหม้เชื้อเพลิงและการจราจร มีฤทธิ์ระคายเคืองเนื้อเยื่อปอด ทำให้ไอ หายใจติดขัด หลอดลมหดเกร็ง และเพิ่มความเสี่ยงต่อการติดเชื้อทางเดินหายใจ",
+                dangerEn: "Produced by fuel combustion and traffic, it irritates lung tissue and can cause coughing, breathing difficulty, bronchoconstriction, and a higher risk of respiratory infections.",
                 advice: "1. ลดเวลาที่อยู่ใกล้การจราจรหนาแน่น\n2. ผู้ป่วยโรคหอบหืดควรพกยาประจำตัว\n3. หากหายใจลำบากหรือแน่นหน้าอกควรพบแพทย์"
+                ,adviceEn: "1. Reduce time spent near heavy traffic.\n2. People with asthma should carry their prescribed medication.\n3. Seek medical care for breathing difficulty or chest tightness."
             },
             so2: {
                 name: "ก๊าซซัลเฟอร์ไดออกไซด์ (SO₂)",
+                nameEn: "Sulfur Dioxide (SO₂)",
                 unit: "µg/m³",
                 valId: "val-so2",
-                icon: "🌋",
+                icon: "SO2",
                 danger: "เกิดจากการเผาไหม้เชื้อเพลิงที่มีกำมะถัน มีฤทธิ์ระคายเคืองตา จมูก คอ และหลอดลม อาจทำให้หายใจลำบากและกระตุ้นอาการของผู้ป่วยโรคปอด",
+                dangerEn: "Produced by burning sulfur-containing fuels, it irritates the eyes, nose, throat, and airways and may cause breathing difficulty or worsen lung conditions.",
                 advice: "1. ออกจากพื้นที่เมื่อรู้สึกแสบตาหรือได้กลิ่นฉุนผิดปกติ\n2. เข้าอาคารที่ปิดมิดชิดและลดการนำอากาศภายนอกเข้ามา\n3. หากหายใจขัดรุนแรงให้ติดต่อหน่วยแพทย์ฉุกเฉิน"
+                ,adviceEn: "1. Leave the area if your eyes burn or you notice an unusually strong odor.\n2. Go indoors, close the building, and reduce outside-air intake.\n3. Contact emergency medical services for severe breathing difficulty."
             }
         };
 
         const airQualityConfig = {
             Good: {
-                emoji: "🟢",
+                emoji: "",
                 label: "GOOD",
                 className: "state-good",
                 advice: "คุณภาพอากาศอยู่ในระดับดี เหมาะสำหรับกิจกรรมทั่วไปและกิจกรรมกลางแจ้ง"
             },
             Moderate: {
-                emoji: "🟡",
+                emoji: "",
                 label: "MODERATE",
                 className: "state-moderate",
                 advice: "คุณภาพอากาศอยู่ในระดับปานกลาง กลุ่มเสี่ยงควรลดระยะเวลาทำกิจกรรมกลางแจ้ง"
             },
             Poor: {
-                emoji: "🔴",
+                emoji: "",
                 label: "POOR",
                 className: "state-poor",
                 advice: "มลพิษเริ่มส่งผลกระทบต่อสุขภาพ ควรสวมหน้ากากและลดกิจกรรมกลางแจ้ง"
             },
             Hazardous: {
-                emoji: "🟣",
+                emoji: "",
                 label: "HAZARDOUS",
                 className: "state-hazardous",
                 advice: "ระดับมลพิษอันตราย ควรงดกิจกรรมนอกอาคารและเคลื่อนย้ายกลุ่มเสี่ยง"
@@ -1893,14 +2459,59 @@
             const detail = pollutantDetails[type];
             if (!detail) return;
 
+            activePollutantType = type;
+            const english = window.I18N?.lang === "en";
             const value = $(detail.valId)?.textContent || "0";
-            $("modal-icon").textContent = detail.icon;
-            $("modal-title").textContent = detail.name;
+            renderIconSlot($("modal-icon"), savedIconImages.modal || detail.icon);
+            $("modal-title").textContent = english ? detail.nameEn : detail.name;
             $("modal-current-val").textContent = `${value} ${detail.unit}`;
-            $("modal-danger").textContent = detail.danger;
-            $("modal-advice").textContent = detail.advice;
+            $("modal-danger").textContent = english ? detail.dangerEn : detail.danger;
+            $("modal-advice").textContent = english ? detail.adviceEn : detail.advice;
             $("pollutant-modal").classList.add("open");
             document.body.style.overflow = "hidden";
+        }
+
+        function renderIconSlot(element, value) {
+            if (!element) return;
+            element.replaceChildren();
+            if (value?.startsWith("data:image/")) {
+                const image = document.createElement("img");
+                image.src = value;
+                image.alt = "";
+                element.appendChild(image);
+            } else {
+                element.textContent = value || "";
+            }
+        }
+
+        function bindReplaceableIcons() {
+            const picker = $("icon-image-picker");
+            if (!picker) return;
+
+            document.querySelectorAll("[data-image-slot]").forEach(slot => {
+                renderIconSlot(slot, savedIconImages[slot.dataset.imageSlot] || slot.textContent.trim());
+                slot.addEventListener("click", () => {
+                    picker.dataset.target = slot.dataset.imageSlot;
+                    picker.click();
+                });
+            });
+
+            picker.addEventListener("change", event => {
+                const file = event.target.files?.[0];
+                const slotName = picker.dataset.target;
+                if (!file || !slotName) return;
+
+                const reader = new FileReader();
+                reader.addEventListener("load", () => {
+                    savedIconImages[slotName] = reader.result;
+                    saveIconImage(slotName, reader.result);
+                    document.querySelectorAll(`[data-image-slot="${slotName}"]`).forEach(slot => {
+                        renderIconSlot(slot, reader.result);
+                    });
+                });
+                reader.readAsDataURL(file);
+                picker.value = "";
+            });
         }
 
         function closePollutantModal() {
@@ -2126,7 +2737,7 @@
         function updateAIButtons() {
             [$("btn-toggle-ai"), $("btn-toggle-ai-esp")].forEach(button => {
                 if (!button) return;
-                button.textContent = isAIDetecting ? "⏹ ปิด AI Detection" : "🤖 เปิด AI Detection";
+                button.textContent = isAIDetecting ? "ปิด AI Detection" : "เปิด AI Detection";
                 button.classList.toggle("cyber-btn-danger", isAIDetecting);
                 button.classList.toggle("cyber-btn-purple", !isAIDetecting);
             });
@@ -2362,7 +2973,7 @@
 
         function toggleSirenMute() {
             sirenMuted = !sirenMuted;
-            $("btn-toggle-siren").textContent = sirenMuted ? "🔕 เปิดเสียง" : "🔔 ปิดเสียง";
+            $("btn-toggle-siren").textContent = sirenMuted ? "เปิดเสียง" : "ปิดเสียง";
 
             if (sirenMuted) stopSiren();
             else if (evacuationActive && !evacuationAcknowledged) startSiren();
@@ -3217,6 +3828,12 @@
                 });
             });
 
+            window.addEventListener("languagechange", () => {
+                if ($("pollutant-modal").classList.contains("open") && activePollutantType) {
+                    openPollutantModal(activePollutantType);
+                }
+            });
+
             $("btn-close-modal").addEventListener("click", closePollutantModal);
             $("btn-close-modal-bottom").addEventListener("click", closePollutantModal);
 
@@ -3253,6 +3870,7 @@
 
         function initializeApp() {
             bindEvents();
+            loadSavedIconImages().then(() => bindReplaceableIcons());
             bindController();
             initializeStarfield();
             initializeDeviceBadge();
