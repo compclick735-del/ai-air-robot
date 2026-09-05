@@ -10,14 +10,14 @@ window.CONFIG = {
     // 🌤️ OpenWeatherMap Air Pollution API
     // Get yours at: https://openweathermap.org/api
     // ============================
-    WEATHER_API_KEY: "YOUR_OPENWEATHERMAP_API_KEY_HERE",
+    WEATHER_API_KEY: "69c5ee3c1296056b0e9bde92ccc215fc",
 
     // ============================
     // 🗄️ Supabase Database
     // Get yours at: https://supabase.com
     // ============================
     SUPABASE_URL: "https://YOUR_PROJECT_ID.supabase.co",
-    SUPABASE_ANON_KEY: "YOUR_SUPABASE_ANON_KEY_HERE",
+    SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0emNhbWdxZXVneWpzYnFmbHJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4OTA5MjcsImV4cCI6MjEwMjQ2NjkyN30.QikhPrSY-qZWbuLzljiAlPYJVygMHoJ33geRaZcTuAM",
 
     // ============================
     // 📡 MQTT Broker Configuration
