@@ -16,14 +16,14 @@ window.CONFIG = {
     // 🗄️ Supabase Database
     // Get yours at: https://supabase.com
     // ============================
-    SUPABASE_URL: "https://YOUR_PROJECT_ID.supabase.co",
+    SUPABASE_URL: "https://itzcamgqeugyjsbqflrn.supabase.co",
     SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0emNhbWdxZXVneWpzYnFmbHJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4OTA5MjcsImV4cCI6MjEwMjQ2NjkyN30.QikhPrSY-qZWbuLzljiAlPYJVygMHoJ33geRaZcTuAM",
 
     // ============================
     // 📡 MQTT Broker Configuration
     // ============================
     MQTT: {
-        broker: "YOUR_MQTT_BROKER_IP",
+        broker: "10.243.178.157",
         port: 9001,
         path: "",
         topics: {
