@@ -2001,7 +2001,7 @@
             /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
             ("ontouchstart" in window && window.innerWidth <= 1024);
 
-        const DETECTION_INTERVAL = isMobileDevice ? 230 : 80;
+        const DETECTION_INTERVAL = isMobileDevice ? 230 : (1000 / 60);
         const MAX_CHART_POINTS = 30;
         const EVAC_DANGER_LEVELS = ["Moderate", "Poor", "Hazardous"];
 
