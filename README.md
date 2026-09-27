@@ -19,10 +19,10 @@
 
 ## โหมดอุปกรณ์จริง
 
-- MQTT sensor topic: `pollution/env/predicted`
-- MQTT control topic: `pollution/robot/control`
-- MQTT GPS topic: `pollution/robot/gps`
-- MQTT evacuation topic: `pollution/robot/evacuate`
+- MQTT TOPIC TELEMETRY: `pollution/env/predicted`
+- MQTT TOPIC CONTROL: `pollution/robot/control`
+- MQTT TOPIC CONFIG: `pollution/robot/config`
+- MQTT TOPIC STATUS: `pollution/robot/status`
 - กล้อง: Webcam/Mobile หรือ ESP32-CAM
 - โมเดลบุคคล: โหลดจาก `YOLO_MODEL_URL`
 
