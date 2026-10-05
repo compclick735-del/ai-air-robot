@@ -50,3 +50,4 @@ html[lang="th"] .en-only{display:none!important}
 .comparison-table th { font-family: 'Share Tech Mono', monospace; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; }
 .comparison-table td:not(:first-child) { color: #cbd5e1; font-family: 'Share Tech Mono', monospace; }
 .comparison-table td:last-child { color: #67e8f9; font-weight: 700; }
+ 
