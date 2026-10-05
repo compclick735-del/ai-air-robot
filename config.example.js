@@ -53,3 +53,4 @@ window.CONFIG = {
     DEFAULT_LAT: 16.7164,
     DEFAULT_LON: 102.1158
 };
+
