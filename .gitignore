@@ -1,7 +1,7 @@
 # Dependencies
 node_modules/
 
-# 🔐 API Keys & Secrets - NEVER commit these!
+# API Keys & Secrets - NEVER commit these!
 config.js
 
 # OS
