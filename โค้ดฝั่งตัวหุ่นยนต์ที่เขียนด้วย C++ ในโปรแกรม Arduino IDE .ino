@@ -1,5 +1,5 @@
 /*
-    🎯 LOCATION-AWARE SMART AIR QUALITY AI ROBOT
+    LOCATION-AWARE SMART AIR QUALITY AI ROBOT
     MATRIX MINI R4 — v2.2 (no preheat gate / read gas immediately)
 
     Board   : Arduino UNO R4 WiFi (Matrix Mini R4)
@@ -49,7 +49,7 @@ static const float ADC_MAX  = 16383.0f;
 static const float ADC_VREF = 5.0f;
 
 // ═══════════════════════════════════════════════════════
-//  🌫️ GP2Y1014AU — CALIBRATION
+//  GP2Y1014AU — CALIBRATION
 // ═══════════════════════════════════════════════════════
 static const unsigned int DUST_SAMPLING_TIME_US = 280;
 static const unsigned int DUST_DELTA_TIME_US    = 40;
@@ -60,7 +60,7 @@ float DUST_VOC = 0.60f;
 static const float DUST_SENSITIVITY = 0.17f;
 
 // ═══════════════════════════════════════════════════════
-//  💨 MQ-2 — CALIBRATION  (ไม่มี preheat gate แล้ว)
+//  MQ-2 — CALIBRATION  (ไม่มี preheat gate แล้ว)
 // ═══════════════════════════════════════════════════════
 static const float MQ2_RL_KOHM         = 10.0f;
 static const float MQ2_CLEAN_AIR_RATIO = 9.83f;
@@ -71,7 +71,7 @@ float MQ2_R0 = 10.0f;
 static const unsigned long MQ2_STABLE_MS = 3UL * 60UL * 1000UL;  // ใช้แค่ติดป้ายสถานะ
 
 // ═══════════════════════════════════════════════════════
-//  🏎️ MOTOR — SLEW RATE + FAILSAFE
+//  MOTOR — SLEW RATE + FAILSAFE
 // ═══════════════════════════════════════════════════════
 int targetM1 = 0, targetM2 = 0;
 int currentM1 = 0, currentM2 = 0;
@@ -98,7 +98,7 @@ bool  pm25Valid = false;
 
 
 // ═══════════════════════════════════════════════════════
-//  🏎️ MOTOR CONTROL
+//  MOTOR CONTROL
 // ═══════════════════════════════════════════════════════
 void setMotorTarget(int m1, int m2) {
   targetM1 = constrain(m1, -MOTOR_MAX, MOTOR_MAX);
@@ -155,7 +155,7 @@ void setLEDs(uint8_t r1,uint8_t g1,uint8_t b1, uint8_t r2,uint8_t g2,uint8_t b2)
 
 
 // ═══════════════════════════════════════════════════════
-//  🌡️ SHT30 — BLOCKING READ + CRC CHECK  (~20ms)
+//  SHT30 — BLOCKING READ + CRC CHECK  (~20ms)
 // ═══════════════════════════════════════════════════════
 uint8_t sht30CRC(const uint8_t* data, int len) {
   uint8_t crc = 0xFF;
@@ -182,7 +182,7 @@ void sht30Read() {
 
   if (sht30CRC(&d[0], 2) != d[2] || sht30CRC(&d[3], 2) != d[5]) {
     shtValid = false;
-    Serial.println("⚠️ SHT30 CRC mismatch — ทิ้งค่านี้");
+    Serial.println("SHT30 CRC mismatch — ทิ้งค่านี้");
     return;
   }
 
@@ -201,7 +201,7 @@ void sht30Read() {
 
 
 // ═══════════════════════════════════════════════════════
-//  💨 MQ-2  (อ่านทันที ไม่รอ preheat)
+//  MQ-2  (อ่านทันที ไม่รอ preheat)
 // ═══════════════════════════════════════════════════════
 float mq2ReadRs() {
   int raw = analogRead(MQ2_PIN);
@@ -222,15 +222,15 @@ void mq2Calibrate() {
   }
   if (n > 0) {
     MQ2_R0 = (sum / n) / MQ2_CLEAN_AIR_RATIO;
-    Serial.print("✅ MQ-2 R0 = "); Serial.print(MQ2_R0, 3); Serial.println(" kOhm");
+    Serial.print("MQ-2 R0 = "); Serial.print(MQ2_R0, 3); Serial.println(" kOhm");
   } else {
-    Serial.println("🔴 คาลิเบรตล้มเหลว — ตรวจสายเซนเซอร์");
+    Serial.println("คาลิเบรตล้มเหลว — ตรวจสายเซนเซอร์");
   }
 }
 
 
 // ═══════════════════════════════════════════════════════
-//  🌫️ GP2Y1014AU — BLOCKING READ (~50ms)
+//  GP2Y1014AU — BLOCKING READ (~50ms)
 // ═══════════════════════════════════════════════════════
 float dustSampleVoltage() {
   digitalWrite(DUST_LED_PIN, LOW);
@@ -262,12 +262,12 @@ void dustCalibrate() {
   float sum = 0; const int N = 60;
   for (int i = 0; i < N; i++) { sum += dustSampleVoltage(); delay(10); }
   DUST_VOC = sum / N;
-  Serial.print("✅ Dust Voc = "); Serial.print(DUST_VOC, 3); Serial.println(" V");
+  Serial.print(" Dust Voc = "); Serial.print(DUST_VOC, 3); Serial.println(" V");
 }
 
 
 // ═══════════════════════════════════════════════════════
-//  📩 MQTT CALLBACKS
+//  MQTT CALLBACKS
 // ═══════════════════════════════════════════════════════
 void handleControl(byte* payload, unsigned int len) {
   if (len == 0) return;
@@ -306,7 +306,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
 
 // ═══════════════════════════════════════════════════════
-//  📶 NETWORK
+//  NETWORK
 // ═══════════════════════════════════════════════════════
 void connectWiFi() {
   if (WiFi.status() == WL_CONNECTED && WiFi.localIP() != IPAddress(0,0,0,0)) return;
@@ -315,23 +315,23 @@ void connectWiFi() {
 
   setLEDs(255,0,0, 255,0,0);
 
-  Serial.print("📶 Connecting WiFi: "); Serial.println(WIFI_SSID);
+  Serial.print("Connecting WiFi: "); Serial.println(WIFI_SSID);
   WiFi.disconnect();
   WiFi.begin(WIFI_SSID, WIFI_PASS);
 
   if (WiFi.status() == WL_CONNECTED && WiFi.localIP() != IPAddress(0,0,0,0)) {
-    Serial.print("🟢 WiFi OK — IP: "); Serial.println(WiFi.localIP());
+    Serial.print(" WiFi OK — IP: "); Serial.println(WiFi.localIP());
     Serial.print("   RSSI: "); Serial.print(WiFi.RSSI()); Serial.println(" dBm");
     setLEDs(0,0,0, 0,0,0);
   } else {
-    Serial.println("🔴 WiFi failed — ลองใหม่ใน 10 วินาที (มอเตอร์ถูกล็อก)");
+    Serial.println(" WiFi failed — ลองใหม่ใน 10 วินาที (มอเตอร์ถูกล็อก)");
   }
 }
 
 bool reconnectMQTT() {
   if (WiFi.status() != WL_CONNECTED) return false;
 
-  Serial.print("📡 Connecting MQTT "); Serial.print(MQTT_HOST); Serial.println("...");
+  Serial.print(" Connecting MQTT "); Serial.print(MQTT_HOST); Serial.println("...");
 
   const char* user = (strlen(MQTT_USER) > 0) ? MQTT_USER : nullptr;
   const char* pass = (strlen(MQTT_PASS) > 0) ? MQTT_PASS : nullptr;
@@ -340,20 +340,20 @@ bool reconnectMQTT() {
                                TOPIC_STATUS, 1, true, "{\"status\":\"offline\"}");
 
   if (ok) {
-    Serial.println("🟢 MQTT Connected!");
+    Serial.println(" MQTT Connected!");
     mqttClient.publish(TOPIC_STATUS, "{\"status\":\"online\"}", true);
     mqttClient.subscribe(TOPIC_CONTROL, 0);
     mqttClient.subscribe(TOPIC_CONFIG, 1);
     return true;
   }
 
-  Serial.print("🔴 MQTT failed (rc="); Serial.print(mqttClient.state()); Serial.println(")");
+  Serial.print(" MQTT failed (rc="); Serial.print(mqttClient.state()); Serial.println(")");
   return false;
 }
 
 
 // ═══════════════════════════════════════════════════════
-//  📊 TELEMETRY  (บล็อก ~70ms ทุก 3 วินาที)
+//  TELEMETRY  (บล็อก ~70ms ทุก 3 วินาที)
 // ═══════════════════════════════════════════════════════
 void publishTelemetry() {
   sht30Read();
@@ -408,23 +408,23 @@ void publishTelemetry() {
   size_t n = serializeJson(doc, buf);
 
   Serial.println("═════════════════════════════════════════");
-  Serial.print("🌡️  Temp : "); shtValid ? Serial.println(String(lastTemp,1) + " *C") : Serial.println("N/A ❌");
-  Serial.print("💦 Hum  : "); shtValid ? Serial.println(String(lastHum,1) + " %RH") : Serial.println("N/A ❌");
-  Serial.print("🌫️  PM2.5: "); pm25Valid ? Serial.println(String(lastPM25,1) + " ug/m3") : Serial.println("N/A ❌");
-  Serial.print("💨 Gas  : ");
+  Serial.print("  Temp : "); shtValid ? Serial.println(String(lastTemp,1) + " *C") : Serial.println("N/A ");
+  Serial.print(" Hum  : "); shtValid ? Serial.println(String(lastHum,1) + " %RH") : Serial.println("N/A ");
+  Serial.print("  PM2.5: "); pm25Valid ? Serial.println(String(lastPM25,1) + " ug/m3") : Serial.println("N/A ");
+  Serial.print(" Gas  : ");
   if (gasOk) {
     Serial.print(String(MQ2_CURVE_A * pow(rs / MQ2_R0, MQ2_CURVE_B), 2));
-    Serial.println(mq2Stable() ? " ppm(CO)" : " ppm(CO) ⚠️ ยังไม่เสถียร");
+    Serial.println(mq2Stable() ? " ppm(CO)" : " ppm(CO)  ยังไม่เสถียร");
   } else {
-    Serial.println("N/A ❌");
+    Serial.println("N/A ");
   }
   Serial.println("═════════════════════════════════════════");
 
   if (mqttClient.connected()) {
     if (mqttClient.publish(TOPIC_TELEMETRY, (const uint8_t*)buf, n, false))
-      Serial.println("📡 Published ✅\n");
+      Serial.println(" Published \n");
     else
-      Serial.println("⚠️ Publish failed (เพิ่ม MQTT_MAX_PACKET_SIZE?)\n");
+      Serial.println(" Publish failed (เพิ่ม MQTT_MAX_PACKET_SIZE?)\n");
   }
 }
 
@@ -457,7 +457,7 @@ void setup() {
   char idbuf[40];
   snprintf(idbuf, sizeof(idbuf), "ChumphaeAirBot_%02X%02X%02X", mac[3], mac[4], mac[5]);
   clientId = String(idbuf);
-  Serial.print("🆔 Client ID: "); Serial.println(clientId);
+  Serial.print(" Client ID: "); Serial.println(clientId);
 
   connectWiFi();
 
@@ -467,7 +467,7 @@ void setup() {
   mqttClient.setBufferSize(512);
   reconnectMQTT();
 
-  Serial.println("✅ System Ready — MQ-2 อ่านค่าทันที (ค่าช่วงแรกอาจยังไม่เสถียร)\n");
+  Serial.println(" System Ready — MQ-2 อ่านค่าทันที (ค่าช่วงแรกอาจยังไม่เสถียร)\n");
 }
 
 
