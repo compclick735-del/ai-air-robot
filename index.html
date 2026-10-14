@@ -2754,28 +2754,35 @@
             button.textContent = "⏳ กำลังโหลดโมเดล AI";
 
             try {
-                await tf.ready();
-                yoloModel = await tf.loadGraphModel(APP_CONFIG.yoloModelUrl);
+    await tf.ready();
+    
+    // ลองโหลดจากลิงก์หลักก่อน ถ้าพังค่อยสลับมาโหลดไฟล์ในเครื่อง
+    try {
+        console.log("ลองโหลดโมเดลจากลิงก์หลัก:", APP_CONFIG.yoloModelUrl);
+        yoloModel = await tf.loadGraphModel(APP_CONFIG.yoloModelUrl);
+    } catch (primaryErr) {
+        console.warn("ลิงก์หลักพัง สลับมาโหลดไฟล์ local แทน...", primaryErr);
+        yoloModel = await tf.loadGraphModel("./model/model.json");
+    }
 
-                const dummy = tf.zeros([1, 640, 640, 3]);
-                const output = yoloModel.execute(dummy);
+    const dummy = tf.zeros([1, 640, 640, 3]);
+    const output = yoloModel.execute(dummy);
 
-                if (Array.isArray(output)) {
-                    output.forEach(tensor => tensor.dispose());
-                } else if (output?.dispose) {
-                    output.dispose();
-                }
+    if (Array.isArray(output)) {
+        output.forEach(tensor => tensor.dispose());
+    } else if (output?.dispose) {
+        output.dispose();
+    }
 
-                dummy.dispose();
-                return true;
-            } catch (error) {
-                console.error("YOLO model error:", error);
-                alert("ไม่สามารถโหลดโมเดล YOLO ได้");
-                return false;
-            } finally {
-                button.disabled = false;
-            }
-        }
+    dummy.dispose();
+    return true;
+} catch (error) {
+    console.error("YOLO model error:", error);
+    alert("ไม่สามารถโหลดโมเดล YOLO ได้ทั้งออนไลน์และออฟไลน์");
+    return false;
+} finally {
+    button.disabled = false;
+}
 
         async function toggleAIDetection(sourceButton) {
             if (isAIDetecting) {

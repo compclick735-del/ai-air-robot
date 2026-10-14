@@ -1,9 +1,9 @@
-/**
+/**ใช้อันนี้ไปเลย
  *  CONFIG TEMPLATE
  * Copy this file to config.js and fill in your actual values:
  *   cp config.example.js config.js
  *
- *  DO NOT commit config.js to Git!
+ *  DO NOT commit config.js to Git!ใช้อันนี้เลยแหละ
  */
 window.CONFIG = {
     // ============================
