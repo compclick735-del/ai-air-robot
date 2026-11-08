@@ -23,7 +23,7 @@ window.CONFIG = {
     //  MQTT Broker Configuration
     // ============================
     MQTT: {
-        broker: "10.243.178.157",
+        broker: "10.90.2.157",
         port: 9001,
         path: "",
         topics: {
